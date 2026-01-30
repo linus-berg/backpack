@@ -20,6 +20,6 @@ RUN dotnet publish "Collector.DockerArchive.csproj" -a $TARGETARCH -c Release -o
 FROM base AS final
 #RUN apt-get -y update && apt-get install -y skopeo
 WORKDIR /app
-COPY skopeo /bin/skopeo
+COPY ./skopeo /bin/skopeo
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Collector.DockerArchive.dll"]
