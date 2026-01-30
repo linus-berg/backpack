@@ -18,8 +18,9 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Collector.DockerArchive.csproj" -a $TARGETARCH -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-RUN apt-get -y update && apt-get install -y libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
-COPY Collector.DockerArchive/skopeo /bin/skopeo
+#RUN apt-get -y update && apt-get install -y libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
+#COPY Collector.DockerArchive/skopeo /bin/skopeo
+RUN apt-get -y update && apt-get install -y skopeo
 
 WORKDIR /app
 COPY --from=publish /app/publish .
