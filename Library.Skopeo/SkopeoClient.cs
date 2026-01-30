@@ -79,12 +79,18 @@ public class SkopeoClient {
                        PipeTarget.ToStringBuilder(std_err)
                      );
     logger_.LogInformation($"Pull> {remote_image}=>{internal_image}");
+    CommandResult? result = null;
     try {
-      CommandResult result =
-        await cmd.ExecuteAsync();
+      result = await cmd.ExecuteAsync();
     } catch (Exception e) {
-      logger_.LogError(std_err.ToString());
-      throw;
+      logger_.LogError("{Error}", e.ToString());
+    }
+    
+    logger_.LogInformation("{StdOut}", std_out.ToString());
+    logger_.LogInformation("{StdErr}", std_err.ToString());
+    
+    if (result is { IsSuccess: false }) {
+      throw new ExecutionEngineException("Skopeo exception");
     }
 
     return archive;
