@@ -18,8 +18,8 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Collector.DockerArchive.csproj" -a $TARGETARCH -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
-#RUN apt-get -y update && apt-get install -y skopeo
+COPY Collector.DockerArchive/skopeo /bin/skopeo
+
 WORKDIR /app
-COPY ./skopeo /bin/skopeo
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Collector.DockerArchive.dll"]
