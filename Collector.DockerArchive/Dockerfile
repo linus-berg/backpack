@@ -27,7 +27,7 @@ ARG SKOPEO_VERSION=1.21.0
 WORKDIR /src
 
 RUN apt-get -y update
-RUN apt-get install -y golang-go make go-md2man libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
+RUN apt-get install -y ca-certificates wget golang-go make go-md2man libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
 ADD https://github.com/containers/skopeo/archive/refs/tags/v${SKOPEO_VERSION}.tar.gz .
 RUN tar -vxf v${SKOPEO_VERSION}.tar.gz && \
     cd skopeo-${SKOPEO_VERSION} && \
