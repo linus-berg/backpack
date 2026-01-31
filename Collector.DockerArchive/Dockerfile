@@ -18,18 +18,29 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Collector.DockerArchive.csproj" -a $TARGETARCH -c Release -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
-RUN apt-get -y update && apt-get install -y go-md2man libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
-# Install skopeo
-RUN wget https://github.com/containers/skopeo/archive/refs/tags/v1.21.0.tar.gz && \
-    tar -vxf v1.21.0.tar.gz && \
-    cd skopeo-1.21.0 && \
-    make && \
-    make install-binary
-#RUN apt-get -y update && apt-get install -y libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
-#COPY Collector.DockerArchive/skopeo /bin/skopeo
-#RUN apt-get -y update && apt-get install -y skopeo
+# Build static skopeo binary (this is unsupported)
+# Requires newer debian release than 8.0 dotnet image has
+# https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
+FROM docker.io/ubuntu:24.04 AS skopeo-build
+# Set skopeo version here
+ARG SKOPEO_VERSION=1.21.0
+WORKDIR /src
 
+RUN apt-get -y update
+RUN apt-get install -y golang-go make go-md2man libgpgme-dev libassuan-dev libbtrfs-dev pkg-config
+ADD https://github.com/containers/skopeo/archive/refs/tags/v${SKOPEO_VERSION}.tar.gz .
+RUN tar -vxf v${SKOPEO_VERSION}.tar.gz && \
+    cd skopeo-${SKOPEO_VERSION} && \
+    export CGO_ENABLED=0 && \
+    export BUILDTAGS=containers_image_openpgp && \
+    make
+# Copy skopeo to output dir
+RUN mkdir /output/
+RUN cp skopeo-${SKOPEO_VERSION}/bin/skopeo /output/skopeo
+
+FROM base AS final
 WORKDIR /app
+COPY Collector.DockerArchive/policy.json /etc/containers/policy.json
+COPY --from=skopeo-build /output/skopeo /bin/skopeo
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Collector.DockerArchive.dll"]
