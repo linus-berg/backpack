@@ -8,7 +8,7 @@ public interface IArtifactService {
                                     Dictionary<string, string> config,
                                     bool root = false);
 
-  public Task Collect(string location, string processor);
+  public Task Collect(string location, string processor, bool force = false);
   public Task Collect(ArtifactCollectRequest request);
   public Task Route(Artifact artifact);
   public Task Ingest(Artifact artifact);
@@ -18,6 +18,8 @@ public interface IArtifactService {
   public Task Track(string processor_str);
   public Task Validate();
   public Task Validate(Processor processor);
-  public Task Validate(string id, string processor_id);
-  public Task Validate(Artifact artifact, Processor processor);
+  public Task Validate(string id, string processor_id, bool force = false);
+
+  public Task Validate(Artifact artifact, Processor processor,
+                       bool force = false);
 }

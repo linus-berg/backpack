@@ -123,7 +123,7 @@ public class ArtifactController : ControllerBase {
   [HttpPost("validate")]
   public async Task<ActionResult> ValidateArtifact(
     [FromBody] ArtifactValidationInput input) {
-    await aps_.Validate(input.id, input.processor);
+    await aps_.Validate(input.id, input.processor, input.force);
     return Ok($"Validating {input.id} artifacts!");
   }
 
