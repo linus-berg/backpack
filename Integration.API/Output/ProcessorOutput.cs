@@ -5,4 +5,5 @@ public class ProcessorOutput {
   public string config { get; set; }
 
   public string description { get; set; }
+  public bool direct_collect { get; set; }
 }

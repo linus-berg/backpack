@@ -30,7 +30,8 @@ public class ProcessorController : ControllerBase {
         new ProcessorOutput {
           id = processor.id,
           config = processor.config.ToJson(),
-          description = processor.description
+          description = processor.description,
+          direct_collect = processor.direct_collect
         }
       );
     }
