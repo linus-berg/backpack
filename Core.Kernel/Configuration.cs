@@ -12,9 +12,9 @@ public static class Configuration {
       }, {
         CoreVariables.BP_REDIS_HOST, "localhost"
       }, {
-        CoreVariables.BP_REDIS_USER, ""
+        CoreVariables.BP_REDIS_USER, "default"
       }, {
-        CoreVariables.BP_REDIS_PASS, ""
+        CoreVariables.BP_REDIS_PASS, "myverylogpassword"
       }, {
         CoreVariables.BP_RABBIT_MQ_HOST, "localhost"
       }, {

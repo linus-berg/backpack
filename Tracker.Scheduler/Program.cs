@@ -49,7 +49,20 @@ IHost host = Host.CreateDefaultBuilder(args)
                      );
                      services.AddSingleton<IConnectionMultiplexer>(
                        ConnectionMultiplexer.Connect(
-                         Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_HOST)
+                         new ConfigurationOptions() {
+                           User = Configuration.GetBackpackVariable(
+                             CoreVariables.BP_REDIS_USER
+                           ),
+                           Password =
+                             Configuration.GetBackpackVariable(
+                               CoreVariables.BP_REDIS_PASS
+                             ),
+                           EndPoints = new EndPointCollection() {
+                             Configuration.GetBackpackVariable(
+                               CoreVariables.BP_REDIS_HOST
+                             ),
+                           }
+                         }
                        )
                      );
                      services.AddScoped<ICoreDatabase, MongoDatabase>();

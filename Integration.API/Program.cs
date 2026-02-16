@@ -49,9 +49,16 @@ builder.Services.AddMassTransit(
     );
   }
 );
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(
   ConnectionMultiplexer.Connect(
-    Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_HOST)
+    new ConfigurationOptions() {
+      User = Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_USER),
+      Password = Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_PASS),
+      EndPoints = new EndPointCollection() {
+        Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_HOST),
+      }
+    }
   )
 );
 builder.Services.AddScoped<ICoreDatabase, MongoDatabase>();
