@@ -54,12 +54,88 @@ A batteries included starter pack is included under /examples and /Compose, howe
 | Tempo                   | Recommended                             | 
 
 
+## Architecture
+
+### Message Propagation Diagram
+The following diagram illustrates how messages flow between the different services in the Backpack ecosystem.
+
+```mermaid
+graph TD
+    API[Integration.API] -- ArtifactIngestRequest --> GW(Core.Gateway)
+    SCHED[Tracker.Scheduler] -- ArtifactIngestRequest --> GW
+    GW -- ArtifactProcessRequest --> PROC{Processors}
+    PROC -- ArtifactProcessedRequest --> GW
+    GW -- ArtifactRouteRequest --> ROUTER[Collector.Router]
+    ROUTER -- ArtifactCollectRequest --> COLL{Collectors}
+    COLL -- Download --> STORAGE[(S3 Storage)]
+
+    subgraph Processors
+        PROC_NPM[Processor.Npm]
+        PROC_PYPI[Processor.Pypi]
+        PROC_...[...]
+    end
+
+    subgraph Collectors
+        COLL_HTTP[Collector.Http]
+        COLL_GIT[Collector.Git]
+        COLL_...[...]
+    end
+```
+
 ## Modules
 | Tag       | Name                        | Description                                                           |
 |-----------|-----------------------------|-----------------------------------------------------------------------|
 | Tracker   | Artifact Tracking Module    | Handles the tracking of artifacts to request an update by the APC.    |
 | Processor | Artifact Processing Module  | Handles the processing of a defined artifact-type.                    |
 | Collector | Artifact Collector Module   | Handles the collection of artifact-types based on standard protocols. |
+
+## Services
+
+### Core Services
+| Service             | Description                                                                                                                              |
+|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `Core.Gateway`      | The central message bus for the Backpack system. It uses MassTransit to route messages between services.                                   |
+| `Tracker.Scheduler` | Schedules and triggers artifact tracking jobs using Quartz.NET. It reads a schedule configuration to define when to check for new artifacts. |
+| `Integration.API`   | A RESTful API that provides an external interface to the Backpack system. It uses Keycloak for authentication and authorization.           |
+
+### Collectors
+Collectors are responsible for retrieving artifacts from their sources.
+
+| Service                   | Description                                                                                             |
+|---------------------------|---------------------------------------------------------------------------------------------------------|
+| `Collector.Git`           | Collects artifacts from Git repositories.                                                               |
+| `Collector.Http`          | Collects artifacts over HTTP/HTTPS.                                                                     |
+| `Collector.Wget`          | A collector that uses `wget` to download artifacts.                                                     |
+| `Collector.Rsync`         | A collector that uses `rsync` to synchronize artifacts.                                                 |
+| `Collector.Router`        | Routes collection requests to the appropriate collector based on the artifact type.                     |
+| `Collector.Container`     | Collects container images from a registry.                                                              |
+| `Collector.DockerArchive` | Collects Docker images from a local Docker archive (`.tar` file).                                       |
+
+### Processors
+Processors are responsible for extracting metadata and dependencies from artifacts.
+
+| Service                       | Description                                                                                             |
+|-------------------------------|---------------------------------------------------------------------------------------------------------|
+| `Processor.Npm`               | Processes Node.js packages from the npm registry.                                                       |
+| `Processor.Php`               | Processes PHP packages.                                                                                 |
+| `Processor.Helm`              | Processes Helm charts.                                                                                  |
+| `Processor.Pypi`              | Processes Python packages from PyPI.                                                                    |
+| `Processor.Maven`             | Processes Java packages from a Maven repository.                                                        |
+| `Processor.Nuget`             | Processes .NET packages from a NuGet repository.                                                        |
+| `Processor.Rancher`           | Processes Rancher artifacts.                                                                            |
+| `Processor.Container`         | Processes container images to extract metadata.                                                         |
+| `Processor.Terraform`         | Processes Terraform modules.                                                                            |
+| `Processor.OperatorHub`       | Processes operators from OperatorHub.io.                                                                |
+| `Processor.Jetbrains.IDE`     | Processes JetBrains IDEs.                                                                               |
+| `Processor.Github.Releases`   | Processes releases from GitHub.                                                                         |
+| `Processor.Jetbrains.Plugins` | Processes plugins for JetBrains IDEs.                                                                   |
+
+### Other Services
+| Service                | Description                                                                                             |
+|------------------------|---------------------------------------------------------------------------------------------------------|
+| `Backpack.Tester`      | A service for testing Backpack functionality.                                                           |
+| `Backpack.Toolbox`     | A service containing various tools for interacting with the Backpack system.                              |
+| `Backpack.GitUnpack`   | A service for unpacking Git repositories.                                                               |
 
 ## Environment Variables
 | Name                            | Default   | Modules                            |
