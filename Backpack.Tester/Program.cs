@@ -13,6 +13,7 @@ using Polly;
 using Polly.Timeout;
 using Processor.OperatorHub;
 using Processor.Php;
+using Processor.Pypi;
 using Processor.Terraform;
 
 HttpClient hc = new(
@@ -51,7 +52,7 @@ services.AddLogging();
 services.AddSingleton<FileSystem>();
 services.AddSingleton<Git>();
 services.AddSingleton<IOperatorHub, OperatorHub>();
-services.AddSingleton<IPhp, Php>();
+services.AddSingleton<IPypi, Pypi>();
 services.AddSingleton<ITerraform, Terraform>();
 services.AddSingleton<IGithubClient, GithubClient>();
 services.AddSingleton<SkopeoClient>();
@@ -64,6 +65,7 @@ IServiceProvider sp = services.BuildServiceProvider();
 IGithubClient gh = sp.GetRequiredService<IGithubClient>();
 ITerraform tf = sp.GetRequiredService<ITerraform>();
 
+IPypi py = sp.GetRequiredService<IPypi>();
 
 Artifact? res = await tf.ProcessArtifact(
                   new Artifact {
@@ -72,21 +74,25 @@ Artifact? res = await tf.ProcessArtifact(
                 );
 
 FileSystem fs = sp.GetRequiredService<FileSystem>();
-IPhp hub = sp.GetRequiredService<IPhp>();
 SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
-await fs.CreateDeltaLink(
+/*await fs.CreateDeltaLink(
   "docker-archive",
   "docker-archive://docker.io/docker_archive_test_1-2-3-4.tar"
-);
+);*/
 //await sk.CopyToTar("docker://docker.io/nginx:latest");
 
-Artifact artifact = new() {
+Artifact php_artifact = new() {
   id = "shardj/zf1-future"
 };
+Artifact py_artifact = new() {
+  id = "pandas"
+};
+
+Artifact response = await py.ProcessArtifact(py_artifact);
 
 //var art = await hub.ProcessArtifact(artifact);
 
-artifact.config["files"] =
+php_artifact.config["files"] =
   @"^helm-v\d+.\d+.\d+-darwin-arm64.tar.gz.sha256sum.asc$";
 //await ghr.ProcessArtifact(artifact);
 //await git.Mirror("git://github.com/linus-berg/ATM.Npm");
