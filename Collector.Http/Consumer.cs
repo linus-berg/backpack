@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Collector.Kernel;
 using Core.Kernel;
 using Core.Kernel.Messages;
@@ -5,17 +8,25 @@ using MassTransit;
 
 namespace Collector.Http;
 
+/// <summary>
+///   Consumer for HTTP artifact collection requests.
+/// </summary>
 public class Consumer : ICollector {
   private readonly bool delta_;
   private readonly bool forward_;
   private readonly FileSystem fs_;
 
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="Consumer" /> class.
+  /// </summary>
+  /// <param name="fs">The file system.</param>
   public Consumer(FileSystem fs) {
     fs_ = fs;
     delta_ = Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_HTTP_DELTA) == "true";
     forward_ = Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_HTTP_MODE) == "forward";
   }
 
+  /// <inheritdoc />
   public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
     string location = context.Message.location;
     string module = context.Message.module;

@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Text.Json;
 using Core.Kernel.Exceptions;
 using Core.Kernel.Models;
@@ -6,16 +9,28 @@ using RestSharp;
 
 namespace Processor.Npm;
 
+/// <summary>
+/// Logic for processing NPM packages from the registry.
+/// </summary>
 public class Npm : INpm {
   private const string C_REGISTRY_ = "https://registry.npmjs.org/";
   private const string C_FILE_NAME_ = "tarball";
   private readonly RestClient client_ = new(C_REGISTRY_);
   private readonly ILogger<Npm> logger_;
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="Npm"/> class.
+  /// </summary>
+  /// <param name="logger">The logger instance.</param>
   public Npm(ILogger<Npm> logger) {
     logger_ = logger;
   }
 
+  /// <summary>
+  /// Processes the artifact to find NPM package versions and dependencies.
+  /// </summary>
+  /// <param name="artifact">The artifact to process.</param>
+  /// <returns>A task that represents the process operation, containing the updated artifact.</returns>
   public async Task<Artifact> ProcessArtifact(Artifact artifact) {
     Metadata? metadata = await GetMetadata(artifact.id);
     ProcessArtifactVersions(artifact, metadata);

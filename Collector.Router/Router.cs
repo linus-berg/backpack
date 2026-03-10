@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Text.RegularExpressions;
 using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
@@ -7,9 +10,13 @@ using Semver;
 
 namespace Collector.Router;
 
+/// <summary>
+///   Consumer for artifact routing requests.
+/// </summary>
 public class Router : IConsumer<ArtifactRouteRequest> {
   private static readonly Predicate<string> S_NO_FILTER_ = s => true;
 
+  /// <inheritdoc />
   public async Task Consume(ConsumeContext<ArtifactRouteRequest> context) {
     Artifact artifact = context.Message.artifact;
 
@@ -33,6 +40,11 @@ public class Router : IConsumer<ArtifactRouteRequest> {
     }
   }
 
+  /// <summary>
+  ///   Creates a filter function for an artifact based on its filter type.
+  /// </summary>
+  /// <param name="artifact">The artifact containing filter criteria.</param>
+  /// <returns>A predicate function for filtering versions.</returns>
   private static Predicate<string> CreateFilterFunction(Artifact artifact) {
     if (string.IsNullOrEmpty(artifact.filter)) {
       return S_NO_FILTER_;

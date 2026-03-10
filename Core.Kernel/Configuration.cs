@@ -1,7 +1,13 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Data;
 
 namespace Core.Kernel;
 
+/// <summary>
+/// Provides central configuration management using environment variables and default values.
+/// </summary>
 public static class Configuration {
   private static readonly Dictionary<CoreVariables, string> S_DEFAULTS_ =
     new() {
@@ -32,6 +38,10 @@ public static class Configuration {
       }
     };
 
+  /// <summary>
+  /// Checks if the OpenTelemetry host configuration is available.
+  /// </summary>
+  /// <returns>True if the host is configured; otherwise, false.</returns>
   public static bool HasOtelHost() {
     bool has_otel_host = false;
     try {
@@ -44,6 +54,12 @@ public static class Configuration {
     return has_otel_host;
   }
 
+  /// <summary>
+  /// Retrieves a configuration variable from environment variables or its default value.
+  /// </summary>
+  /// <param name="variable">The variable to retrieve.</param>
+  /// <returns>The value of the configuration variable.</returns>
+  /// <exception cref="NoNullAllowedException">Thrown when the variable is not set and has no default value.</exception>
   public static string? GetBackpackVariable(CoreVariables variable) {
     string? value = Environment.GetEnvironmentVariable(variable.ToString());
 

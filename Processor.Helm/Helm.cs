@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Text.RegularExpressions;
 using Core.Kernel.Models;
 using Processor.Helm.Models;
@@ -5,11 +8,18 @@ using RestSharp;
 
 namespace Processor.Helm;
 
+/// <summary>
+/// Logic for processing Helm charts from Artifact Hub.
+/// </summary>
 public class Helm {
   private const string C_API_ = "https://artifacthub.io/api/v1/packages/helm";
   private readonly RestClient client_ = new(C_API_);
   private readonly ILogger<Helm> logger_;
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="Helm"/> class.
+  /// </summary>
+  /// <param name="logger">The logger instance.</param>
   public Helm(ILogger<Helm> logger) {
     logger_ = logger;
     AddApiKeyIfAvailable();
@@ -27,6 +37,11 @@ public class Helm {
     }
   }
 
+  /// <summary>
+  /// Processes the artifact to find Helm chart versions and dependencies.
+  /// </summary>
+  /// <param name="artifact">The artifact to process.</param>
+  /// <returns>A task that represents the process operation.</returns>
   public async Task ProcessArtifact(Artifact artifact) {
     await ProcessVersions(artifact);
   }

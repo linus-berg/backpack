@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Collector.Kernel.Storage.Minio;
 using Core.Kernel;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,7 +9,15 @@ using Polly.Retry;
 
 namespace Collector.Kernel;
 
+/// <summary>
+///   Extension methods for adding storage services.
+/// </summary>
 public static class StorageExtensions {
+  /// <summary>
+  ///   Adds storage services to the service collection.
+  /// </summary>
+  /// <param name="services">The service collection.</param>
+  /// <returns>The updated service collection.</returns>
   public static IServiceCollection AddStorage(
     this IServiceCollection services) {
     services.AddResiliencePipeline<string, bool>(

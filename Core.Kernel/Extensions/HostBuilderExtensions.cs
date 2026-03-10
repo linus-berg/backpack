@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Core.Kernel.Registrations;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -7,7 +10,16 @@ using OpenTelemetry.Resources;
 
 namespace Core.Kernel.Extensions;
 
+/// <summary>
+/// Provides extension methods for <see cref="IHostBuilder"/> to configure system logging.
+/// </summary>
 public static class HostBuilderExtensions {
+  /// <summary>
+  /// Adds OpenTelemetry logging to the host builder.
+  /// </summary>
+  /// <param name="builder">The host builder to configure.</param>
+  /// <param name="registration">The module registration information.</param>
+  /// <returns>The configured host builder.</returns>
   public static IHostBuilder AddLogging(this IHostBuilder builder,
                                         ModuleRegistration registration) {
     if (!Configuration.HasOtelHost()) {

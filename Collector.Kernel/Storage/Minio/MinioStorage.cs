@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Text;
 using System.Text.RegularExpressions;
 using Collector.Kernel.Storage.Common;
@@ -9,12 +12,20 @@ using Minio.Exceptions;
 
 namespace Collector.Kernel.Storage.Minio;
 
+/// <summary>
+///   Provides storage operations using Minio.
+/// </summary>
 public class MinioStorage : IDisposable {
   private readonly string bucket_;
   private readonly ILogger logger_;
   private readonly bool should_auto_create_bucket_;
   private bool bucket_exists_checked_;
 
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="MinioStorage" /> class.
+  /// </summary>
+  /// <param name="options">The Minio storage options.</param>
+  /// <param name="logger">The logger.</param>
   public MinioStorage(MinioStorageOptions options,
                       ILogger<MinioStorage> logger) {
     if (options == null) {
@@ -29,11 +40,18 @@ public class MinioStorage : IDisposable {
     should_auto_create_bucket_ = options.auto_create_bucket;
   }
 
+  /// <summary>
+  ///   Gets the Minio client.
+  /// </summary>
   public IMinioClient client { get; }
 
+  /// <inheritdoc />
   public void Dispose() {
   }
 
+  /// <summary>
+  ///   Ensures that the bucket exists.
+  /// </summary>
   private async Task EnsureBucketExists() {
     if (!should_auto_create_bucket_ || bucket_exists_checked_) {
       return;
@@ -53,6 +71,12 @@ public class MinioStorage : IDisposable {
     bucket_exists_checked_ = true;
   }
 
+  /// <summary>
+  ///   Gets a file stream for the specified path.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the file stream.</returns>
   [Obsolete(
     $"Use {nameof(GetFileStreamAsync)} with {nameof(FileAccess)} instead to define read or write behaviour of stream"
   )]
@@ -62,6 +86,13 @@ public class MinioStorage : IDisposable {
     return GetFileStreamAsync(path, StreamMode.READ, cancellation_token);
   }
 
+  /// <summary>
+  ///   Gets a file stream for the specified path and stream mode.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <param name="stream_mode">The stream mode.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the file stream.</returns>
   public async Task<Stream> GetFileStreamAsync(string path,
                                                StreamMode stream_mode,
                                                CancellationToken
@@ -109,6 +140,11 @@ public class MinioStorage : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Gets information about the specified file.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the file info, or null if the file does not exist.</returns>
   public async Task<FileSpec?> GetFileInfoAsync(string path) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
@@ -151,6 +187,11 @@ public class MinioStorage : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Checks if the specified file exists.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file exists.</returns>
   public async Task<bool> ExistsAsync(string path) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
@@ -189,6 +230,13 @@ public class MinioStorage : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Saves a file from a stream.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <param name="stream">The file content stream.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully saved.</returns>
   public async Task<bool> SaveFileAsync(string path, Stream stream,
                                         CancellationToken cancellation_token =
                                           default) {
@@ -242,6 +290,11 @@ public class MinioStorage : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Gets a seekable stream from the provided stream.
+  /// </summary>
+  /// <param name="stream">The original stream.</param>
+  /// <returns>A seekable stream.</returns>
   private async Task<Stream> GetSeekableStream(Stream stream) {
     if (stream.CanSeek) {
       return stream;
@@ -258,6 +311,13 @@ public class MinioStorage : IDisposable {
     return temp_file_stream;
   }
 
+  /// <summary>
+  ///   Renames a file.
+  /// </summary>
+  /// <param name="path">The current file path.</param>
+  /// <param name="new_path">The new file path.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully renamed.</returns>
   public async Task<bool> RenameFileAsync(string path, string new_path,
                                           CancellationToken cancellation_token =
                                             default) {
@@ -287,6 +347,11 @@ public class MinioStorage : IDisposable {
            await DeleteFileAsync(normalized_path, cancellation_token);
   }
 
+  /// <summary>
+  ///   Gets the contents of a file as a string.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the file contents.</returns>
   public async Task<string> GetFileContentsAsync(string path) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
@@ -302,6 +367,12 @@ public class MinioStorage : IDisposable {
     return null;
   }
 
+  /// <summary>
+  ///   Saves file contents from a string.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <param name="contents">The file contents.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully saved.</returns>
   public Task<bool> SaveFileAsync(string path, string contents) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
@@ -313,6 +384,13 @@ public class MinioStorage : IDisposable {
     );
   }
 
+  /// <summary>
+  ///   Copies a file.
+  /// </summary>
+  /// <param name="path">The source file path.</param>
+  /// <param name="target_path">The target file path.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully copied.</returns>
   public async Task<bool> CopyFileAsync(string path, string target_path,
                                         CancellationToken cancellation_token =
                                           default) {
@@ -359,6 +437,12 @@ public class MinioStorage : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Deletes a file.
+  /// </summary>
+  /// <param name="path">The file path.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully deleted.</returns>
   public async Task<bool> DeleteFileAsync(string path,
                                           CancellationToken cancellation_token =
                                             default) {
@@ -390,6 +474,12 @@ public class MinioStorage : IDisposable {
     }
   }
 
+  /// <summary>
+  ///   Deletes files matching a search pattern.
+  /// </summary>
+  /// <param name="search_pattern">The search pattern.</param>
+  /// <param name="cancellation">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the number of files deleted.</returns>
   public async Task<int> DeleteFilesAsync(string search_pattern = null,
                                           CancellationToken cancellation =
                                             default) {
@@ -436,6 +526,13 @@ public class MinioStorage : IDisposable {
     return count;
   }
 
+  /// <summary>
+  ///   Gets a list of files matching a search pattern.
+  /// </summary>
+  /// <param name="search_pattern">The search pattern.</param>
+  /// <param name="limit">The maximum number of files to return.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the list of files.</returns>
   public async Task<IReadOnlyCollection<FileSpec>> GetFileListAsync(
     string search_pattern = null, int? limit = null,
     CancellationToken cancellation_token = default) {
@@ -456,6 +553,13 @@ public class MinioStorage : IDisposable {
     return files;
   }
 
+  /// <summary>
+  ///   Gets a paged list of files matching a search pattern.
+  /// </summary>
+  /// <param name="page_size">The page size.</param>
+  /// <param name="search_pattern">The search pattern.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the paged list of files.</returns>
   public async Task<PagedFileListResult> GetPagedFileListAsync(
     int page_size = 100, string search_pattern = null,
     CancellationToken cancellation_token = default) {
@@ -471,6 +575,14 @@ public class MinioStorage : IDisposable {
     return result;
   }
 
+  /// <summary>
+  ///   Gets a page of files.
+  /// </summary>
+  /// <param name="search_pattern">The search pattern.</param>
+  /// <param name="page">The page number.</param>
+  /// <param name="page_size">The page size.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the next page result.</returns>
   private async Task<NextPageResult> GetFiles(string search_pattern, int page,
                                               int page_size,
                                               CancellationToken
@@ -509,6 +621,14 @@ public class MinioStorage : IDisposable {
     };
   }
 
+  /// <summary>
+  ///   Gets a list of files matching a search pattern with limit and skip.
+  /// </summary>
+  /// <param name="search_pattern">The search pattern.</param>
+  /// <param name="limit">The limit.</param>
+  /// <param name="skip">The skip.</param>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result contains the list of files.</returns>
   private async Task<List<FileSpec>> GetFileListAsync(
     string search_pattern = null, int? limit = null, int? skip = null,
     CancellationToken cancellation_token = default) {
@@ -564,10 +684,20 @@ public class MinioStorage : IDisposable {
                .ToList();
   }
 
+  /// <summary>
+  ///   Normalizes the path by replacing backslashes with forward slashes.
+  /// </summary>
+  /// <param name="path">The path to normalize.</param>
+  /// <returns>The normalized path.</returns>
   private string NormalizePath(string path) {
     return path?.Replace('\\', '/');
   }
 
+  /// <summary>
+  ///   Gets the search criteria from a search pattern.
+  /// </summary>
+  /// <param name="search_pattern">The search pattern.</param>
+  /// <returns>The search criteria.</returns>
   private SearchCriteria GetRequestCriteria(string search_pattern) {
     if (string.IsNullOrEmpty(search_pattern)) {
       return new SearchCriteria {
@@ -599,6 +729,11 @@ public class MinioStorage : IDisposable {
     };
   }
 
+  /// <summary>
+  ///   Creates a Minio client from the provided options.
+  /// </summary>
+  /// <param name="options">The Minio storage options.</param>
+  /// <returns>The Minio client and bucket name.</returns>
   private (IMinioClient Client, string Bucket) CreateClient(
     MinioStorageOptions options) {
     MinioConnectionBuilder connection =

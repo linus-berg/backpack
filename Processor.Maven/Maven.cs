@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
@@ -12,6 +15,9 @@ using Artifact = Core.Kernel.Models.Artifact;
 
 namespace Processor.Maven;
 
+/// <summary>
+/// Implementation of Maven artifact processing.
+/// </summary>
 public class Maven : IMaven {
   private const string C_MAVEN_ = "https://repo1.maven.org/maven2";
   private const string C_MAVEN_SEARCH_ = "https://search.maven.org";
@@ -19,11 +25,20 @@ public class Maven : IMaven {
   private readonly RestClient mvn_search_ = new(C_MAVEN_SEARCH_);
   private readonly MavenCentralRepository repo_;
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="Maven"/> class.
+  /// </summary>
+  /// <param name="logger">The logger instance.</param>
   public Maven(ILogger<Maven> logger) {
     logger_ = logger;
     repo_ = MavenRepository.FromMavenCentral();
   }
 
+  /// <summary>
+  /// Processes the artifact to find Maven versions and dependencies.
+  /// </summary>
+  /// <param name="artifact">The artifact to process.</param>
+  /// <returns>A task that represents the process operation, containing the updated artifact.</returns>
   public async Task<Artifact> ProcessArtifact(Artifact artifact) {
     string group_id = GetGroup(artifact);
     string artifact_id = artifact.id;
@@ -70,6 +85,12 @@ public class Maven : IMaven {
     return artifact;
   }
 
+  /// <summary>
+  /// Searches Maven for versions and files of an artifact.
+  /// </summary>
+  /// <param name="g">The group identifier.</param>
+  /// <param name="id">The artifact identifier.</param>
+  /// <returns>A task that represents the search operation, containing a dictionary of versions and their file extensions.</returns>
   public async Task<Dictionary<string, List<string>>> SearchMaven(
     string g, string id) {
     string group = g.Replace("/", ".");
@@ -91,6 +112,12 @@ public class Maven : IMaven {
     return versions;
   }
 
+  /// <summary>
+  /// Gets metadata for a Maven artifact.
+  /// </summary>
+  /// <param name="g">The group identifier.</param>
+  /// <param name="id">The artifact identifier.</param>
+  /// <returns>A task that represents the metadata retrieval operation.</returns>
   public async Task<Metadata> GetMetadata(string g, string id) {
     Metadata m = null;
     try {
@@ -103,6 +130,13 @@ public class Maven : IMaven {
     return m;
   }
 
+  /// <summary>
+  /// Gets the POM (Project Object Model) for a specific version of a Maven artifact.
+  /// </summary>
+  /// <param name="g">The group identifier.</param>
+  /// <param name="id">The artifact identifier.</param>
+  /// <param name="v">The version string.</param>
+  /// <returns>A task that represents the POM retrieval operation.</returns>
   public async Task<Project> GetPom(string g, string id, string v) {
     Project p = null;
     try {
@@ -115,6 +149,14 @@ public class Maven : IMaven {
     return p;
   }
 
+  /// <summary>
+  /// Constructs the URL for a Maven artifact file.
+  /// </summary>
+  /// <param name="group">The group identifier.</param>
+  /// <param name="id">The artifact identifier.</param>
+  /// <param name="version">The version string.</param>
+  /// <param name="extension">The file extension.</param>
+  /// <returns>the URL to the file.</returns>
   public string GetFile(string group, string id, string version,
                         string extension) {
     return Path.Combine(

@@ -1,11 +1,23 @@
-﻿using Core.Kernel.Exceptions;
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Core.Kernel.Exceptions;
 using Core.Kernel.Registrations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Kernel;
 
+/// <summary>
+/// Provides utility methods for registering modules and configuring MassTransit with RabbitMQ.
+/// </summary>
 public static class RegistrationUtils {
+  /// <summary>
+  /// Registers a module with MassTransit and configures its endpoints.
+  /// </summary>
+  /// <param name="sc">The service collection to register with.</param>
+  /// <param name="registration">The module registration information.</param>
+  /// <returns>The updated service collection.</returns>
   public static IServiceCollection Register(this IServiceCollection sc,
                                             ModuleRegistration registration) {
     sc.AddMassTransit(
@@ -40,6 +52,10 @@ public static class RegistrationUtils {
     return sc;
   }
 
+  /// <summary>
+  /// Configures retry and redelivery policies for a RabbitMQ receive endpoint.
+  /// </summary>
+  /// <param name="endpoint">The endpoint configurator.</param>
   private static void ConfigureRetrying(
     this IRabbitMqReceiveEndpointConfigurator endpoint) {
     endpoint.UseDelayedRedelivery(
@@ -65,6 +81,10 @@ public static class RegistrationUtils {
     endpoint.DiscardFaultedMessages();
   }
 
+  /// <summary>
+  /// Sets up the RabbitMQ host and authentication for the bus factory.
+  /// </summary>
+  /// <param name="cfg">The bus factory configurator.</param>
   public static void SetupRabbitMq(this IRabbitMqBusFactoryConfigurator cfg) {
     cfg.Host(
       Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_HOST),

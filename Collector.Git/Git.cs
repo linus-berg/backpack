@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Collector.Kernel;
 using Core.Kernel;
 using Minio.Exceptions;
@@ -6,6 +9,9 @@ using Polly.Registry;
 
 namespace Collector.Git;
 
+/// <summary>
+///   Handles git mirroring operations.
+/// </summary>
 public class Git {
   private readonly string bundle_dir_;
   private readonly string dir_;
@@ -13,6 +19,12 @@ public class Git {
   private readonly ResiliencePipeline<bool> git_timeout_;
   private readonly ILogger<Git> logger_;
 
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="Git" /> class.
+  /// </summary>
+  /// <param name="fs">The file system.</param>
+  /// <param name="polly">The resilience pipeline provider.</param>
+  /// <param name="logger">The logger.</param>
   public Git(FileSystem fs, ResiliencePipelineProvider<string> polly,
              ILogger<Git> logger) {
     fs_ = fs;
@@ -23,6 +35,9 @@ public class Git {
     ConfigureProxy();
   }
 
+  /// <summary>
+  ///   Configures the git proxy if specified in environment variables.
+  /// </summary>
   private void ConfigureProxy() {
     string? proxy = Environment.GetEnvironmentVariable("HTTPS_PROXY");
 
@@ -44,6 +59,12 @@ public class Git {
       .Wait();
   }
 
+  /// <summary>
+  ///   Mirrors a remote repository.
+  /// </summary>
+  /// <param name="remote">The remote repository URL.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the mirroring was successful.</returns>
   public async Task<bool> Mirror(string remote, CancellationToken token) {
     Repository repository = new(remote, dir_);
     logger_.LogDebug("{Remote}: Starting", remote);
@@ -63,6 +84,12 @@ public class Git {
     return success;
   }
 
+  /// <summary>
+  ///   Clones or updates the local mirror of a repository.
+  /// </summary>
+  /// <param name="repository">The repository to clone or update.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the operation was successful.</returns>
   private async Task<bool> CloneOrUpdateLocalMirror(
     Repository repository, CancellationToken token = default) {
     if (!Directory.Exists(repository.local_path)) {
@@ -101,6 +128,12 @@ public class Git {
            );
   }
 
+  /// <summary>
+  ///   Creates an incremental git bundle for a repository and pushes it to storage.
+  /// </summary>
+  /// <param name="repository">The repository to bundle.</param>
+  /// <param name="token">The cancellation token.</param>
+  /// <returns>A task that represents the asynchronous operation.</returns>
   private async Task CreateIncrementalGitBundle(Repository repository,
                                                 CancellationToken token) {
     string bundle_dir = Path.Join(bundle_dir_, repository.owner);
@@ -182,6 +215,11 @@ public class Git {
     }
   }
 
+  /// <summary>
+  ///   Pushes the git bundle to storage.
+  /// </summary>
+  /// <param name="bundle_file_path">The path to the bundle file.</param>
+  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the upload was successful.</returns>
   private async Task<bool> PushToStorage(string bundle_file_path) {
     if (!File.Exists(bundle_file_path)) {
       throw new FileNotFoundException($"{bundle_file_path} not found on disk.");

@@ -1,3 +1,6 @@
+// Copyright (c) 2022 Linus Berg. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using Core.Kernel.Exceptions;
 using Core.Kernel.Models;
 using NuGet.Common;
@@ -9,6 +12,9 @@ using ILogger = NuGet.Common.ILogger;
 
 namespace Processor.Nuget;
 
+/// <summary>
+/// Logic for processing NuGet packages from NuGet.org.
+/// </summary>
 public class Nuget : INuget {
   private const string C_API_ = "https://api.nuget.org/v3/index.json";
   private const string C_NUGET_ = "https://api.nuget.org/v3-flatcontainer/";
@@ -19,6 +25,9 @@ public class Nuget : INuget {
   private readonly SourceRepository repository_;
   private FindPackageByIdResource resource_;
 
+  /// <summary>
+  /// Initializes a new instance of the <see cref="Nuget"/> class.
+  /// </summary>
   public Nuget() {
     repository_ = Repository.Factory.GetCoreV3(C_API_);
     meta_res_ = repository_.GetResource<PackageMetadataResource>();
@@ -27,6 +36,11 @@ public class Nuget : INuget {
     logger_ = NullLogger.Instance;
   }
 
+  /// <summary>
+  /// Processes the artifact to find NuGet package versions and dependencies.
+  /// </summary>
+  /// <param name="artifact">The artifact to process.</param>
+  /// <returns>A task that represents the process operation, containing the updated artifact.</returns>
   public async Task<Artifact> ProcessArtifact(Artifact artifact) {
     await ProcessArtifactVersions(artifact);
     return artifact;
