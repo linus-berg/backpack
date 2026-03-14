@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backpack | The Ultimate Artifact Bridge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-accent: #1a1a1a;
+            --primary: #f97316; /* Orange-500 */
+            --primary-muted: rgba(249, 115, 22, 0.2);
+            --secondary: #fb923c; /* Orange-400 */
+            --accent: #ea580c; /* Orange-600 */
+            --text-main: #e5e7eb;
+            --text-dim: #71717a;
+            --border: #262626;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --terminal-green: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.06),
+                rgba(0, 255, 0, 0.02),
+                rgba(0, 0, 255, 0.06)
+            );
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Hero Section */
+        header {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
+        }
+
+        .hero-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            filter: grayscale(1) brightness(1.5) drop-shadow(0 0 20px var(--primary-muted));
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); filter: grayscale(1) brightness(1.2) drop-shadow(0 0 15px var(--primary-muted)); }
+            50% { transform: scale(1.02); filter: grayscale(0) brightness(1) drop-shadow(0 0 30px rgba(249, 115, 22, 0.4)); }
+        }
+
+        h1 {
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .tagline {
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            color: var(--text-dim);
+            max-width: 800px;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .tagline::before {
+            content: "> ";
+            color: var(--primary);
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid var(--primary);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            color: var(--primary);
+            background: transparent;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-muted);
+            transform: scale(1.05);
+        }
+
+        /* Features Section */
+        .section {
+            padding: 8rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 4rem;
+            text-align: left;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        .section-title::before {
+            content: "# ";
+            opacity: 0.5;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            background: var(--surface-accent);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h3::before {
+            content: "[+]";
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .card p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Ecosystems Section */
+        .ecosystem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        .eco-item {
+            background: var(--bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .eco-item:hover {
+            border-color: var(--primary);
+            background: var(--surface);
+        }
+
+        .eco-icon {
+            width: 32px;
+            height: 32px;
+            fill: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .eco-item:hover .eco-icon {
+            fill: var(--primary);
+        }
+
+        .eco-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        /* Architecture */
+        .arch-box {
+            background: #000;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 4px;
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .arch-box::after {
+            content: "SYSTEM_DIAGRAM.LOG";
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 10px;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        pre {
+            font-family: 'JetBrains Mono', monospace;
+            background: transparent;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        /* Terminal Prompt */
+        .terminal-prompt {
+            color: var(--terminal-green);
+            margin-bottom: 1rem;
+        }
+
+        .terminal-prompt span {
+            color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 0;
+            text-align: left;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .scroll-down {
+            position: absolute;
+            bottom: 2rem;
+            animation: bounce 2s infinite;
+            color: var(--text-dim);
+            opacity: 0.5;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 { font-size: 3rem; }
+            .section { padding: 4rem 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="noise-overlay"></div>
+
+    <header>
+        <img src="images/backpack-256.png" alt="Backpack Logo" class="hero-logo" onerror="this.src='https://raw.githubusercontent.com/google/gemini-cli/main/assets/gemini-cli-logo.png'">
+        <div class="container">
+            <div class="terminal-prompt">admin@backpack:~$ <span>./init --focus-artifact-collection</span></div>
+            <h1>Backpack</h1>
+            <p class="tagline">The ultimate artifact bridge for airgapped and high-security networks.</p>
+            <div class="cta-group">
+                <a href="https://github.com/linus-berg/backpack" class="btn btn-primary">View on GitHub</a>
+                <a href="#features" class="btn btn-secondary">Explore Features</a>
+            </div>
+        </div>
+        <div class="scroll-down">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+        </div>
+    </header>
+
+    <section id="features" class="section">
+        <div class="container">
+            <h2 class="section-title">Why Backpack?</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Recursive & Greedy</h3>
+                    <p>Backpack doesn't just collect artifacts; it hunts them. It recursively resolves every dependency and version until the collection is complete.</p>
+                </div>
+                <div class="card">
+                    <h3>Daily Deltas</h3>
+                    <p>Efficiency is key. Backpack builds daily deltas to minimize the transfer load, ensuring only new or changed artifacts are moved.</p>
+                </div>
+                <div class="card">
+                    <h3>Microservice Oriented</h3>
+                    <p>Designed for horizontal scalability. Easily add new "Processors" or "Collectors" without touching the core infrastructure.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="background: rgba(255,255,255,0.02)">
+        <div class="container">
+            <h2 class="section-title">Supported Ecosystems</h2>
+            <p style="text-align: center; color: var(--text-dim); margin-top: -3rem; margin-bottom: 3rem;">Ready to process and collect from the most popular artifact registries.</p>
+            
+            <div class="ecosystem-grid">
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 7.334v8.666h24v-8.666h-24zm22.5 7.166h-21v-5.666h21v5.666zM13.5 10.168h-3v3h3v-3z"/></svg>
+                    <span class="eco-name">NPM</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L1 7l11 5 11-5-11-5zM1 17l11 5 11-5M1 12l11 5 11-5"/></svg>
+                    <span class="eco-name">NuGet</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M13.983 11.078h2.119c.695 0 1.264.561 1.264 1.256 0 .696-.569 1.256-1.264 1.256h-2.119v-2.512zm10.017 1.054c0-6.191-5.03-11.209-11.231-11.209-6.201 0-11.231 5.018-11.231 11.209 0 6.191 5.03 11.21 11.231 11.21 6.201 0 11.231-5.019 11.231-11.21zm-14.28 1.034c0 .607-.492 1.099-1.099 1.099-.606 0-1.099-.492-1.099-1.099 0-.606.493-1.099 1.099-1.099.607 0 1.099.493 1.099 1.099zm0-2.834c0 .606-.492 1.099-1.099 1.099-.606 0-1.099-.493-1.099-1.099 0-.607.493-1.099 1.099-1.099.607 0 1.099.492 1.099 1.099zm2.833 2.834c0 .607-.492 1.099-1.099 1.099-.606 0-1.099-.492-1.099-1.099 0-.606.493-1.099 1.099-1.099.607 0 1.099.493 1.099 1.099zm0-2.834c0 .606-.492 1.099-1.099 1.099-.606 0-1.099-.493-1.099-1.099 0-.607.493-1.099 1.099-1.099.607 0 1.099.492 1.099 1.099zm5.667 4.09h-3.4v2.512h3.4c1.373 0 2.491-1.11 2.491-2.474 0-1.363-1.118-2.473-2.491-2.473h-2.119v-2.513h2.119c1.373 0 2.491-1.11 2.491-2.473 0-1.364-1.118-2.474-2.491-2.474h-3.4v7.433z"/></svg>
+                    <span class="eco-name">Docker</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v14l9 4 9-4V5l-9-4zm0 18l-7-3.11V6.89L12 10l7-3.11v9L12 19z"/></svg>
+                    <span class="eco-name">Helm</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span class="eco-name">Maven</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span class="eco-name">PyPI</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M2.4 7.3h19.2V22H2.4zM21.6 2H2.4v3.7h19.2z"/></svg>
+                    <span class="eco-name">Terraform</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span class="eco-name">GitHub</span>
+                </div>
+            </div>
+        </div>
+    <style>
+        /* ... existing styles ... */
+
+        /* Mermaid Customization */
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.2));
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Neon Glow for Mermaid Paths */
+        .mermaid .edgePaths .edgePath path {
+            stroke: var(--primary) !important;
+            stroke-width: 2px !important;
+            filter: drop-shadow(0 0 5px var(--primary));
+        }
+
+        .mermaid .marker {
+            fill: var(--primary) !important;
+            stroke: var(--primary) !important;
+        }
+
+        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon {
+            fill: var(--surface) !important;
+            stroke: var(--primary) !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .node .label {
+            color: var(--text-main) !important;
+            font-family: 'JetBrains Mono', monospace !important;
+        }
+
+        .mermaid .cluster rect {
+            fill: rgba(249, 115, 22, 0.05) !important;
+            stroke: var(--border) !important;
+            stroke-dasharray: 5 5 !important;
+        }
+
+        .arch-status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            securityLevel: 'loose',
+            fontFamily: 'JetBrains Mono',
+            themeVariables: {
+                primaryColor: '#141414',
+                primaryTextColor: '#e5e7eb',
+                primaryBorderColor: '#f97316',
+                lineColor: '#f97316',
+                secondaryColor: '#1a1a1a',
+                tertiaryColor: '#0a0a0a',
+                mainBkg: '#141414',
+                nodeBorder: '#f97316',
+                clusterBkg: 'rgba(249, 115, 22, 0.05)',
+                clusterBorder: '#262626',
+                edgeLabelBackground: '#0a0a0a',
+                defaultLinkColor: '#f97316'
+            }
+        });
+    </script>
+    </head>
+    <body>
+    ...
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Architecture</h2>
+            <div class="arch-box">
+                <div class="arch-status">
+                    <span>STATUS: OPERATIONAL</span>
+                    <span>ENCRYPTION: AES-256</span>
+                    <span>UPLINK: ACTIVE</span>
+                </div>
+                <div class="mermaid">
+                    graph LR
+                        subgraph Ingress
+                            API[Integration.API]
+                            SCHED[Tracker.Scheduler]
+                        end
+
+                        subgraph Core
+                            GW((Core.Gateway))
+                            ROUTER{Collector.Router}
+                        end
+
+                        subgraph Processing
+                            PROC{Processors}
+                        end
+
+                        subgraph Collection
+                            COLL[Collectors]
+                            STORAGE[(S3 Storage)]
+                        end
+
+                        API -- "REQ" --> GW
+                        SCHED -- "REQ" --> GW
+                        GW -- "PROC" --> PROC
+                        PROC -- "RES" --> GW
+                        GW -- "ROUTE" --> ROUTER
+                        ROUTER -- "FETCH" --> COLL
+                        COLL -- "SAVE" --> STORAGE
+
+                        classDef default font-family:'JetBrains Mono',font-size:12px;
+                        classDef highlight fill:#f97316,color:#0a0a0a,stroke:#ea580c;
+                        class GW highlight;
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container" style="text-align: center;">
+            <h2 class="section-title">Get Started</h2>
+            <p class="tagline" style="margin: 0 auto 3rem;">Ready to bridge your artifacts?</p>
+            <div class="card" style="max-width: 600px; margin: 0 auto; text-align: left;">
+                <p style="margin-bottom: 1rem; color: var(--primary); font-family: 'JetBrains Mono', monospace;"># Quick deploy with Helm</p>
+                <pre>helm repo add backpack https://linus-berg.github.io/helm-charts/
+helm install backpack backpack/backpack</pre>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Backpack Project. Built for high-security environments.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Simple reveal animation on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0)";
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card, .eco-item, .arch-box').forEach(el => {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(20px)";
+            el.style.transition = "all 0.6s ease-out";
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
