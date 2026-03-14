@@ -308,6 +308,57 @@
             color: var(--primary);
         }
 
+        /* Mermaid Customization */
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.2));
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .mermaid .edgePaths .edgePath path {
+            stroke: var(--primary) !important;
+            stroke-width: 2px !important;
+            filter: drop-shadow(0 0 5px var(--primary));
+        }
+
+        .mermaid .marker {
+            fill: var(--primary) !important;
+            stroke: var(--primary) !important;
+        }
+
+        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon {
+            fill: var(--surface) !important;
+            stroke: var(--primary) !important;
+            stroke-width: 2px !important;
+        }
+
+        .mermaid .node .label {
+            color: var(--text-main) !important;
+            font-family: 'JetBrains Mono', monospace !important;
+        }
+
+        .mermaid .cluster rect {
+            fill: rgba(249, 115, 22, 0.05) !important;
+            stroke: var(--border) !important;
+            stroke-dasharray: 5 5 !important;
+        }
+
+        .arch-status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
         /* Footer */
         footer {
             padding: 4rem 0;
@@ -337,6 +388,29 @@
             .section { padding: 4rem 0; }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            securityLevel: 'loose',
+            fontFamily: 'JetBrains Mono',
+            themeVariables: {
+                primaryColor: '#141414',
+                primaryTextColor: '#e5e7eb',
+                primaryBorderColor: '#f97316',
+                lineColor: '#f97316',
+                secondaryColor: '#1a1a1a',
+                tertiaryColor: '#0a0a0a',
+                mainBkg: '#141414',
+                nodeBorder: '#f97316',
+                clusterBkg: 'rgba(249, 115, 22, 0.05)',
+                clusterBorder: '#262626',
+                edgeLabelBackground: '#0a0a0a',
+                defaultLinkColor: '#f97316'
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="scanlines"></div>
@@ -430,87 +504,8 @@
                 </div>
             </div>
         </div>
-    <style>
-        /* ... existing styles ... */
+    </section>
 
-        /* Mermaid Customization */
-        .mermaid {
-            display: flex;
-            justify-content: center;
-            filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.2));
-        }
-
-        .mermaid svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* Neon Glow for Mermaid Paths */
-        .mermaid .edgePaths .edgePath path {
-            stroke: var(--primary) !important;
-            stroke-width: 2px !important;
-            filter: drop-shadow(0 0 5px var(--primary));
-        }
-
-        .mermaid .marker {
-            fill: var(--primary) !important;
-            stroke: var(--primary) !important;
-        }
-
-        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon {
-            fill: var(--surface) !important;
-            stroke: var(--primary) !important;
-            stroke-width: 2px !important;
-        }
-
-        .mermaid .node .label {
-            color: var(--text-main) !important;
-            font-family: 'JetBrains Mono', monospace !important;
-        }
-
-        .mermaid .cluster rect {
-            fill: rgba(249, 115, 22, 0.05) !important;
-            stroke: var(--border) !important;
-            stroke-dasharray: 5 5 !important;
-        }
-
-        .arch-status {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'base',
-            securityLevel: 'loose',
-            fontFamily: 'JetBrains Mono',
-            themeVariables: {
-                primaryColor: '#141414',
-                primaryTextColor: '#e5e7eb',
-                primaryBorderColor: '#f97316',
-                lineColor: '#f97316',
-                secondaryColor: '#1a1a1a',
-                tertiaryColor: '#0a0a0a',
-                mainBkg: '#141414',
-                nodeBorder: '#f97316',
-                clusterBkg: 'rgba(249, 115, 22, 0.05)',
-                clusterBorder: '#262626',
-                edgeLabelBackground: '#0a0a0a',
-                defaultLinkColor: '#f97316'
-            }
-        });
-    </script>
-    </head>
-    <body>
-    ...
     <section class="section">
         <div class="container">
             <h2 class="section-title">Architecture</h2>
@@ -556,6 +551,7 @@
             </div>
         </div>
     </section>
+
     <section class="section">
         <div class="container" style="text-align: center;">
             <h2 class="section-title">Get Started</h2>
