@@ -237,6 +237,12 @@
             text-align: center;
             border: 1px solid var(--border);
             transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            aspect-ratio: 1 / 1;
         }
 
         .eco-item:hover {
@@ -245,10 +251,10 @@
         }
 
         .eco-icon {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             fill: var(--text-dim);
-            margin-bottom: 0.5rem;
+            display: block;
         }
 
         .eco-item:hover .eco-icon {
@@ -379,11 +385,11 @@
             
             <div class="ecosystem-grid">
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 7.334v8.666h24v-8.666h-24zm22.5 7.166h-21v-5.666h21v5.666zM13.5 10.168h-3v3h3v-3z"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 0v24h24V0H0zm18 18h-3V6h-3v12H6V6H3v15h15v-3z"/></svg>
                     <span class="eco-name">NPM</span>
                 </div>
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L1 7l11 5 11-5-11-5zM1 17l11 5 11-5M1 12l11 5 11-5"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 .586L2.253 10.333l9.747 9.747 9.747-9.747L12 .586zM12 5.43l4.903 4.903L12 15.237l-4.903-4.903L12 5.43z"/></svg>
                     <span class="eco-name">NuGet</span>
                 </div>
                 <div class="eco-item">
@@ -391,24 +397,36 @@
                     <span class="eco-name">Docker</span>
                 </div>
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v14l9 4 9-4V5l-9-4zm0 18l-7-3.11V6.89L12 10l7-3.11v9L12 19z"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12.181 0l11.819 6.825v13.65l-11.819 6.825-11.819-6.825v-13.65l11.819-6.825zm0 2.822l-9.375 5.412v10.825l9.375 5.412 9.375-5.412v-10.825l-9.375-5.412z"/></svg>
                     <span class="eco-name">Helm</span>
                 </div>
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 1L2 6.5v11l10 5 10-5v-11L12 1zM4 16V8l8 4.5V20l-8-4z"/></svg>
                     <span class="eco-name">Maven</span>
                 </div>
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 1L3.25 6v12L12 23l8.75-5V6L12 1zm0 2.5l6.5 3.75v7.5L12 18.5 5.5 14.75v-7.5L12 3.5z"/></svg>
                     <span class="eco-name">PyPI</span>
                 </div>
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M2.4 7.3h19.2V22H2.4zM21.6 2H2.4v3.7h19.2z"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M1.44 0v7.575l6.561 3.79V3.787L1.44 0zm14.559 0v7.575L9.438 11.365V3.787L15.999 0zM8.72 12.63l6.56 3.791v-7.575L8.72 5.056v7.574zm-7.28 0l6.56 3.791v-7.575L1.44 5.056v7.574zm7.28 11.37l6.56-3.791v-7.574l-6.56 3.79v7.575z"/></svg>
                     <span class="eco-name">Terraform</span>
                 </div>
                 <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
                     <span class="eco-name">GitHub</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M23.533 15.717l-1.422-1.129a.44.44 0 0 0-.547-.005l-.105.076c-.958.683-1.666 1.189-2.924 1.189-1.385 0-2.338-.633-3.076-1.644l-3.34-4.57c-.1-.133-.133-.219-.133-.31 0-.171.147-.324.343-.324h2.296c.261 0 .447-.143.552-.395l1.047-2.529a.475.475 0 0 0-.024-.39c-.067-.114-.18-.18-.31-.18h-4.839a.471.471 0 0 0-.319.124L2.529 14.152a.466.466 0 0 0-.019.657l1.457 1.48c.086.086.205.133.329.133h5.176c.262 0 .448-.143.553-.395l1.048-2.529a.47.47 0 0 0-.024-.39c-.067-.114-.181-.181-.31-.181H9.866a.186.186 0 0 1-.186-.186c0-.052.023-.102.064-.136l4.639-3.877a.466.466 0 0 1 .59 0l4.31 3.593c1.076.895 2.372 1.976 4.319 1.976.129 0 .252-.007.367-.019a.445.445 0 0 0 .36-.26c.036-.086.04-.18.012-.27z"/></svg>
+                    <span class="eco-name">Composer</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 0v24h24V0H0zm21.408 17.653l-9.408-9.408-9.408 9.408v-11.306l9.408-9.408 9.408 9.408v11.306z"/></svg>
+                    <span class="eco-name">Rancher</span>
+                </div>
+                <div class="eco-item">
+                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 0v24h24V0H0zm15.11 11.83l-3.36 3.36-3.36-3.36 3.36-3.36 3.36 3.36zM12 2l10 10-10 10L2 12 12 2z"/></svg>
+                    <span class="eco-name">JetBrains</span>
                 </div>
             </div>
         </div>
