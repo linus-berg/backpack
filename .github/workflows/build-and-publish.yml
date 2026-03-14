@@ -5,6 +5,7 @@ on:
   push:
     branches: [master, development]
     paths-ignore:
+      - 'docs/**'
       - '**/README.md'
       - '**/*.drawio.svg'
       - 'example/**'
