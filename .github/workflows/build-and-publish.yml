@@ -55,6 +55,9 @@ jobs:
           - name: processor/jetbrains-ide
             directory: Processor.Jetbrains.IDE
             
+          - name: processor/huggingface
+            directory: Processor.HuggingFace
+            
           - name: processor/nuget
             directory: Processor.Nuget
             
