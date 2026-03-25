@@ -11,6 +11,7 @@ using Library.Skopeo;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Timeout;
+using Processor.HuggingFace;
 using Processor.OperatorHub;
 using Processor.Php;
 using Processor.Pypi;
@@ -54,6 +55,7 @@ services.AddSingleton<Git>();
 services.AddSingleton<IOperatorHub, OperatorHub>();
 services.AddSingleton<IPypi, Pypi>();
 services.AddSingleton<ITerraform, Terraform>();
+services.AddSingleton<IHuggingFace, HuggingFace>();
 services.AddSingleton<IGithubClient, GithubClient>();
 services.AddSingleton<SkopeoClient>();
 // Build the service provider
@@ -64,8 +66,15 @@ IServiceProvider sp = services.BuildServiceProvider();
 
 IGithubClient gh = sp.GetRequiredService<IGithubClient>();
 ITerraform tf = sp.GetRequiredService<ITerraform>();
+IHuggingFace hf = sp.GetRequiredService<IHuggingFace>();
 
 IPypi py = sp.GetRequiredService<IPypi>();
+
+Artifact? hf_res = await hf.ProcessArtifact(
+                     new Artifact {
+                       id = "zai-org/GLM-5"
+                     }
+                   );
 
 Artifact? res = await tf.ProcessArtifact(
                   new Artifact {

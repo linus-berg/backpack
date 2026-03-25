@@ -14,6 +14,7 @@
         <ProjectReference Include="..\Library.Skopeo\Library.Skopeo.csproj" />
         <ProjectReference Include="..\Processor.Github.Releases\Processor.Github.Releases.csproj" />
         <ProjectReference Include="..\Processor.Helm\Processor.Helm.csproj" />
+        <ProjectReference Include="..\Processor.HuggingFace\Processor.HuggingFace.csproj" />
         <ProjectReference Include="..\Processor.Jetbrains.IDE\Processor.Jetbrains.IDE.csproj" />
         <ProjectReference Include="..\Processor.Jetbrains.Plugins\Processor.Jetbrains.Plugins.csproj" />
         <ProjectReference Include="..\Processor.Maven\Processor.Maven.csproj" />
