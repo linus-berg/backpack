@@ -28,6 +28,7 @@ public class GatewayProcessingService : IGatewayProcessingService {
 
     bool changed = stored == null || !AreDeepEqual(stored, artifact);
 
+    /* If the artifact changed, we need to collect new data */
     if (changed) {
       await db_.UpdateArtifact(artifact);
       /* Collecting artifact files due to artifact being updated */
