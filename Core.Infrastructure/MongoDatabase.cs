@@ -232,7 +232,7 @@ public class MongoDatabase : ICoreDatabase {
 
   public async Task<bool> DeleteApiKey(string id) {
     IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
-    var res = await collection.DeleteOneAsync(a => a.id == id);
+    DeleteResult? res = await collection.DeleteOneAsync(a => a.id == id);
     return res.DeletedCount > 0;
   }
 
