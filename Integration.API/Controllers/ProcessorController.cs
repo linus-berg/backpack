@@ -26,7 +26,6 @@ public class ProcessorController : ControllerBase {
 
   [HttpGet("processors")]
   public async Task<IEnumerable<ProcessorOutput>> GetProcessors() {
-    Console.WriteLine(HttpContext.User.Identity.Name); 
     IEnumerable<Processor> processors = await database_.GetProcessors();
     List<ProcessorOutput> proc_out = new();
 
@@ -38,7 +37,8 @@ public class ProcessorController : ControllerBase {
           description = processor.description,
           direct_collect = processor.direct_collect,
           requires_approval = processor.requires_approval,
-          multi_add = processor.multi_add
+          multi_add = processor.multi_add,
+          is_external = processor.is_external
         }
       );
     }
@@ -56,6 +56,7 @@ public class ProcessorController : ControllerBase {
     processor.direct_collect = input.direct_collect;
     processor.requires_approval = input.requires_approval;
     processor.multi_add = input.multi_add;
+    processor.is_external = input.is_external;
     if (!string.IsNullOrEmpty(input.config)) {
       processor.config =
         JsonSerializer.Deserialize<
@@ -97,6 +98,7 @@ public class ProcessorController : ControllerBase {
         id = input.processor_id,
         requires_approval = input.requires_approval,
         multi_add = input.multi_add,
+        is_external = input.is_external,
         description = "",
         config = new Dictionary<string, ProcessorAuxiliaryField>()
       }

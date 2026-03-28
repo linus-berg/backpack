@@ -1,6 +1,7 @@
 using Core.Kernel;
 using Core.Kernel.Models;
 using Core.Services;
+using Integration.API.Output;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,16 +20,24 @@ public class ApiKeyController : ControllerBase {
   }
 
   [HttpGet]
-  public async Task<IEnumerable<ApiKey>> Get() {
-    return await database_.GetApiKeys();
+  public async Task<IEnumerable<ApiKeyOutput>> Get() {
+    IEnumerable<ApiKey> keys = await database_.GetApiKeys();
+    return keys.Select(k => new ApiKeyOutput {
+      id = k.id,
+      name = k.name,
+      key_preview = $"{k.key.Substring(0, 4)}...{k.key.Substring(k.key.Length - 4)}",
+      created_at = k.created_at,
+      created_by = k.created_by
+    });
   }
-  
+
   [HttpPost]
-  public async Task<ActionResult<ApiKey>> Post([FromBody] ApiKey input) {
+  public async Task<ActionResult<object>> Post([FromBody] ApiKey input) {
     // We only take the name from input, generate everything else for security
+    string fullKey = Guid.NewGuid().ToString().Replace("-", "");
     ApiKey key = new() {
       name = input.name,
-      key = Guid.NewGuid().ToString().Replace("-", ""),
+      key = fullKey,
       created_by = HttpContext.User.Identity?.Name ?? "Unknown"
     };
 
@@ -39,7 +48,16 @@ public class ApiKeyController : ControllerBase {
       EventSeverity.SUCCESS,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
-    return Ok(key);
+    
+    // Return BOTH the full key (for initial display) and the output metadata
+    return Ok(new {
+      id = key.id,
+      name = key.name,
+      key = fullKey, // Only time the full key is returned
+      key_preview = $"{fullKey.Substring(0, 4)}...{fullKey.Substring(fullKey.Length - 4)}",
+      created_at = key.created_at,
+      created_by = key.created_by
+    });
   }
 
   [HttpDelete("{id}")]

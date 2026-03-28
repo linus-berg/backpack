@@ -68,11 +68,11 @@ public class ArtifactController : ControllerBase {
     
     Artifact? artifact = await database_.GetArtifact(input.id, input.processor);
     Processor proc = await database_.GetProcessor(input.processor);
-    bool is_admin = u.IsInRole("Administrator");
-    bool needs_approval = proc.requires_approval;// && !isAdmin;
+    bool isAdmin = u.IsInRole("Administrator");
+    bool needsApproval = proc.requires_approval && !isAdmin;
 
     if (artifact == null) {
-      if (needs_approval) {
+      if (needsApproval) {
         await database_.AddPendingArtifact(new PendingArtifact {
           id = input.id,
           processor = input.processor,
@@ -109,6 +109,16 @@ public class ArtifactController : ControllerBase {
       );
     }
 
+    if (proc.is_external) {
+      await event_service_.LogEvent(
+        "API",
+        $"Artifact {input.processor}/{input.id} was added (EXTERNAL - skipped sync)",
+        EventSeverity.INFO,
+        u.Identity.Name
+      );
+      return Ok(input);
+    }
+
     if (proc.direct_collect) {
       await aps_.Collect(input.id, input.processor);
     } else {
@@ -119,7 +129,7 @@ public class ArtifactController : ControllerBase {
       "API",
       $"Artifact {input.processor}/{input.id} was added",
       EventSeverity.SUCCESS,
-      HttpContext.User.Identity?.Name ?? "Unknown"
+      u.Identity.Name
     );
 
     return Ok(input);
@@ -150,6 +160,17 @@ public class ArtifactController : ControllerBase {
     await database_.DeletePendingArtifact(input.processor, input.id);
 
     Processor proc = await database_.GetProcessor(input.processor);
+    
+    if (proc.is_external) {
+      await event_service_.LogEvent(
+        "API",
+        $"Artifact {input.processor}/{input.id} was APPROVED (EXTERNAL - skipped sync)",
+        EventSeverity.INFO,
+        HttpContext.User.Identity?.Name ?? "Unknown"
+      );
+      return Ok(new { Message = "Artifact approved (External)" });
+    }
+
     if (proc.direct_collect) {
       await aps_.Collect(input.id, input.processor);
     } else {

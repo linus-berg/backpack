@@ -8,4 +8,5 @@ public class ProcessorOutput {
   public bool direct_collect { get; set; }
   public bool requires_approval { get; set; }
   public bool multi_add { get; set; }
+  public bool is_external { get; set; }
 }
