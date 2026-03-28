@@ -5,4 +5,5 @@ public class UpdateProcessorInput {
   public string description { get; set; }
   public string config { get; set; }
   public bool direct_collect { get; set; }
+  public bool requires_approval { get; set; }
 }

@@ -65,9 +65,31 @@ public class ArtifactController : ControllerBase {
       u.Identity.Name,
       input.id
     );
-    Artifact artifact =
-      await database_.GetArtifact(input.id, input.processor);
+    
+    Artifact? artifact = await database_.GetArtifact(input.id, input.processor);
+    Processor proc = await database_.GetProcessor(input.processor);
+    bool is_admin = u.IsInRole("Administrator");
+    bool needs_approval = proc.requires_approval;// && !isAdmin;
+
     if (artifact == null) {
+      if (needs_approval) {
+        await database_.AddPendingArtifact(new PendingArtifact {
+          id = input.id,
+          processor = input.processor,
+          filter = input.filter,
+          config = input.config,
+          requested_by = u.Identity.Name
+        });
+        
+        await event_service_.LogEvent(
+          "API",
+          $"Artifact {input.processor}/{input.id} requested and pending approval",
+          EventSeverity.WARNING,
+          u.Identity.Name
+        );
+        return Ok(new { Message = "Artifact requested and pending administrator approval." });
+      }
+
       artifact =
         await aps_.AddArtifact(
           input.id,
@@ -87,7 +109,6 @@ public class ArtifactController : ControllerBase {
       );
     }
 
-    Processor proc = await database_.GetProcessor(input.processor);
     if (proc.direct_collect) {
       await aps_.Collect(input.id, input.processor);
     } else {
@@ -102,6 +123,63 @@ public class ArtifactController : ControllerBase {
     );
 
     return Ok(input);
+  }
+
+  [HttpGet("pending")]
+  [Authorize(Roles = "Administrator")]
+  public async Task<IEnumerable<PendingArtifact>> GetPending() {
+    return await database_.GetPendingArtifacts();
+  }
+
+  [HttpPost("approve")]
+  [Authorize(Roles = "Administrator")]
+  public async Task<ActionResult> Approve([FromBody] ArtifactValidationInput input) {
+    PendingArtifact pending = await database_.GetPendingArtifact(input.processor, input.id);
+    if (pending == null) return NotFound("Pending artifact not found");
+    
+    // Create actual artifact
+    Artifact artifact = await aps_.AddArtifact(
+      pending.id,
+      pending.processor,
+      pending.filter,
+      pending.config,
+      true
+    );
+
+    // Delete pending
+    await database_.DeletePendingArtifact(input.processor, input.id);
+
+    Processor proc = await database_.GetProcessor(input.processor);
+    if (proc.direct_collect) {
+      await aps_.Collect(input.id, input.processor);
+    } else {
+      await aps_.Ingest(artifact);
+    }
+
+    await event_service_.LogEvent(
+      "API",
+      $"Artifact {input.processor}/{input.id} was APPROVED",
+      EventSeverity.SUCCESS,
+      HttpContext.User.Identity?.Name ?? "Unknown"
+    );
+
+    return Ok(new { Message = "Artifact approved and sync started" });
+  }
+
+  [HttpPost("reject")]
+  [Authorize(Roles = "Administrator")]
+  public async Task<ActionResult> Reject([FromBody] ArtifactValidationInput input) {
+    bool result = await database_.DeletePendingArtifact(input.processor, input.id);
+    if (!result) return NotFound();
+
+    await event_service_.LogEvent(
+      "API",
+      $"Artifact {input.processor}/{input.id} was REJECTED",
+      EventSeverity.WARNING,
+      HttpContext.User.Identity?.Name ?? "Unknown"
+    );
+
+    return Ok(new { Message = "Artifact request rejected" });
   }
 
   // POST: api/Artifact/track

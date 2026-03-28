@@ -193,4 +193,25 @@ public class MongoDatabase : ICoreDatabase {
     IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
     await collection.InsertOneAsync(schedule);
   }
+
+  public async Task AddPendingArtifact(PendingArtifact artifact) {
+    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
+    await collection.InsertOneAsync(artifact);
+  }
+
+  public async Task<IEnumerable<PendingArtifact>> GetPendingArtifacts() {
+    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
+    return await (await collection.FindAsync(a => true)).ToListAsync();
+  }
+
+  public async Task<PendingArtifact> GetPendingArtifact(string processor, string id) {
+    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
+    return await (await collection.FindAsync(a => a.processor == processor && a.id == id)).FirstOrDefaultAsync();
+  }
+
+  public async Task<bool> DeletePendingArtifact(string processor, string id) {
+    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
+    DeleteResult? res = await collection.DeleteOneAsync(a => a.processor == processor && a.id == id);
+    return res.DeletedCount > 0;
+  }
 }

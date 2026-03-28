@@ -22,6 +22,11 @@ public class Processor {
   public string description { get; set; }
 
   /// <summary>
+  /// Gets or sets a value indicating whether this processor requires approval for new artifacts.
+  /// </summary>
+  public bool requires_approval { get; set; } = false;
+
+  /// <summary>
   /// Gets or sets a dictionary of auxiliary configuration fields for the processor.
   /// </summary>
   public Dictionary<string, ProcessorAuxiliaryField> config { get; set; }
