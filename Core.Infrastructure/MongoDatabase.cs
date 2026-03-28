@@ -143,6 +143,14 @@ public class MongoDatabase : ICoreDatabase {
     return a != null;
   }
 
+  public async Task<bool> DeleteProcessor(string processor_id) {
+    IMongoCollection<Processor> collection =
+      GetCollection<Processor>(C_PROCESSOR_COLLECTION_);
+    Processor p =
+      await collection.FindOneAndDeleteAsync(p => p.id == processor_id);
+    return p != null;
+  }
+
   private IMongoCollection<T> GetCollection<T>(string collection) {
     return database_.GetCollection<T>(collection);
   }

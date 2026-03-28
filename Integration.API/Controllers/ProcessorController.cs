@@ -59,6 +59,13 @@ public class ProcessorController : ControllerBase {
     return processor;
   }
 
+  [HttpDelete("{id}")]
+  [Authorize(Roles = "Administrator")]
+  public async Task<ActionResult> DeleteProcessor(string id) {
+    bool result = await database_.DeleteProcessor(id);
+    return result ? Ok() : BadRequest();
+  }
+
   [HttpPost]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Post([FromBody] AddProcessorInput input) {

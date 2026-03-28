@@ -18,4 +18,5 @@ public interface ICoreDatabase {
     string processor, bool only_roots = true);
 
   public Task<bool> DeleteArtifact(Artifact artifact);
+  public Task<bool> DeleteProcessor(string processor_id);
 }
