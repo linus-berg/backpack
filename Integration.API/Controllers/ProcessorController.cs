@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Input;
@@ -46,6 +47,14 @@ public class ProcessorController : ControllerBase {
     Processor processor = await database_.GetProcessor(input.processor_id);
 
     processor.description = input.description;
+    processor.direct_collect = input.direct_collect;
+    if (!string.IsNullOrEmpty(input.config)) {
+      processor.config =
+        JsonSerializer.Deserialize<
+          Dictionary<string, ProcessorAuxiliaryField>>(input.config) ??
+        new Dictionary<string, ProcessorAuxiliaryField>();
+    }
+
     await database_.UpdateProcessor(processor);
     return processor;
   }
