@@ -165,4 +165,17 @@ public class MongoDatabase : ICoreDatabase {
   public async Task<bool> ArtifactExists(string id, string processor) {
     return await GetArtifact(id, processor) != null;
   }
+
+  public async Task AddEvent(Event @event) {
+    IMongoCollection<Event> collection = GetCollection<Event>("backpack-events");
+    await collection.InsertOneAsync(@event);
+  }
+
+  public async Task<IEnumerable<Event>> GetEvents(int limit = 100) {
+    IMongoCollection<Event> collection = GetCollection<Event>("backpack-events");
+    return await collection.Find(a => true)
+                           .SortByDescending(a => a.timestamp)
+                           .Limit(limit)
+                           .ToListAsync();
+  }
 }

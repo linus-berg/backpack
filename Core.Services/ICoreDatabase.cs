@@ -19,4 +19,7 @@ public interface ICoreDatabase {
 
   public Task<bool> DeleteArtifact(Artifact artifact);
   public Task<bool> DeleteProcessor(string processor_id);
+
+  public Task AddEvent(Event @event);
+  public Task<IEnumerable<Event>> GetEvents(int limit = 100);
 }

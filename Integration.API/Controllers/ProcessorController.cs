@@ -56,6 +56,14 @@ public class ProcessorController : ControllerBase {
     }
 
     await database_.UpdateProcessor(processor);
+    await database_.AddEvent(
+      new Event {
+        source = "API",
+        message = $"Processor {processor.id} was updated",
+        severity = EventSeverity.INFO,
+        user = HttpContext.User.Identity?.Name ?? "Unknown"
+      }
+    );
     return processor;
   }
 
@@ -63,6 +71,17 @@ public class ProcessorController : ControllerBase {
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> DeleteProcessor(string id) {
     bool result = await database_.DeleteProcessor(id);
+    if (result) {
+      await database_.AddEvent(
+        new Event {
+          source = "API",
+          message = $"Processor {id} was deleted",
+          severity = EventSeverity.WARNING,
+          user = HttpContext.User.Identity?.Name ?? "Unknown"
+        }
+      );
+    }
+
     return result ? Ok() : BadRequest();
   }
 
@@ -74,6 +93,14 @@ public class ProcessorController : ControllerBase {
         id = input.processor_id,
         description = "",
         config = new Dictionary<string, ProcessorAuxiliaryField>()
+      }
+    );
+    await database_.AddEvent(
+      new Event {
+        source = "API",
+        message = $"Processor {input.processor_id} was created",
+        severity = EventSeverity.SUCCESS,
+        user = HttpContext.User.Identity?.Name ?? "Unknown"
       }
     );
     return Ok(

@@ -12,10 +12,12 @@ namespace Integration.API.Controllers;
 public class StatusController : ControllerBase {
   private readonly KeycloakAuthenticationOptions kc_opt_ = new();
   private readonly IStatusService status_service_;
+  private readonly ICoreDatabase database_;
 
-  public StatusController(IConfiguration configuration, IStatusService status_service) {
+  public StatusController(IConfiguration configuration, IStatusService status_service, ICoreDatabase database) {
     KeycloakAuthenticationOptions opts = new();
     status_service_ = status_service;
+    database_ = database;
     configuration
       .GetSection(KeycloakAuthenticationOptions.Section)
       .Bind(kc_opt_, opt => opt.BindNonPublicProperties = true);
@@ -35,6 +37,17 @@ public class StatusController : ControllerBase {
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> PurgeQueue(string queue_name) {
     bool result = await status_service_.PurgeQueue(queue_name);
+    if (result) {
+      await database_.AddEvent(
+        new Event {
+          source = "API",
+          message = $"Queue {queue_name} was purged",
+          severity = EventSeverity.WARNING,
+          user = HttpContext.User.Identity?.Name ?? "Unknown"
+        }
+      );
+    }
+
     return result ? Ok() : BadRequest();
   }
   
