@@ -29,4 +29,9 @@ public static class Endpoints {
   /// </summary>
   public static readonly Uri S_GATEWAY_INGEST_UNPROCESSED =
     new("queue:gateway-ingest-unprocessed");
+
+  /// <summary>
+  /// Endpoint for system events.
+  /// </summary>
+  public static readonly Uri S_SYSTEM_EVENT = new("queue:system-event");
 }

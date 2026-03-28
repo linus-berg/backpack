@@ -26,6 +26,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                          b.AddConsumer<IngestConsumer>(
                            typeof(IngestDefinition)
                          );
+                         b.AddConsumer<SystemEventConsumer>(
+                           typeof(SystemEventDefinition)
+                         );
 
                          b.UsingRabbitMq(
                            (ctx, cfg) => {
@@ -57,6 +60,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                      services.AddScoped<ICoreDatabase, MongoDatabase>();
                      services.AddSingleton<ICoreCache, CoreCache>();
                      services.AddScoped<IArtifactService, ArtifactService>();
+                     services.AddScoped<IEventService, EventService>();
                      services.AddHostedService<Worker>();
                    }
                  )

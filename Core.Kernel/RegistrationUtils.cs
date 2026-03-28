@@ -20,6 +20,7 @@ public static class RegistrationUtils {
   /// <returns>The updated service collection.</returns>
   public static IServiceCollection Register(this IServiceCollection sc,
                                             ModuleRegistration registration) {
+    sc.AddScoped<IEventService, EventService>();
     sc.AddMassTransit(
       mt => {
         mt.AddConsumer(registration.consumer);

@@ -1,3 +1,4 @@
+using Core.Kernel;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Output;
@@ -13,11 +14,13 @@ public class StatusController : ControllerBase {
   private readonly KeycloakAuthenticationOptions kc_opt_ = new();
   private readonly IStatusService status_service_;
   private readonly ICoreDatabase database_;
+  private readonly IEventService event_service_;
 
-  public StatusController(IConfiguration configuration, IStatusService status_service, ICoreDatabase database) {
+  public StatusController(IConfiguration configuration, IStatusService status_service, ICoreDatabase database, IEventService event_service) {
     KeycloakAuthenticationOptions opts = new();
     status_service_ = status_service;
     database_ = database;
+    event_service_ = event_service;
     configuration
       .GetSection(KeycloakAuthenticationOptions.Section)
       .Bind(kc_opt_, opt => opt.BindNonPublicProperties = true);
@@ -38,13 +41,11 @@ public class StatusController : ControllerBase {
   public async Task<ActionResult> PurgeQueue(string queue_name) {
     bool result = await status_service_.PurgeQueue(queue_name);
     if (result) {
-      await database_.AddEvent(
-        new Event {
-          source = "API",
-          message = $"Queue {queue_name} was purged",
-          severity = EventSeverity.WARNING,
-          user = HttpContext.User.Identity?.Name ?? "Unknown"
-        }
+      await event_service_.LogEvent(
+        "API",
+        $"Queue {queue_name} was purged",
+        EventSeverity.WARNING,
+        HttpContext.User.Identity?.Name ?? "Unknown"
       );
     }
 

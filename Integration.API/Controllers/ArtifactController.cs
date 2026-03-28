@@ -1,11 +1,11 @@
 using System.Security.Authentication;
 using System.Security.Claims;
 using Core.Infrastructure.Models;
+using Core.Kernel;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Input;
-using Integration.API.Output;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
@@ -18,12 +18,14 @@ namespace Integration.API.Controllers;
 public class ArtifactController : ControllerBase {
   private readonly IArtifactService aps_;
   private readonly ICoreDatabase database_;
+  private readonly IEventService event_service_;
   private readonly ILogger log_;
 
-  public ArtifactController(IArtifactService aps, ICoreDatabase database,
+  public ArtifactController(IArtifactService aps, ICoreDatabase database, IEventService event_service,
                             ILogger log) {
     database_ = database;
     aps_ = aps;
+    event_service_ = event_service;
     log_ = log.ForContext<ArtifactController>();
   }
 
@@ -92,13 +94,11 @@ public class ArtifactController : ControllerBase {
       await aps_.Ingest(artifact);
     }
 
-    await database_.AddEvent(
-      new Event {
-        source = "API",
-        message = $"Artifact {input.processor}/{input.id} was added",
-        severity = EventSeverity.SUCCESS,
-        user = HttpContext.User.Identity?.Name ?? "Unknown"
-      }
+    await event_service_.LogEvent(
+      "API",
+      $"Artifact {input.processor}/{input.id} was added",
+      EventSeverity.SUCCESS,
+      HttpContext.User.Identity?.Name ?? "Unknown"
     );
 
     return Ok(input);
@@ -109,13 +109,11 @@ public class ArtifactController : ControllerBase {
   public async Task<ActionResult>
     Track([FromBody] ArtifactTrackInput request) {
     if (await aps_.Track(request.id, request.processor)) {
-      await database_.AddEvent(
-        new Event {
-          source = "API",
-          message = $"Re-track triggered for {request.processor}/{request.id}",
-          severity = EventSeverity.INFO,
-          user = HttpContext.User.Identity?.Name ?? "Unknown"
-        }
+      await event_service_.LogEvent(
+        "API",
+        $"Re-track triggered for {request.processor}/{request.id}",
+        EventSeverity.INFO,
+        HttpContext.User.Identity?.Name ?? "Unknown"
       );
       return Ok($"{request.processor}->{request.id} being reprocessed");
     }
@@ -127,13 +125,11 @@ public class ArtifactController : ControllerBase {
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> TrackAll() {
     await aps_.Track();
-    await database_.AddEvent(
-      new Event {
-        source = "API",
-        message = "Global re-track triggered",
-        severity = EventSeverity.WARNING,
-        user = HttpContext.User.Identity?.Name ?? "Unknown"
-      }
+    await event_service_.LogEvent(
+      "API",
+      "Global re-track triggered",
+      EventSeverity.WARNING,
+      HttpContext.User.Identity?.Name ?? "Unknown"
     );
     return Ok("Triggered re-tracking");
   }
@@ -142,13 +138,11 @@ public class ArtifactController : ControllerBase {
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> ValidateAllArtifacts() {
     await aps_.Validate();
-    await database_.AddEvent(
-      new Event {
-        source = "API",
-        message = "Global validation triggered",
-        severity = EventSeverity.WARNING,
-        user = HttpContext.User.Identity?.Name ?? "Unknown"
-      }
+    await event_service_.LogEvent(
+      "API",
+      "Global validation triggered",
+      EventSeverity.WARNING,
+      HttpContext.User.Identity?.Name ?? "Unknown"
     );
     return Ok("Validating all artifacts!");
   }
@@ -157,13 +151,11 @@ public class ArtifactController : ControllerBase {
   public async Task<ActionResult> ValidateArtifact(
     [FromBody] ArtifactValidationInput input) {
     await aps_.Validate(input.id, input.processor, input.force);
-    await database_.AddEvent(
-      new Event {
-        source = "API",
-        message = $"Validation triggered for {input.processor}/{input.id}",
-        severity = EventSeverity.INFO,
-        user = HttpContext.User.Identity?.Name ?? "Unknown"
-      }
+    await event_service_.LogEvent(
+      "API",
+      $"Validation triggered for {input.processor}/{input.id}",
+      EventSeverity.INFO,
+      HttpContext.User.Identity?.Name ?? "Unknown"
     );
     return Ok($"Validating {input.id} artifacts!");
   }
@@ -181,13 +173,11 @@ public class ArtifactController : ControllerBase {
       return Problem();
     }
 
-    await database_.AddEvent(
-      new Event {
-        source = "API",
-        message = $"Artifact {input.processor}/{input.id} was deleted",
-        severity = EventSeverity.WARNING,
-        user = HttpContext.User.Identity?.Name ?? "Unknown"
-      }
+    await event_service_.LogEvent(
+      "API",
+      $"Artifact {input.processor}/{input.id} was deleted",
+      EventSeverity.WARNING,
+      HttpContext.User.Identity?.Name ?? "Unknown"
     );
 
     return Ok(artifact);
@@ -197,13 +187,11 @@ public class ArtifactController : ControllerBase {
   public async Task<ActionResult> Collect(ArtifactCollectRequest request) {
     log_.Information("Collecting {RequestLocation}", request.location);
     await aps_.Collect(request.location, request.module);
-    await database_.AddEvent(
-      new Event {
-        source = "API",
-        message = $"Manual collection triggered for {request.module}/{request.location}",
-        severity = EventSeverity.INFO,
-        user = HttpContext.User.Identity?.Name ?? "Unknown"
-      }
+    await event_service_.LogEvent(
+      "API",
+      $"Manual collection triggered for {request.module}/{request.location}",
+      EventSeverity.INFO,
+      HttpContext.User.Identity?.Name ?? "Unknown"
     );
     return Ok("OK");
   }
