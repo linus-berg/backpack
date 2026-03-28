@@ -26,6 +26,7 @@ public class ApiKeyController : ControllerBase {
       id = k.id,
       name = k.name,
       key_preview = $"{k.key.Substring(0, 4)}...{k.key.Substring(k.key.Length - 4)}",
+      is_admin = k.is_admin,
       created_at = k.created_at,
       created_by = k.created_by
     });
@@ -33,18 +34,19 @@ public class ApiKeyController : ControllerBase {
 
   [HttpPost]
   public async Task<ActionResult<object>> Post([FromBody] ApiKey input) {
-    // We only take the name from input, generate everything else for security
+    // We only take the name and is_admin from input, generate everything else for security
     string fullKey = Guid.NewGuid().ToString().Replace("-", "");
     ApiKey key = new() {
       name = input.name,
       key = fullKey,
+      is_admin = input.is_admin,
       created_by = HttpContext.User.Identity?.Name ?? "Unknown"
     };
 
     await database_.AddApiKey(key);
     await event_service_.LogEvent(
       "API",
-      $"API Key created: {key.name}",
+      $"API Key created: {key.name} (Admin: {key.is_admin})",
       EventSeverity.SUCCESS,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
@@ -55,6 +57,7 @@ public class ApiKeyController : ControllerBase {
       name = key.name,
       key = fullKey, // Only time the full key is returned
       key_preview = $"{fullKey.Substring(0, 4)}...{fullKey.Substring(fullKey.Length - 4)}",
+      is_admin = key.is_admin,
       created_at = key.created_at,
       created_by = key.created_by
     });

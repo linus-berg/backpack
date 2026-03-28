@@ -39,6 +39,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
     List<Claim> claims = new() {
       new Claim(ClaimTypes.Name, api_key.name),
+      new Claim(ClaimTypes.Role, api_key.is_admin ? "Administrator" : "User")
     };
 
     ClaimsIdentity identity = new(claims, Scheme.Name);
