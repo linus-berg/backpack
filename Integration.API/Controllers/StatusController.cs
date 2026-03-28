@@ -2,6 +2,7 @@ using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Output;
 using Keycloak.AuthServices.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integration.API.Controllers;
@@ -28,6 +29,13 @@ public class StatusController : ControllerBase {
   [HttpGet("queue")]
   public async Task<List<QueueStatus>> GetQueueStatus() {
     return await status_service_.QueueStatus();
+  }
+
+  [HttpDelete("queue/{queue_name}")]
+  [Authorize(Roles = "Administrator")]
+  public async Task<ActionResult> PurgeQueue(string queue_name) {
+    bool result = await status_service_.PurgeQueue(queue_name);
+    return result ? Ok() : BadRequest();
   }
   
   [HttpGet("keycloak")]
