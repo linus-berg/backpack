@@ -23,14 +23,14 @@ public class SchedulerController : ControllerBase {
 
   [HttpGet]
   public async Task<IEnumerable<Schedule>> Get() {
-    var schedules = (await database_.GetSchedules()).ToList();
-    foreach (var schedule in schedules) {
+    List<Schedule> schedules = (await database_.GetSchedules()).ToList();
+    foreach (Schedule schedule in schedules) {
       try {
-        var expression = CronExpression.Parse(
+        CronExpression expression = CronExpression.Parse(
           schedule.cron,
           CronFormat.IncludeSeconds
         );
-        var next = expression.GetNextOccurrence(DateTime.UtcNow);
+        DateTime? next = expression.GetNextOccurrence(DateTime.UtcNow);
         if (next.HasValue) {
           schedule.next_run = next.Value;
         }
