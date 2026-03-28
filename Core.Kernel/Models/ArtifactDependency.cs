@@ -10,11 +10,11 @@ public class ArtifactDependency {
   /// <summary>
   /// Gets the unique identifier of the dependency.
   /// </summary>
-  public string id { get; init; }
+  public required string id { get; init; }
   /// <summary>
   /// Gets the name of the processor for the dependency.
   /// </summary>
-  public string processor { get; init; }
+  public required string processor { get; init; }
 
   /// <summary>
   /// Gets or sets a dictionary of configuration settings for the dependency.
@@ -27,7 +27,7 @@ public class ArtifactDependency {
   /// <param name="obj">The object to compare with the current dependency.</param>
   /// <returns>True if the objects are equal; otherwise, false.</returns>
   public override bool Equals(object? obj) {
-    ArtifactDependency dep = obj as ArtifactDependency;
+    ArtifactDependency? dep = obj as ArtifactDependency;
     return dep != null && id.Equals(dep.id);
   }
 

@@ -10,7 +10,7 @@ public record ArtifactFile {
   /// <summary>
   /// Gets or sets the URI of the file.
   /// </summary>
-  public string uri { get; set; }
+  public required string uri { get; set; }
   /// <summary>
   /// Gets or sets the folder where the file is located.
   /// </summary>
