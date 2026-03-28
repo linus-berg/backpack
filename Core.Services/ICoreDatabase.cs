@@ -22,4 +22,8 @@ public interface ICoreDatabase {
 
   public Task AddEvent(Event @event);
   public Task<IEnumerable<Event>> GetEvents(int limit = 100);
+
+  public Task<IEnumerable<Schedule>> GetSchedules();
+  public Task UpdateSchedule(Schedule schedule);
+  public Task AddSchedule(Schedule schedule);
 }

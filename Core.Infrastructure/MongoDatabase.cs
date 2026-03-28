@@ -178,4 +178,19 @@ public class MongoDatabase : ICoreDatabase {
                            .Limit(limit)
                            .ToListAsync();
   }
+
+  public async Task<IEnumerable<Schedule>> GetSchedules() {
+    IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
+    return await (await collection.FindAsync(a => true)).ToListAsync();
+  }
+
+  public async Task UpdateSchedule(Schedule schedule) {
+    IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
+    await collection.ReplaceOneAsync(a => a.id == schedule.id, schedule);
+  }
+
+  public async Task AddSchedule(Schedule schedule) {
+    IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
+    await collection.InsertOneAsync(schedule);
+  }
 }
