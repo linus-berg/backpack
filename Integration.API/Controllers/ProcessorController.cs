@@ -26,6 +26,7 @@ public class ProcessorController : ControllerBase {
 
   [HttpGet("processors")]
   public async Task<IEnumerable<ProcessorOutput>> GetProcessors() {
+    Console.WriteLine(HttpContext.User.Identity.Name); 
     IEnumerable<Processor> processors = await database_.GetProcessors();
     List<ProcessorOutput> proc_out = new();
 

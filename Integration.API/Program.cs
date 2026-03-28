@@ -5,9 +5,13 @@ using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using Core.Services;
+using Integration.API;
 using Keycloak.AuthServices.Authentication;
 using Keycloak.AuthServices.Authorization;
+using Keycloak.AuthServices.Common;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Serilog;
 using Serilog.Events;
 using StackExchange.Redis;
@@ -74,7 +78,18 @@ builder.Services.AddKeycloakAuthentication(
   builder.Configuration,
   o => { o.RequireHttpsMetadata = false; }
 );
-builder.Services.AddKeycloakAuthorization(builder.Configuration);
+
+builder.Services.AddAuthentication()
+  .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+    ApiKeyAuthenticationOptions.C_SCHEME, null);
+builder.Services.AddAuthorization(options => {
+  var defaultPolicy = new AuthorizationPolicyBuilder(
+      JwtBearerDefaults.AuthenticationScheme,
+      ApiKeyAuthenticationOptions.C_SCHEME)
+    .RequireAuthenticatedUser()
+    .Build();
+  options.DefaultPolicy = defaultPolicy;
+});
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();

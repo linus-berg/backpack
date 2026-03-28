@@ -214,4 +214,26 @@ public class MongoDatabase : ICoreDatabase {
     DeleteResult? res = await collection.DeleteOneAsync(a => a.processor == processor && a.id == id);
     return res.DeletedCount > 0;
   }
+  
+  public async Task AddApiKey(ApiKey key) {
+    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
+    await collection.InsertOneAsync(key);
+  }
+
+  public async Task<IEnumerable<ApiKey>> GetApiKeys() {
+    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
+    return await (await collection.FindAsync(a => true)).ToListAsync();
+  }
+
+  public async Task<ApiKey> GetApiKey(string key) {
+    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
+    return await (await collection.FindAsync(a => a.key == key)).FirstOrDefaultAsync();
+  }
+
+  public async Task<bool> DeleteApiKey(string id) {
+    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
+    var res = await collection.DeleteOneAsync(a => a.id == id);
+    return res.DeletedCount > 0;
+  }
+
 }
