@@ -2,7 +2,7 @@ using Core.Kernel.Messages;
 using Core.Services;
 using MassTransit;
 
-namespace Core.Gateway;
+namespace Core.Gateway.Consumers;
 
 public class IngestConsumer : IConsumer<ArtifactIngestRequest> {
   private readonly IArtifactService aps_;

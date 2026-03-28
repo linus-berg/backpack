@@ -1,4 +1,6 @@
 using Core.Gateway;
+using Core.Gateway.Consumers;
+using Core.Gateway.Definitions;
 using Core.Infrastructure;
 using Core.Infrastructure.Services;
 using Core.Kernel;
@@ -20,7 +22,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                          b.AddConsumer<ProcessedConsumer>(
                            typeof(ProcessedDefinition)
                          );
-                         b.AddConsumer<ProcessedRawConsumer>(
+                         b.AddConsumer<ProcessedConsumer>(
                            typeof(ProcessedRawDefinition)
                          );
                          b.AddConsumer<IngestConsumer>(

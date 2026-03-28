@@ -4,7 +4,7 @@ using Core.Services;
 using MassTransit;
 using Event = Core.Kernel.Models.Event;
 
-namespace Core.Gateway;
+namespace Core.Gateway.Consumers;
 
 public class SystemEventConsumer : IConsumer<SystemEventMessage> {
   private readonly ICoreDatabase database_;

@@ -3,7 +3,7 @@ using Core.Kernel.Models;
 using Core.Services;
 using MassTransit;
 
-namespace Core.Gateway;
+namespace Core.Gateway.Consumers;
 
 public class ProcessedConsumer : IConsumer<ArtifactProcessedRequest> {
   private readonly IArtifactService aps_;
