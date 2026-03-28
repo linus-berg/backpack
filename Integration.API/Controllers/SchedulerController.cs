@@ -1,6 +1,7 @@
 using Core.Kernel;
 using Core.Kernel.Models;
 using Core.Services;
+using Cronos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,22 @@ public class SchedulerController : ControllerBase {
 
   [HttpGet]
   public async Task<IEnumerable<Schedule>> Get() {
-    return await database_.GetSchedules();
+    var schedules = (await database_.GetSchedules()).ToList();
+    foreach (var schedule in schedules) {
+      try {
+        var expression = CronExpression.Parse(
+          schedule.cron,
+          CronFormat.IncludeSeconds
+        );
+        var next = expression.GetNextOccurrence(DateTime.UtcNow);
+        if (next.HasValue) {
+          schedule.next_run = next.Value;
+        }
+      } catch (Exception) {
+        // Log or handle invalid cron
+      }
+    }
+    return schedules;
   }
 
   [HttpPost("trigger/{processor}")]
