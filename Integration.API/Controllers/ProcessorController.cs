@@ -36,7 +36,8 @@ public class ProcessorController : ControllerBase {
           config = processor.config.ToJson(),
           description = processor.description,
           direct_collect = processor.direct_collect,
-          requires_approval = processor.requires_approval
+          requires_approval = processor.requires_approval,
+          multi_add = processor.multi_add
         }
       );
     }
@@ -53,6 +54,7 @@ public class ProcessorController : ControllerBase {
     processor.description = input.description;
     processor.direct_collect = input.direct_collect;
     processor.requires_approval = input.requires_approval;
+    processor.multi_add = input.multi_add;
     if (!string.IsNullOrEmpty(input.config)) {
       processor.config =
         JsonSerializer.Deserialize<
@@ -93,6 +95,7 @@ public class ProcessorController : ControllerBase {
       new Processor {
         id = input.processor_id,
         requires_approval = input.requires_approval,
+        multi_add = input.multi_add,
         description = "",
         config = new Dictionary<string, ProcessorAuxiliaryField>()
       }

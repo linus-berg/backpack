@@ -27,6 +27,11 @@ public class Processor {
   public bool requires_approval { get; set; } = false;
 
   /// <summary>
+  /// Gets or sets a value indicating whether this processor supports multi-add.
+  /// </summary>
+  public bool multi_add { get; set; } = false;
+
+  /// <summary>
   /// Gets or sets a dictionary of auxiliary configuration fields for the processor.
   /// </summary>
   public Dictionary<string, ProcessorAuxiliaryField> config { get; set; }
