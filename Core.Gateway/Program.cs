@@ -22,7 +22,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                          b.AddConsumer<ProcessedConsumer>(
                            typeof(ProcessedDefinition)
                          );
-                         b.AddConsumer<ProcessedConsumer>(
+                         b.AddConsumer<ProcessedRawConsumer>(
                            typeof(ProcessedRawDefinition)
                          );
                          b.AddConsumer<IngestConsumer>(
@@ -62,6 +62,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                      services.AddScoped<ICoreDatabase, MongoDatabase>();
                      services.AddSingleton<ICoreCache, CoreCache>();
                      services.AddScoped<IArtifactService, ArtifactService>();
+                     services.AddScoped<IGatewayProcessingService, GatewayProcessingService>();
                      services.AddScoped<IEventService, EventService>();
                      services.AddHostedService<Worker>();
                    }

@@ -3,10 +3,10 @@ using MassTransit;
 
 namespace Core.Gateway.Consumers;
 
-public class ProcessedConsumer : IConsumer<ArtifactProcessedRequest> {
+public class ProcessedRawConsumer : IConsumer<ArtifactProcessedRequest> {
   private readonly IGatewayProcessingService processing_service_;
 
-  public ProcessedConsumer(IGatewayProcessingService processing_service) {
+  public ProcessedRawConsumer(IGatewayProcessingService processing_service) {
     processing_service_ = processing_service;
   }
 

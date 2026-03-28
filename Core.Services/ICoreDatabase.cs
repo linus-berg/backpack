@@ -10,7 +10,7 @@ public interface ICoreDatabase {
   public Task<bool> UpdateProcessor(Processor processor);
   public Task<Processor> GetProcessor(string processor);
   public Task<IEnumerable<Processor>> GetProcessors();
-  public Task<Artifact> GetArtifact(string name, string processor);
+  public Task<Artifact?> GetArtifact(string name, string processor);
 
   public Task<IEnumerable<Artifact>> GetArtifacts(
     string processor, bool only_roots = true);

@@ -4,13 +4,13 @@ using MassTransit;
 
 namespace Core.Gateway.Definitions;
 
-public class ProcessedRawDefinition : BaseGatewayDefinition<ProcessedConsumer> {
+public class ProcessedRawDefinition : BaseGatewayDefinition<ProcessedRawConsumer> {
   public ProcessedRawDefinition() : base(Endpoints.S_GATEWAY_INGEST_PROCESSED_RAW) {
   }
 
   protected override void ConfigureConsumer(
     IReceiveEndpointConfigurator endpoint_configurator,
-    IConsumerConfigurator<ProcessedConsumer> consumer_configurator) {
+    IConsumerConfigurator<ProcessedRawConsumer> consumer_configurator) {
     // Call base to get common retry and outbox logic
     base.ConfigureConsumer(endpoint_configurator, consumer_configurator);
     

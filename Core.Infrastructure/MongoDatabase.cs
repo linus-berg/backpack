@@ -62,7 +62,7 @@ public class MongoDatabase : ICoreDatabase {
              .ToListAsync();
   }
 
-  public async Task<Artifact> GetArtifact(string id, string processor) {
+  public async Task<Artifact?> GetArtifact(string id, string processor) {
     IAsyncCursor<Artifact> cursor =
       await GetCollection<Artifact>(processor).FindAsync(a => a.id == id);
     return await cursor.FirstOrDefaultAsync();
