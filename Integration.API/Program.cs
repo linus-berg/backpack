@@ -83,19 +83,20 @@ builder.Services.AddAuthentication(options => {
   options.Authority = authority;
   options.Audience = audience;
   options.RequireHttpsMetadata = false; // Set to true in production
+  
   options.TokenValidationParameters = new TokenValidationParameters {
-    ValidateIssuer = false,
+    ValidateIssuer = true,
+    ValidIssuers = new[] { authority, authority.TrimEnd('/') + "/", authority.TrimEnd('/') },
     ValidateAudience = false,
     ValidateLifetime = true,
     NameClaimType = ClaimTypes.NameIdentifier,
-    RoleClaimType = ClaimTypes.Role // We will map this in events
+    RoleClaimType = ClaimTypes.Role
   };
 
   options.Events = new JwtBearerEvents {
     OnTokenValidated = context => {
       if (context.Principal?.Identity is ClaimsIdentity identity) {
         // Map Keycloak/Standard OIDC resource roles to .NET roles
-        // This handles the 'resource_access' claim commonly used by Keycloak
         var resourceAccessClaim = identity.FindFirst("resource_access");
         if (resourceAccessClaim != null) {
           try {
