@@ -36,4 +36,8 @@ public interface ICoreDatabase {
   public Task<IEnumerable<ApiKey>> GetApiKeys();
   public Task<ApiKey> GetApiKey(string key);
   public Task<bool> DeleteApiKey(string id);
+
+  public Task AddNewsPost(NewsPost post);
+  public Task<IEnumerable<NewsPost>> GetNewsPosts(int limit = 50);
+  public Task<bool> DeleteNewsPost(string id);
 }

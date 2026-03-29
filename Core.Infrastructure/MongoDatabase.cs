@@ -236,4 +236,22 @@ public class MongoDatabase : ICoreDatabase {
     return res.DeletedCount > 0;
   }
 
+  public async Task AddNewsPost(NewsPost post) {
+    IMongoCollection<NewsPost> collection = GetCollection<NewsPost>("backpack-news");
+    await collection.InsertOneAsync(post);
+  }
+
+  public async Task<IEnumerable<NewsPost>> GetNewsPosts(int limit = 50) {
+    IMongoCollection<NewsPost> collection = GetCollection<NewsPost>("backpack-news");
+    return await collection.Find(a => true)
+                           .SortByDescending(a => a.timestamp)
+                           .Limit(limit)
+                           .ToListAsync();
+  }
+
+  public async Task<bool> DeleteNewsPost(string id) {
+    IMongoCollection<NewsPost> collection = GetCollection<NewsPost>("backpack-news");
+    DeleteResult? res = await collection.DeleteOneAsync(a => a.id == id);
+    return res.DeletedCount > 0;
+  }
 }
