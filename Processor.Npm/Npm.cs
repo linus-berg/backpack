@@ -10,7 +10,7 @@ using RestSharp;
 namespace Processor.Npm;
 
 /// <summary>
-/// Logic for processing NPM packages from the registry.
+///   Logic for processing NPM packages from the registry.
 /// </summary>
 public class Npm : INpm {
   private const string C_REGISTRY_ = "https://registry.npmjs.org/";
@@ -19,7 +19,7 @@ public class Npm : INpm {
   private readonly ILogger<Npm> logger_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Npm"/> class.
+  ///   Initializes a new instance of the <see cref="Npm" /> class.
   /// </summary>
   /// <param name="logger">The logger instance.</param>
   public Npm(ILogger<Npm> logger) {
@@ -27,7 +27,7 @@ public class Npm : INpm {
   }
 
   /// <summary>
-  /// Processes the artifact to find NPM package versions and dependencies.
+  ///   Processes the artifact to find NPM package versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

@@ -9,13 +9,13 @@ using Library.Github.Models;
 namespace Processor.Github.Releases;
 
 /// <summary>
-/// Implementation of GitHub releases processing.
+///   Implementation of GitHub releases processing.
 /// </summary>
 public class GithubReleases : IGithubReleases {
   private readonly IGithubClient gh_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="GithubReleases"/> class.
+  ///   Initializes a new instance of the <see cref="GithubReleases" /> class.
   /// </summary>
   /// <param name="gh">The GitHub client.</param>
   public GithubReleases(IGithubClient gh) {
@@ -23,7 +23,7 @@ public class GithubReleases : IGithubReleases {
   }
 
   /// <summary>
-  /// Processes the artifact to find GitHub releases.
+  ///   Processes the artifact to find GitHub releases.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

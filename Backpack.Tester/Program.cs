@@ -1,9 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Collector.Git;
+using Collector.Http;
 using Collector.Kernel;
 using Collector.Kernel.Storage.Minio;
-using Collector.Http;
 using Core.Kernel;
 using Core.Kernel.Models;
 using Library.Github;
@@ -13,7 +13,6 @@ using Polly;
 using Polly.Timeout;
 using Processor.HuggingFace;
 using Processor.OperatorHub;
-using Processor.Php;
 using Processor.Pypi;
 using Processor.Terraform;
 
@@ -116,13 +115,16 @@ RemoteFile file = new(url, fs);
 // DEBUG MINIO
 MinioConnectionBuilder connection = new();
 
-connection.region = Configuration.GetBackpackVariable(CoreVariables.BP_S3_REGION);
+connection.region =
+  Configuration.GetBackpackVariable(CoreVariables.BP_S3_REGION);
 connection.access_key =
   Configuration.GetBackpackVariable(CoreVariables.BP_S3_ACCESS_KEY);
 connection.secret_key =
   Configuration.GetBackpackVariable(CoreVariables.BP_S3_SECRET_KEY);
-connection.end_point = Configuration.GetBackpackVariable(CoreVariables.BP_S3_ENDPOINT);
-connection.bucket = Configuration.GetBackpackVariable(CoreVariables.BP_S3_BUCKET);
+connection.end_point =
+  Configuration.GetBackpackVariable(CoreVariables.BP_S3_ENDPOINT);
+connection.bucket =
+  Configuration.GetBackpackVariable(CoreVariables.BP_S3_BUCKET);
 
 //await st.SaveFileAsync("debug/empty-file", remote_stream);
 //await file.Get("list");

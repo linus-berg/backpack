@@ -23,7 +23,10 @@ public class RSync {
   ///   Mirrors a remote location using rsync.
   /// </summary>
   /// <param name="remote">The remote location.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the mirroring was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the mirroring was
+  ///   successful.
+  /// </returns>
   public async Task<bool> Mirror(string remote) {
     /* Bucket is hardcoded to rsync */
     return await Archive(remote, "rsync");
@@ -34,7 +37,10 @@ public class RSync {
   /// </summary>
   /// <param name="remote">The remote location.</param>
   /// <param name="bucket">The target bucket.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the operation was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the operation was
+  ///   successful.
+  /// </returns>
   private async Task<bool> Archive(string remote, string bucket) {
     return await Bin.Execute(
              "rsync-os",

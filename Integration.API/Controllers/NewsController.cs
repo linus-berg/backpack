@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Security.Claims;
 using Core.Kernel.Models;
 using Core.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -35,7 +33,10 @@ public class NewsController : ControllerBase {
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Delete(string id) {
     bool result = await database_.DeleteNewsPost(id);
-    if (result) return Ok();
+    if (result) {
+      return Ok();
+    }
+
     return NotFound();
   }
 }

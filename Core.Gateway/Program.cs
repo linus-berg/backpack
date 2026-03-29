@@ -43,7 +43,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
                      services.AddSingleton<IConnectionMultiplexer>(
                        ConnectionMultiplexer.Connect(
-                         new ConfigurationOptions() {
+                         new ConfigurationOptions {
                            User = Configuration.GetBackpackVariable(
                              CoreVariables.BP_REDIS_USER
                            ),
@@ -51,10 +51,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                              Configuration.GetBackpackVariable(
                                CoreVariables.BP_REDIS_PASS
                              ),
-                           EndPoints = new EndPointCollection() {
+                           EndPoints = new EndPointCollection {
                              Configuration.GetBackpackVariable(
                                CoreVariables.BP_REDIS_HOST
-                             ),
+                             )
                            }
                          }
                        )
@@ -62,7 +62,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                      services.AddScoped<ICoreDatabase, MongoDatabase>();
                      services.AddSingleton<ICoreCache, CoreCache>();
                      services.AddScoped<IArtifactService, ArtifactService>();
-                     services.AddScoped<IGatewayProcessingService, GatewayProcessingService>();
+                     services
+                       .AddScoped<IGatewayProcessingService,
+                         GatewayProcessingService>();
                      services.AddScoped<IEventService, EventService>();
                      services.AddHostedService<Worker>();
                    }

@@ -11,11 +11,11 @@ using OpenTelemetry.Resources;
 namespace Core.Kernel.Extensions;
 
 /// <summary>
-/// Provides extension methods for <see cref="IHostBuilder"/> to configure system logging.
+///   Provides extension methods for <see cref="IHostBuilder" /> to configure system logging.
 /// </summary>
 public static class HostBuilderExtensions {
   /// <summary>
-  /// Adds OpenTelemetry logging to the host builder.
+  ///   Adds OpenTelemetry logging to the host builder.
   /// </summary>
   /// <param name="builder">The host builder to configure.</param>
   /// <param name="registration">The module registration information.</param>
@@ -42,7 +42,9 @@ public static class HostBuilderExtensions {
                     exporter.Endpoint =
                       new Uri(
 #pragma warning disable CS8604 // Possible null reference argument.
-                        Configuration.GetBackpackVariable(CoreVariables.BP_OTEL_HOST)
+                        Configuration.GetBackpackVariable(
+                          CoreVariables.BP_OTEL_HOST
+                        )
                       );
 #pragma warning restore CS8604 // Possible null reference argument.
                     exporter.Protocol =

@@ -4,25 +4,26 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Represents a dependency of an artifact on another artifact.
+///   Represents a dependency of an artifact on another artifact.
 /// </summary>
 public class ArtifactDependency {
   /// <summary>
-  /// Gets the unique identifier of the dependency.
+  ///   Gets the unique identifier of the dependency.
   /// </summary>
   public required string id { get; init; }
+
   /// <summary>
-  /// Gets the name of the processor for the dependency.
+  ///   Gets the name of the processor for the dependency.
   /// </summary>
   public required string processor { get; init; }
 
   /// <summary>
-  /// Gets or sets a dictionary of configuration settings for the dependency.
+  ///   Gets or sets a dictionary of configuration settings for the dependency.
   /// </summary>
   public Dictionary<string, string> config { get; set; } = new();
 
   /// <summary>
-  /// Determines whether the specified object is equal to the current dependency.
+  ///   Determines whether the specified object is equal to the current dependency.
   /// </summary>
   /// <param name="obj">The object to compare with the current dependency.</param>
   /// <returns>True if the objects are equal; otherwise, false.</returns>
@@ -32,7 +33,7 @@ public class ArtifactDependency {
   }
 
   /// <summary>
-  /// Serves as the default hash function.
+  ///   Serves as the default hash function.
   /// </summary>
   /// <returns>A hash code for the current dependency.</returns>
   public override int GetHashCode() {

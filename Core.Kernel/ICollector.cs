@@ -7,7 +7,7 @@ using MassTransit;
 namespace Core.Kernel;
 
 /// <summary>
-/// Defines a collector module that consumes <see cref="ArtifactCollectRequest"/> messages.
+///   Defines a collector module that consumes <see cref="ArtifactCollectRequest" /> messages.
 /// </summary>
 public interface ICollector : IConsumer<ArtifactCollectRequest> {
 }

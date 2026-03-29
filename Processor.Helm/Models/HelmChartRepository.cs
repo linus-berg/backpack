@@ -4,11 +4,11 @@
 namespace Processor.Helm.Models;
 
 /// <summary>
-/// Represents a Helm chart repository.
+///   Represents a Helm chart repository.
 /// </summary>
 public class HelmChartRepository {
   /// <summary>
-  /// Gets or sets the name of the repository.
+  ///   Gets or sets the name of the repository.
   /// </summary>
   public string name { get; set; }
 }

@@ -18,7 +18,8 @@ public class ProcessorController : ControllerBase {
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
 
-  public ProcessorController(IArtifactService aps, ICoreDatabase database, IEventService event_service) {
+  public ProcessorController(IArtifactService aps, ICoreDatabase database,
+                             IEventService event_service) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;

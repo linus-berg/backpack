@@ -1,4 +1,3 @@
-using System;
 using Core.Kernel.Models;
 
 namespace Core.Kernel.Messages;

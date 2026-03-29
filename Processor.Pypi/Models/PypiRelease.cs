@@ -4,31 +4,31 @@
 namespace Processor.Pypi.Models;
 
 /// <summary>
-/// Represents a release of a PyPI package.
+///   Represents a release of a PyPI package.
 /// </summary>
 public class PypiRelease {
   /// <summary>
-  /// Gets or sets the filename of the release.
+  ///   Gets or sets the filename of the release.
   /// </summary>
   public string filename { get; set; }
 
   /// <summary>
-  /// Gets or sets the URL for downloading the release.
+  ///   Gets or sets the URL for downloading the release.
   /// </summary>
   public string url { get; set; }
 
   /// <summary>
-  /// Gets or sets the type of the package (e.g., sdist, bdist_wheel).
+  ///   Gets or sets the type of the package (e.g., sdist, bdist_wheel).
   /// </summary>
   public string packagetype { get; set; }
 
   /// <summary>
-  /// Gets or sets a value indicating whether the release has been yanked.
+  ///   Gets or sets a value indicating whether the release has been yanked.
   /// </summary>
   public bool yanked { get; set; }
 
   /// <summary>
-  /// Determines if the release is valid for inclusion in the system.
+  ///   Determines if the release is valid for inclusion in the system.
   /// </summary>
   /// <returns>True if the release is valid; otherwise, false.</returns>
   public bool IsValid() {

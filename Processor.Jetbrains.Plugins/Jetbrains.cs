@@ -9,14 +9,14 @@ using RestSharp;
 namespace Processor.Jetbrains.Plugins;
 
 /// <summary>
-/// Logic for processing JetBrains plugins.
+///   Logic for processing JetBrains plugins.
 /// </summary>
 public class Jetbrains : IJetbrains {
   private const string C_API_ = "https://plugins.jetbrains.com";
   private readonly RestClient client_ = new(C_API_);
 
   /// <summary>
-  /// Processes the artifact to find JetBrains plugin updates.
+  ///   Processes the artifact to find JetBrains plugin updates.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

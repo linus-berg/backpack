@@ -82,7 +82,7 @@ public class MongoDatabase : ICoreDatabase {
 
     FilterDefinition<Artifact>? filter =
       Builders<Artifact>.Filter.Eq("root", true);
-    BsonDocument project_stage = new BsonDocument {
+    BsonDocument project_stage = new() {
       {
         "$project", new BsonDocument {
           {
@@ -95,8 +95,7 @@ public class MongoDatabase : ICoreDatabase {
             "config", 1
           }, {
             "filter", 1
-          },
-          {
+          }, {
             "versions", new BsonDocument {
               {
                 "$size", new BsonDocument {
@@ -151,6 +150,118 @@ public class MongoDatabase : ICoreDatabase {
     return p != null;
   }
 
+  public async Task AddEvent(Event @event) {
+    IMongoCollection<Event>
+      collection = GetCollection<Event>("backpack-events");
+    await collection.InsertOneAsync(@event);
+  }
+
+  public async Task<IEnumerable<Event>> GetEvents(int limit = 100) {
+    IMongoCollection<Event>
+      collection = GetCollection<Event>("backpack-events");
+    return await collection.Find(a => true)
+                           .SortByDescending(a => a.timestamp)
+                           .Limit(limit)
+                           .ToListAsync();
+  }
+
+  public async Task<IEnumerable<Schedule>> GetSchedules() {
+    IMongoCollection<Schedule> collection =
+      GetCollection<Schedule>("backpack-schedules");
+    return await (await collection.FindAsync(a => true)).ToListAsync();
+  }
+
+  public async Task UpdateSchedule(Schedule schedule) {
+    IMongoCollection<Schedule> collection =
+      GetCollection<Schedule>("backpack-schedules");
+    await collection.ReplaceOneAsync(a => a.id == schedule.id, schedule);
+  }
+
+  public async Task AddSchedule(Schedule schedule) {
+    IMongoCollection<Schedule> collection =
+      GetCollection<Schedule>("backpack-schedules");
+    await collection.InsertOneAsync(schedule);
+  }
+
+  public async Task AddPendingArtifact(PendingArtifact artifact) {
+    IMongoCollection<PendingArtifact> collection =
+      GetCollection<PendingArtifact>("pending-approvals");
+    await collection.InsertOneAsync(artifact);
+  }
+
+  public async Task<IEnumerable<PendingArtifact>> GetPendingArtifacts() {
+    IMongoCollection<PendingArtifact> collection =
+      GetCollection<PendingArtifact>("pending-approvals");
+    return await (await collection.FindAsync(a => true)).ToListAsync();
+  }
+
+  public async Task<PendingArtifact> GetPendingArtifact(
+    string processor, string id) {
+    IMongoCollection<PendingArtifact> collection =
+      GetCollection<PendingArtifact>("pending-approvals");
+    return await (await collection.FindAsync(
+                    a => a.processor == processor && a.id == id
+                  )).FirstOrDefaultAsync();
+  }
+
+  public async Task<bool> DeletePendingArtifact(string processor, string id) {
+    IMongoCollection<PendingArtifact> collection =
+      GetCollection<PendingArtifact>("pending-approvals");
+    DeleteResult? res =
+      await collection.DeleteOneAsync(
+        a => a.processor == processor && a.id == id
+      );
+    return res.DeletedCount > 0;
+  }
+
+  public async Task AddApiKey(ApiKey key) {
+    IMongoCollection<ApiKey> collection =
+      GetCollection<ApiKey>("backpack-api-keys");
+    await collection.InsertOneAsync(key);
+  }
+
+  public async Task<IEnumerable<ApiKey>> GetApiKeys() {
+    IMongoCollection<ApiKey> collection =
+      GetCollection<ApiKey>("backpack-api-keys");
+    return await (await collection.FindAsync(a => true)).ToListAsync();
+  }
+
+  public async Task<ApiKey> GetApiKey(string key) {
+    IMongoCollection<ApiKey> collection =
+      GetCollection<ApiKey>("backpack-api-keys");
+    return await (await collection.FindAsync(a => a.key == key))
+             .FirstOrDefaultAsync();
+  }
+
+  public async Task<bool> DeleteApiKey(string id) {
+    IMongoCollection<ApiKey> collection =
+      GetCollection<ApiKey>("backpack-api-keys");
+    DeleteResult? res = await collection.DeleteOneAsync(a => a.id == id);
+    return res.DeletedCount > 0;
+  }
+
+  public async Task AddNewsPost(NewsPost post) {
+    IMongoCollection<NewsPost> collection =
+      GetCollection<NewsPost>("backpack-news");
+    await collection.InsertOneAsync(post);
+  }
+
+  public async Task<IEnumerable<NewsPost>> GetNewsPosts(int limit = 50) {
+    IMongoCollection<NewsPost> collection =
+      GetCollection<NewsPost>("backpack-news");
+    return await collection.Find(a => true)
+                           .SortByDescending(a => a.timestamp)
+                           .Limit(limit)
+                           .ToListAsync();
+  }
+
+  public async Task<bool> DeleteNewsPost(string id) {
+    IMongoCollection<NewsPost> collection =
+      GetCollection<NewsPost>("backpack-news");
+    DeleteResult? res = await collection.DeleteOneAsync(a => a.id == id);
+    return res.DeletedCount > 0;
+  }
+
   private IMongoCollection<T> GetCollection<T>(string collection) {
     return database_.GetCollection<T>(collection);
   }
@@ -164,94 +275,5 @@ public class MongoDatabase : ICoreDatabase {
 
   public async Task<bool> ArtifactExists(string id, string processor) {
     return await GetArtifact(id, processor) != null;
-  }
-
-  public async Task AddEvent(Event @event) {
-    IMongoCollection<Event> collection = GetCollection<Event>("backpack-events");
-    await collection.InsertOneAsync(@event);
-  }
-
-  public async Task<IEnumerable<Event>> GetEvents(int limit = 100) {
-    IMongoCollection<Event> collection = GetCollection<Event>("backpack-events");
-    return await collection.Find(a => true)
-                           .SortByDescending(a => a.timestamp)
-                           .Limit(limit)
-                           .ToListAsync();
-  }
-
-  public async Task<IEnumerable<Schedule>> GetSchedules() {
-    IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
-    return await (await collection.FindAsync(a => true)).ToListAsync();
-  }
-
-  public async Task UpdateSchedule(Schedule schedule) {
-    IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
-    await collection.ReplaceOneAsync(a => a.id == schedule.id, schedule);
-  }
-
-  public async Task AddSchedule(Schedule schedule) {
-    IMongoCollection<Schedule> collection = GetCollection<Schedule>("backpack-schedules");
-    await collection.InsertOneAsync(schedule);
-  }
-
-  public async Task AddPendingArtifact(PendingArtifact artifact) {
-    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
-    await collection.InsertOneAsync(artifact);
-  }
-
-  public async Task<IEnumerable<PendingArtifact>> GetPendingArtifacts() {
-    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
-    return await (await collection.FindAsync(a => true)).ToListAsync();
-  }
-
-  public async Task<PendingArtifact> GetPendingArtifact(string processor, string id) {
-    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
-    return await (await collection.FindAsync(a => a.processor == processor && a.id == id)).FirstOrDefaultAsync();
-  }
-
-  public async Task<bool> DeletePendingArtifact(string processor, string id) {
-    IMongoCollection<PendingArtifact> collection = GetCollection<PendingArtifact>("pending-approvals");
-    DeleteResult? res = await collection.DeleteOneAsync(a => a.processor == processor && a.id == id);
-    return res.DeletedCount > 0;
-  }
-  
-  public async Task AddApiKey(ApiKey key) {
-    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
-    await collection.InsertOneAsync(key);
-  }
-
-  public async Task<IEnumerable<ApiKey>> GetApiKeys() {
-    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
-    return await (await collection.FindAsync(a => true)).ToListAsync();
-  }
-
-  public async Task<ApiKey> GetApiKey(string key) {
-    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
-    return await (await collection.FindAsync(a => a.key == key)).FirstOrDefaultAsync();
-  }
-
-  public async Task<bool> DeleteApiKey(string id) {
-    IMongoCollection<ApiKey> collection = GetCollection<ApiKey>("backpack-api-keys");
-    DeleteResult? res = await collection.DeleteOneAsync(a => a.id == id);
-    return res.DeletedCount > 0;
-  }
-
-  public async Task AddNewsPost(NewsPost post) {
-    IMongoCollection<NewsPost> collection = GetCollection<NewsPost>("backpack-news");
-    await collection.InsertOneAsync(post);
-  }
-
-  public async Task<IEnumerable<NewsPost>> GetNewsPosts(int limit = 50) {
-    IMongoCollection<NewsPost> collection = GetCollection<NewsPost>("backpack-news");
-    return await collection.Find(a => true)
-                           .SortByDescending(a => a.timestamp)
-                           .Limit(limit)
-                           .ToListAsync();
-  }
-
-  public async Task<bool> DeleteNewsPost(string id) {
-    IMongoCollection<NewsPost> collection = GetCollection<NewsPost>("backpack-news");
-    DeleteResult? res = await collection.DeleteOneAsync(a => a.id == id);
-    return res.DeletedCount > 0;
   }
 }

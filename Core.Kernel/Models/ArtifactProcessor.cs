@@ -4,15 +4,16 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Represents an artifact processor and its configuration.
+///   Represents an artifact processor and its configuration.
 /// </summary>
 public class ArtifactProcessor {
   /// <summary>
-  /// Gets or sets the unique identifier for the artifact processor.
+  ///   Gets or sets the unique identifier for the artifact processor.
   /// </summary>
   public string id { get; set; }
+
   /// <summary>
-  /// Gets or sets the configuration string for the processor.
+  ///   Gets or sets the configuration string for the processor.
   /// </summary>
   public string config { get; set; }
 }

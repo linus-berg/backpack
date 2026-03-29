@@ -7,7 +7,6 @@ using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Input;
 using Integration.API.Services;
-using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
@@ -24,7 +23,8 @@ public class ArtifactController : ControllerBase {
   private readonly ILogger log_;
   private readonly PreviewRoutingService router_;
 
-  public ArtifactController(IArtifactService aps, ICoreDatabase database, IEventService event_service,
+  public ArtifactController(IArtifactService aps, ICoreDatabase database,
+                            IEventService event_service,
                             PreviewRoutingService router,
                             ILogger log) {
     database_ = database;
@@ -60,16 +60,16 @@ public class ArtifactController : ControllerBase {
   [HttpGet("preview")]
   public async Task<ActionResult<Artifact>> Preview(
     [FromQuery] string id, [FromQuery] string processor) {
-    
     // Explicitly address the processor's preview queue
-    string routing_key= $"processor-{processor.ToLower()}-preview";
+    string routing_key = $"processor-{processor.ToLower()}-preview";
 
-    ArtifactPreviewRequest req = new ArtifactPreviewRequest {
+    ArtifactPreviewRequest req = new() {
       id = id,
       processor = processor
     };
 
-    ArtifactPreviewResponse resp = await router_.GetDataDynamicallyAsync(routing_key, req);
+    ArtifactPreviewResponse resp =
+      await router_.GetDataDynamicallyAsync(routing_key, req);
 
     if (resp.artifact != null) {
       return Ok(resp.artifact);
@@ -91,7 +91,7 @@ public class ArtifactController : ControllerBase {
       u.Identity.Name,
       input.id
     );
-    
+
     Artifact? artifact = await database_.GetArtifact(input.id, input.processor);
     Processor proc = await database_.GetProcessor(input.processor);
     bool isAdmin = u.IsInRole("Administrator");
@@ -99,21 +99,27 @@ public class ArtifactController : ControllerBase {
 
     if (artifact == null) {
       if (needsApproval) {
-        await database_.AddPendingArtifact(new PendingArtifact {
-          id = input.id,
-          processor = input.processor,
-          filter = input.filter,
-          config = input.config,
-          requested_by = u.Identity.Name
-        });
-        
+        await database_.AddPendingArtifact(
+          new PendingArtifact {
+            id = input.id,
+            processor = input.processor,
+            filter = input.filter,
+            config = input.config,
+            requested_by = u.Identity.Name
+          }
+        );
+
         await event_service_.LogEvent(
           "API",
           $"Artifact {input.processor}/{input.id} requested and pending approval",
           EventSeverity.WARNING,
           u.Identity.Name
         );
-        return Ok(new { Message = "Artifact requested and pending administrator approval." });
+        return Ok(
+          new {
+            Message = "Artifact requested and pending administrator approval."
+          }
+        );
       }
 
       artifact =
@@ -169,24 +175,28 @@ public class ArtifactController : ControllerBase {
 
   [HttpPost("approve")]
   [Authorize(Roles = "Administrator")]
-  public async Task<ActionResult> Approve([FromBody] ArtifactValidationInput input) {
-    PendingArtifact pending = await database_.GetPendingArtifact(input.processor, input.id);
-    if (pending == null) return NotFound("Pending artifact not found");
-    
+  public async Task<ActionResult> Approve(
+    [FromBody] ArtifactValidationInput input) {
+    PendingArtifact pending =
+      await database_.GetPendingArtifact(input.processor, input.id);
+    if (pending == null) {
+      return NotFound("Pending artifact not found");
+    }
+
     // Create actual artifact
     Artifact artifact = await aps_.AddArtifact(
-      pending.id,
-      pending.processor,
-      pending.filter,
-      pending.config,
-      true
-    );
+                          pending.id,
+                          pending.processor,
+                          pending.filter,
+                          pending.config,
+                          true
+                        );
 
     // Delete pending
     await database_.DeletePendingArtifact(input.processor, input.id);
 
     Processor proc = await database_.GetProcessor(input.processor);
-    
+
     if (proc.is_external) {
       await event_service_.LogEvent(
         "API",
@@ -194,7 +204,11 @@ public class ArtifactController : ControllerBase {
         EventSeverity.INFO,
         HttpContext.User.Identity?.Name ?? "Unknown"
       );
-      return Ok(new { Message = "Artifact approved (External)" });
+      return Ok(
+        new {
+          Message = "Artifact approved (External)"
+        }
+      );
     }
 
     if (proc.direct_collect) {
@@ -210,14 +224,22 @@ public class ArtifactController : ControllerBase {
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
 
-    return Ok(new { Message = "Artifact approved and sync started" });
+    return Ok(
+      new {
+        Message = "Artifact approved and sync started"
+      }
+    );
   }
 
   [HttpPost("reject")]
   [Authorize(Roles = "Administrator")]
-  public async Task<ActionResult> Reject([FromBody] ArtifactValidationInput input) {
-    bool result = await database_.DeletePendingArtifact(input.processor, input.id);
-    if (!result) return NotFound();
+  public async Task<ActionResult> Reject(
+    [FromBody] ArtifactValidationInput input) {
+    bool result =
+      await database_.DeletePendingArtifact(input.processor, input.id);
+    if (!result) {
+      return NotFound();
+    }
 
     await event_service_.LogEvent(
       "API",
@@ -226,7 +248,11 @@ public class ArtifactController : ControllerBase {
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
 
-    return Ok(new { Message = "Artifact request rejected" });
+    return Ok(
+      new {
+        Message = "Artifact request rejected"
+      }
+    );
   }
 
   // POST: api/Artifact/track

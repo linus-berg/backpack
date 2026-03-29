@@ -10,11 +10,11 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0"/>
-        <PackageReference Include="RestSharp" Version="112.1.0" />
+        <PackageReference Include="RestSharp" Version="112.1.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Core.Infrastructure\Core.Infrastructure.csproj" />
-        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj" />
+        <ProjectReference Include="..\Core.Infrastructure\Core.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj"/>
     </ItemGroup>
 </Project>

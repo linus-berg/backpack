@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Core.Kernel.Models;
 
 namespace Core.Kernel;

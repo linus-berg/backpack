@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Text.Json;
 using Core.Infrastructure;
 using Core.Infrastructure.Services;
 using Core.Kernel;
@@ -6,6 +8,7 @@ using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using Core.Services;
 using Integration.API;
+using Integration.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +16,6 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 using StackExchange.Redis;
-using System.Security.Claims;
-using System.Text.Json;
-using Core.Kernel.Messages;
-using Integration.API.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTelemetry(
@@ -46,8 +45,12 @@ builder.Services.AddMassTransit(
           Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_HOST),
           "/",
           h => {
-            h.Username(Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_USER));
-            h.Password(Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_PASS));
+            h.Username(
+              Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_USER)
+            );
+            h.Password(
+              Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_PASS)
+            );
           }
         );
         cfg.ConfigureEndpoints(ctx);
@@ -58,11 +61,11 @@ builder.Services.AddMassTransit(
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(
   ConnectionMultiplexer.Connect(
-    new ConfigurationOptions() {
+    new ConfigurationOptions {
       User = Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_USER),
       Password = Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_PASS),
-      EndPoints = new EndPointCollection() {
-        Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_HOST),
+      EndPoints = new EndPointCollection {
+        Configuration.GetBackpackVariable(CoreVariables.BP_REDIS_HOST)
       }
     }
   )
@@ -76,67 +79,97 @@ builder.Services.AddSingleton<IStatusService, RabbitMqStatusService>();
 builder.Services.AddScoped<IEventService, EventService>();
 
 /* Authentication & Authorization */
-string authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ?? "http://localhost:8090/realms/master";
-string audience = Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ?? "backpack";
+string authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ??
+                   "http://localhost:8090/realms/master";
+string audience =
+  Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ?? "backpack";
 
-builder.Services.AddAuthentication(options => {
-  options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-  options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options => {
-  options.Authority = authority;
-  options.Audience = audience;
-  options.RequireHttpsMetadata = false; // Set to true in production
-  
-  options.TokenValidationParameters = new TokenValidationParameters {
-    ValidateIssuer = true,
-    ValidIssuers = new[] { authority, authority.TrimEnd('/') + "/", authority.TrimEnd('/') },
-    ValidateAudience = false,
-    ValidateLifetime = true,
-    NameClaimType = "preferred_username",
-    RoleClaimType = ClaimTypes.Role
-  };
+builder.Services.AddAuthentication(
+         options => {
+           options.DefaultAuthenticateScheme =
+             JwtBearerDefaults.AuthenticationScheme;
+           options.DefaultChallengeScheme =
+             JwtBearerDefaults.AuthenticationScheme;
+         }
+       )
+       .AddJwtBearer(
+         options => {
+           options.Authority = authority;
+           options.Audience = audience;
+           options.RequireHttpsMetadata = false; // Set to true in production
 
-  options.Events = new JwtBearerEvents {
-    OnTokenValidated = context => {
-      if (context.Principal?.Identity is ClaimsIdentity identity) {
-        // Map Keycloak/Standard OIDC resource roles to .NET roles
-        Claim? resource_access_claim = identity.FindFirst("resource_access");
-        if (resource_access_claim != null) {
-          try {
-            using JsonDocument json_doc = JsonDocument.Parse(resource_access_claim.Value);
-            if (json_doc.RootElement.TryGetProperty(audience, out JsonElement client_element) &&
-                client_element.TryGetProperty("roles", out JsonElement roles_element)) {
-              foreach (JsonElement role in roles_element.EnumerateArray()) {
-                identity.AddClaim(new Claim(ClaimTypes.Role, role.GetString()!));
-              }
-            }
-          } catch {
-            // Log or handle parsing error
-          }
-        }
+           options.TokenValidationParameters = new TokenValidationParameters {
+             ValidateIssuer = true,
+             ValidIssuers = new[] {
+               authority,
+               authority.TrimEnd('/') + "/",
+               authority.TrimEnd('/')
+             },
+             ValidateAudience = false,
+             ValidateLifetime = true,
+             NameClaimType = "preferred_username",
+             RoleClaimType = ClaimTypes.Role
+           };
 
-        // Also handle a flat 'roles' claim if present
-        IEnumerable<Claim> roles_claim = identity.FindAll("roles");
-        foreach (Claim rc in roles_claim) {
-          identity.AddClaim(new Claim(ClaimTypes.Role, rc.Value));
-        }
-      }
-      return Task.CompletedTask;
-    }
-  };
-})
-.AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
-  ApiKeyAuthenticationOptions.C_SCHEME, null);
+           options.Events = new JwtBearerEvents {
+             OnTokenValidated = context => {
+               if (context.Principal?.Identity is ClaimsIdentity identity) {
+                 // Map Keycloak/Standard OIDC resource roles to .NET roles
+                 Claim? resource_access_claim =
+                   identity.FindFirst("resource_access");
+                 if (resource_access_claim != null) {
+                   try {
+                     using JsonDocument json_doc =
+                       JsonDocument.Parse(resource_access_claim.Value);
+                     if (json_doc.RootElement.TryGetProperty(
+                           audience,
+                           out JsonElement client_element
+                         ) &&
+                         client_element.TryGetProperty(
+                           "roles",
+                           out JsonElement roles_element
+                         )) {
+                       foreach (JsonElement role in
+                                roles_element.EnumerateArray()) {
+                         identity.AddClaim(
+                           new Claim(ClaimTypes.Role, role.GetString()!)
+                         );
+                       }
+                     }
+                   } catch {
+                     // Log or handle parsing error
+                   }
+                 }
 
-builder.Services.AddAuthorization(options => {
-  AuthorizationPolicy default_policy = new AuthorizationPolicyBuilder(
-                                        JwtBearerDefaults.AuthenticationScheme,
-                                        ApiKeyAuthenticationOptions.C_SCHEME)
-                                      .RequireAuthenticatedUser()
-                                      .Build();
-  options.DefaultPolicy = default_policy;
-});
+                 // Also handle a flat 'roles' claim if present
+                 IEnumerable<Claim> roles_claim = identity.FindAll("roles");
+                 foreach (Claim rc in roles_claim) {
+                   identity.AddClaim(new Claim(ClaimTypes.Role, rc.Value));
+                 }
+               }
+
+               return Task.CompletedTask;
+             }
+           };
+         }
+       )
+       .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+         ApiKeyAuthenticationOptions.C_SCHEME,
+         null
+       );
+
+builder.Services.AddAuthorization(
+  options => {
+    AuthorizationPolicy default_policy = new AuthorizationPolicyBuilder(
+                                           JwtBearerDefaults
+                                             .AuthenticationScheme,
+                                           ApiKeyAuthenticationOptions.C_SCHEME
+                                         )
+                                         .RequireAuthenticatedUser()
+                                         .Build();
+    options.DefaultPolicy = default_policy;
+  }
+);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();

@@ -8,11 +8,11 @@ using CliWrap;
 namespace Core.Kernel.Extensions;
 
 /// <summary>
-/// Provides extension methods for <see cref="Command"/> to simplify binary execution and result capturing.
+///   Provides extension methods for <see cref="Command" /> to simplify binary execution and result capturing.
 /// </summary>
 public static class WrapperExtensions {
   /// <summary>
-  /// Executes a command and deserializes its standard output to the specified type.
+  ///   Executes a command and deserializes its standard output to the specified type.
   /// </summary>
   /// <typeparam name="T">The type to deserialize the output to.</typeparam>
   /// <param name="cmd">The command to execute.</param>
@@ -35,7 +35,7 @@ public static class WrapperExtensions {
   }
 
   /// <summary>
-  /// Executes a command and pipes its output directly to the console.
+  ///   Executes a command and pipes its output directly to the console.
   /// </summary>
   /// <param name="cmd">The command to execute.</param>
   /// <returns>True if the command executed successfully (exit code 0); otherwise, false.</returns>

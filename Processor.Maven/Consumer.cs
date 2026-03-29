@@ -10,13 +10,13 @@ using MassTransit;
 namespace Processor.Maven;
 
 /// <summary>
-/// Consumer for Maven artifact processing requests.
+///   Consumer for Maven artifact processing requests.
 /// </summary>
 public class Consumer : IProcessor {
   private readonly IMaven maven_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Consumer"/> class.
+  ///   Initializes a new instance of the <see cref="Consumer" /> class.
   /// </summary>
   /// <param name="maven">The Maven processor.</param>
   public Consumer(IMaven maven) {
@@ -24,7 +24,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact process request.
+  ///   Consumes the artifact process request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -35,7 +35,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact preview request.
+  ///   Consumes the artifact preview request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -46,9 +46,17 @@ public class Consumer : IProcessor {
         processor = context.Message.processor
       };
       await maven_.ProcessArtifact(artifact);
-      await context.RespondAsync(new ArtifactPreviewResponse { artifact = artifact });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          artifact = artifact
+        }
+      );
     } catch (Exception e) {
-      await context.RespondAsync(new ArtifactPreviewResponse { error = e.Message });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          error = e.Message
+        }
+      );
     }
   }
 }

@@ -10,13 +10,13 @@ using MassTransit;
 namespace Processor.Nuget;
 
 /// <summary>
-/// Consumer for NuGet artifact processing and preview requests.
+///   Consumer for NuGet artifact processing and preview requests.
 /// </summary>
 public class Consumer : IProcessor {
   private readonly INuget nuget_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Consumer"/> class.
+  ///   Initializes a new instance of the <see cref="Consumer" /> class.
   /// </summary>
   /// <param name="nuget">The NuGet processor.</param>
   public Consumer(INuget nuget) {
@@ -24,7 +24,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact process request.
+  ///   Consumes the artifact process request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -35,7 +35,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact preview request.
+  ///   Consumes the artifact preview request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -46,13 +46,17 @@ public class Consumer : IProcessor {
     };
     try {
       await nuget_.ProcessArtifact(artifact);
-      await context.RespondAsync(new ArtifactPreviewResponse {
-        artifact = artifact
-      });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          artifact = artifact
+        }
+      );
     } catch (Exception e) {
-      await context.RespondAsync(new ArtifactPreviewResponse {
-        error = e.Message
-      });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          error = e.Message
+        }
+      );
     }
   }
 }

@@ -4,11 +4,11 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Defines the possible statuses of an artifact.
+///   Defines the possible statuses of an artifact.
 /// </summary>
 public enum ArtifactStatus {
   /// <summary>
-  /// The artifact is currently being processed.
+  ///   The artifact is currently being processed.
   /// </summary>
   PROCESSING
 }

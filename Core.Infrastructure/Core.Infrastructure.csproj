@@ -12,12 +12,12 @@
         <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5"/>
         <PackageReference Include="MongoDB.Driver" Version="2.23.1"/>
         <PackageReference Include="MongoDB.Driver.Core" Version="2.23.1"/>
-        <PackageReference Include="RestSharp" Version="112.1.0" />
+        <PackageReference Include="RestSharp" Version="112.1.0"/>
         <PackageReference Include="StackExchange.Redis" Version="2.7.17"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Core.Services\Core.Services.csproj" />
+        <ProjectReference Include="..\Core.Services\Core.Services.csproj"/>
     </ItemGroup>
 
 </Project>

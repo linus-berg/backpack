@@ -4,11 +4,11 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Defines the possible statuses of an artifact version.
+///   Defines the possible statuses of an artifact version.
 /// </summary>
 public enum ArtifactVersionStatus {
   /// <summary>
-  /// The artifact version has been sent for collection.
+  ///   The artifact version has been sent for collection.
   /// </summary>
   SENT_FOR_COLLECTION
 }

@@ -14,6 +14,7 @@ public interface ICoreDatabase {
 
   public Task<IEnumerable<Artifact>> GetArtifacts(
     string processor, bool only_roots = true);
+
   public Task<IEnumerable<ArtifactSummary>> GetArtifactSummaries(
     string processor, bool only_roots = true);
 

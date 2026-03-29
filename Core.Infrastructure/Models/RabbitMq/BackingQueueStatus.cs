@@ -1,9 +1,6 @@
-using System.Text.Json.Serialization;
-
 namespace Core.Infrastructure.Models.RabbitMq;
 
-public class BackingQueueStatus
-{
+public class BackingQueueStatus {
   public double avg_ack_egress_rate { get; set; }
 
   public double avg_ack_ingress_rate { get; set; }

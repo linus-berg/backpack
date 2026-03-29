@@ -27,7 +27,10 @@ public class RemoteFile {
   ///   Fetches the remote file and saves it to the specified path.
   /// </summary>
   /// <param name="path">The path where the file should be saved.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully retrieved.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   retrieved.
+  /// </returns>
   public async Task<bool> Get(string path) {
     HttpResponseMessage response =
       await S_CLIENT_.GetAsync(url_, HttpCompletionOption.ResponseHeadersRead);
@@ -55,7 +58,10 @@ public class RemoteFile {
   ///   Clears the file from the file system.
   /// </summary>
   /// <param name="file">The file path to clear.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully cleared.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   cleared.
+  /// </returns>
   private async Task<bool> ClearFile(string file) {
     if (!await fs_.Exists(file)) {
       return false;

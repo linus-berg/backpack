@@ -4,11 +4,11 @@
 namespace Processor.Jetbrains.IDE.Models;
 
 /// <summary>
-/// Represents a JetBrains product.
+///   Represents a JetBrains product.
 /// </summary>
 public class JetbrainsProduct {
   /// <summary>
-  /// Gets or sets the list of releases for the product.
+  ///   Gets or sets the list of releases for the product.
   /// </summary>
   public List<JetbrainsProductRelease> releases { get; set; }
 }

@@ -4,23 +4,26 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Represents an auxiliary configuration field for a processor.
+///   Represents an auxiliary configuration field for a processor.
 /// </summary>
 public class ProcessorAuxiliaryField {
   /// <summary>
-  /// Gets or sets the configuration key.
+  ///   Gets or sets the configuration key.
   /// </summary>
   public string key { get; set; }
+
   /// <summary>
-  /// Gets or sets the data type of the configuration field.
+  ///   Gets or sets the data type of the configuration field.
   /// </summary>
   public string type { get; set; }
+
   /// <summary>
-  /// Gets or sets the display name of the configuration field.
+  ///   Gets or sets the display name of the configuration field.
   /// </summary>
   public string name { get; set; }
+
   /// <summary>
-  /// Gets or sets the placeholder text for the configuration field.
+  ///   Gets or sets the placeholder text for the configuration field.
   /// </summary>
   public string placeholder { get; set; }
 }

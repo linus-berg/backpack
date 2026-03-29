@@ -22,14 +22,17 @@ public class ApiKeyController : ControllerBase {
   [HttpGet]
   public async Task<IEnumerable<ApiKeyOutput>> Get() {
     IEnumerable<ApiKey> keys = await database_.GetApiKeys();
-    return keys.Select(k => new ApiKeyOutput {
-      id = k.id,
-      name = k.name,
-      key_preview = $"{k.key.Substring(0, 4)}...{k.key.Substring(k.key.Length - 4)}",
-      is_admin = k.is_admin,
-      created_at = k.created_at,
-      created_by = k.created_by
-    });
+    return keys.Select(
+      k => new ApiKeyOutput {
+        id = k.id,
+        name = k.name,
+        key_preview =
+          $"{k.key.Substring(0, 4)}...{k.key.Substring(k.key.Length - 4)}",
+        is_admin = k.is_admin,
+        created_at = k.created_at,
+        created_by = k.created_by
+      }
+    );
   }
 
   [HttpPost]
@@ -50,17 +53,20 @@ public class ApiKeyController : ControllerBase {
       EventSeverity.SUCCESS,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
-    
+
     // Return BOTH the full key (for initial display) and the output metadata
-    return Ok(new {
-      id = key.id,
-      name = key.name,
-      key = fullKey, // Only time the full key is returned
-      key_preview = $"{fullKey.Substring(0, 4)}...{fullKey.Substring(fullKey.Length - 4)}",
-      is_admin = key.is_admin,
-      created_at = key.created_at,
-      created_by = key.created_by
-    });
+    return Ok(
+      new {
+        key.id,
+        key.name,
+        key = fullKey, // Only time the full key is returned
+        key_preview =
+          $"{fullKey.Substring(0, 4)}...{fullKey.Substring(fullKey.Length - 4)}",
+        key.is_admin,
+        key.created_at,
+        key.created_by
+      }
+    );
   }
 
   [HttpDelete("{id}")]
@@ -74,6 +80,7 @@ public class ApiKeyController : ControllerBase {
         HttpContext.User.Identity?.Name ?? "Unknown"
       );
     }
+
     return result ? Ok() : BadRequest();
   }
 }

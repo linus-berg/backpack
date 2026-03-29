@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Processor.Github.Releases;
 
 /// <summary>
-/// Interface for GitHub releases processing.
+///   Interface for GitHub releases processing.
 /// </summary>
 public interface IGithubReleases {
   /// <summary>
-  /// Processes the artifact to find GitHub releases.
+  ///   Processes the artifact to find GitHub releases.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

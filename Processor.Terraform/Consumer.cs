@@ -26,13 +26,17 @@ public class Consumer : IProcessor {
     };
     try {
       await terraform_.ProcessArtifact(artifact);
-      await context.RespondAsync(new ArtifactPreviewResponse {
-        artifact = artifact
-      });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          artifact = artifact
+        }
+      );
     } catch (Exception e) {
-      await context.RespondAsync(new ArtifactPreviewResponse {
-        error = e.Message
-      });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          error = e.Message
+        }
+      );
     }
   }
 }

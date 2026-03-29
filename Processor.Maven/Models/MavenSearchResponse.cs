@@ -4,21 +4,21 @@
 namespace Processor.Maven.Models;
 
 /// <summary>
-/// Represents the response body of a Maven search result.
+///   Represents the response body of a Maven search result.
 /// </summary>
 public class MavenSearchResponse {
   /// <summary>
-  /// Gets or sets the total number of documents found.
+  ///   Gets or sets the total number of documents found.
   /// </summary>
   public int numFound { get; set; }
 
   /// <summary>
-  /// Gets or sets the start index of the results.
+  ///   Gets or sets the start index of the results.
   /// </summary>
   public int start { get; set; }
 
   /// <summary>
-  /// Gets or sets the list of documents found.
+  ///   Gets or sets the list of documents found.
   /// </summary>
   public List<MavenSearchDoc> docs { get; set; }
 }

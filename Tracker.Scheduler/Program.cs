@@ -31,7 +31,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                      );
                      services.AddSingleton<IConnectionMultiplexer>(
                        ConnectionMultiplexer.Connect(
-                         new ConfigurationOptions() {
+                         new ConfigurationOptions {
                            User = Configuration.GetBackpackVariable(
                              CoreVariables.BP_REDIS_USER
                            ),
@@ -39,10 +39,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                              Configuration.GetBackpackVariable(
                                CoreVariables.BP_REDIS_PASS
                              ),
-                           EndPoints = new EndPointCollection() {
+                           EndPoints = new EndPointCollection {
                              Configuration.GetBackpackVariable(
                                CoreVariables.BP_REDIS_HOST
-                             ),
+                             )
                            }
                          }
                        )
@@ -69,21 +69,26 @@ IHost host = Host.CreateDefaultBuilder(args)
 // Migrate schedules from file to DB if needed and schedule triggers
 using (IServiceScope scope = host.Services.CreateScope()) {
   ICoreDatabase db = scope.ServiceProvider.GetRequiredService<ICoreDatabase>();
-  IScheduler scheduler = await scope.ServiceProvider.GetRequiredService<ISchedulerFactory>().GetScheduler();
+  IScheduler scheduler = await scope.ServiceProvider
+                                    .GetRequiredService<ISchedulerFactory>()
+                                    .GetScheduler();
 
   IEnumerable<Schedule> existing_schedules = await db.GetSchedules();
   if (!existing_schedules.Any()) {
     string? file = Environment.GetEnvironmentVariable("SCHEDULE_FILE");
     if (!string.IsNullOrEmpty(file) && File.Exists(file)) {
       string schedule_str = await File.ReadAllTextAsync(file);
-      List<ScheduleOptions>? schedule_opts = JsonSerializer.Deserialize<List<ScheduleOptions>>(schedule_str);
+      List<ScheduleOptions>? schedule_opts =
+        JsonSerializer.Deserialize<List<ScheduleOptions>>(schedule_str);
       if (schedule_opts != null) {
         foreach (ScheduleOptions opt in schedule_opts) {
-          await db.AddSchedule(new Schedule {
-            id = Guid.NewGuid().ToString(),
-            processor = opt.processor,
-            cron = opt.schedule
-          });
+          await db.AddSchedule(
+            new Schedule {
+              id = Guid.NewGuid().ToString(),
+              processor = opt.processor,
+              cron = opt.schedule
+            }
+          );
         }
       }
     }
@@ -93,9 +98,15 @@ using (IServiceScope scope = host.Services.CreateScope()) {
   IEnumerable<Schedule> schedules = await db.GetSchedules();
   foreach (Schedule schedule in schedules) {
     ITrigger trigger = TriggerBuilder.Create()
-                                     .WithIdentity($"tracking-{schedule.processor}", "backpack")
+                                     .WithIdentity(
+                                       $"tracking-{schedule.processor}",
+                                       "backpack"
+                                     )
                                      .ForJob(TrackingJob.S_KEY)
-                                     .UsingJobData("processor", schedule.processor)
+                                     .UsingJobData(
+                                       "processor",
+                                       schedule.processor
+                                     )
                                      .WithCronSchedule(schedule.cron)
                                      .Build();
     await scheduler.ScheduleJob(trigger);

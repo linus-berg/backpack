@@ -4,11 +4,11 @@
 namespace Processor.Helm.Models;
 
 /// <summary>
-/// Represents metadata for a Helm chart.
+///   Represents metadata for a Helm chart.
 /// </summary>
 public class HelmChartMetadata {
   /// <summary>
-  /// Initializes a new instance of the <see cref="HelmChartMetadata"/> class.
+  ///   Initializes a new instance of the <see cref="HelmChartMetadata" /> class.
   /// </summary>
   public HelmChartMetadata() {
     available_versions = new HashSet<HelmChartVersion>();
@@ -16,42 +16,42 @@ public class HelmChartMetadata {
   }
 
   /// <summary>
-  /// Gets or sets the name of the Helm chart.
+  ///   Gets or sets the name of the Helm chart.
   /// </summary>
   public string name { get; set; }
 
   /// <summary>
-  /// Gets or sets the package identifier.
+  ///   Gets or sets the package identifier.
   /// </summary>
   public string package_id { get; set; }
 
   /// <summary>
-  /// Gets or sets the content URL.
+  ///   Gets or sets the content URL.
   /// </summary>
   public string content_url { get; set; }
 
   /// <summary>
-  /// Gets or sets the version string.
+  ///   Gets or sets the version string.
   /// </summary>
   public string version { get; set; }
 
   /// <summary>
-  /// Gets or sets the repository information.
+  ///   Gets or sets the repository information.
   /// </summary>
   public HelmChartRepository repository { get; set; }
 
   /// <summary>
-  /// Gets or sets the chart data.
+  ///   Gets or sets the chart data.
   /// </summary>
   public HelmChartData data { get; set; }
 
   /// <summary>
-  /// Gets or sets the available versions.
+  ///   Gets or sets the available versions.
   /// </summary>
   public IEnumerable<HelmChartVersion> available_versions { get; set; }
 
   /// <summary>
-  /// Gets or sets the container images associated with the chart.
+  ///   Gets or sets the container images associated with the chart.
   /// </summary>
   public IEnumerable<HelmChartContainerImage> containers_images { get; set; }
 }

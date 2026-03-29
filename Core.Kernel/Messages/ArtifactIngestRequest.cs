@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Core.Kernel.Messages;
 
 /// <summary>
-/// Represents a request to ingest an artifact into the system.
+///   Represents a request to ingest an artifact into the system.
 /// </summary>
 public class ArtifactIngestRequest {
   /// <summary>
-  /// Gets or sets the artifact to be ingested.
+  ///   Gets or sets the artifact to be ingested.
   /// </summary>
   public Artifact artifact { get; set; }
 }

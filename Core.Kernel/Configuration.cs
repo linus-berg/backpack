@@ -6,7 +6,7 @@ using System.Data;
 namespace Core.Kernel;
 
 /// <summary>
-/// Provides central configuration management using environment variables and default values.
+///   Provides central configuration management using environment variables and default values.
 /// </summary>
 public static class Configuration {
   private static readonly Dictionary<CoreVariables, string> S_DEFAULTS_ =
@@ -39,7 +39,7 @@ public static class Configuration {
     };
 
   /// <summary>
-  /// Checks if the OpenTelemetry host configuration is available.
+  ///   Checks if the OpenTelemetry host configuration is available.
   /// </summary>
   /// <returns>True if the host is configured; otherwise, false.</returns>
   public static bool HasOtelHost() {
@@ -55,7 +55,7 @@ public static class Configuration {
   }
 
   /// <summary>
-  /// Retrieves a configuration variable from environment variables or its default value.
+  ///   Retrieves a configuration variable from environment variables or its default value.
   /// </summary>
   /// <param name="variable">The variable to retrieve.</param>
   /// <returns>The value of the configuration variable.</returns>

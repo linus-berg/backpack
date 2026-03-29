@@ -6,16 +6,16 @@ using System.Text.RegularExpressions;
 namespace Processor.Pypi.Models;
 
 /// <summary>
-/// Represents the information about a PyPI package version.
+///   Represents the information about a PyPI package version.
 /// </summary>
 public class PypiInfo {
   /// <summary>
-  /// Gets or sets the list of required distributions (dependencies).
+  ///   Gets or sets the list of required distributions (dependencies).
   /// </summary>
   public List<string>? requires_dist { get; set; }
 
   /// <summary>
-  /// Extracts dependency identifiers from the requires_dist list.
+  ///   Extracts dependency identifiers from the requires_dist list.
   /// </summary>
   /// <returns>A list of dependency project identifiers.</returns>
   public List<string> GetDependencies() {
@@ -29,11 +29,12 @@ public class PypiInfo {
       // "requests (>=2.25.1)"
       // "pywin32; sys_platform == 'win32'"
       // "numpy"
-      
+
       // We want the first part, which is the package name.
       // We'll split by characters that signify the end of the name.
-      string dependency = Regex.Split(dist, @"[\s(;<>=!~]").FirstOrDefault() ?? "";
-      
+      string dependency =
+        Regex.Split(dist, @"[\s(;<>=!~]").FirstOrDefault() ?? "";
+
       if (!string.IsNullOrWhiteSpace(dependency)) {
         dependencies.Add(dependency);
       }

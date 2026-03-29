@@ -51,7 +51,8 @@ public class ArtifactService : IArtifactService {
     );
   }
 
-  public async Task Collect(string location, string processor, bool force = false) {
+  public async Task Collect(string location, string processor,
+                            bool force = false) {
     ArtifactCollectRequest request = new() {
       location = location,
       module = processor,
@@ -139,13 +140,15 @@ public class ArtifactService : IArtifactService {
     }
   }
 
-  public async Task Validate(string id, string processor_id, bool force = false) {
+  public async Task
+    Validate(string id, string processor_id, bool force = false) {
     Processor processor = await db_.GetProcessor(processor_id);
     Artifact artifact = await db_.GetArtifact(id, processor_id);
     await Validate(artifact, processor, force);
   }
 
-  public async Task Validate(Artifact artifact, Processor processor,  bool force = false) {
+  public async Task Validate(Artifact artifact, Processor processor,
+                             bool force = false) {
     if (processor.direct_collect) {
       await Collect(artifact.id, processor.id, force);
     } else {

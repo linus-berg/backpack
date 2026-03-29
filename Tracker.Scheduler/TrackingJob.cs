@@ -11,7 +11,8 @@ public class TrackingJob : IJob {
   private readonly ICoreDatabase db_;
   private readonly ILogger<TrackingJob> logger_;
 
-  public TrackingJob(ILogger<TrackingJob> logger, IArtifactService aps, ICoreDatabase db) {
+  public TrackingJob(ILogger<TrackingJob> logger, IArtifactService aps,
+                     ICoreDatabase db) {
     aps_ = aps;
     db_ = db;
     logger_ = logger;
@@ -26,10 +27,11 @@ public class TrackingJob : IJob {
     logger_.LogInformation("Tracking {Processor}", processor);
     try {
       await aps_.Track(processor);
-      
+
       // Update last_run in DB
       IEnumerable<Schedule> schedules = await db_.GetSchedules();
-      Schedule? schedule = schedules.FirstOrDefault(s => s.processor == processor);
+      Schedule? schedule =
+        schedules.FirstOrDefault(s => s.processor == processor);
       if (schedule != null) {
         schedule.last_run = DateTime.UtcNow;
         await db_.UpdateSchedule(schedule);

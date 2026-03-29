@@ -4,12 +4,15 @@ using Core.Kernel.Models;
 using Core.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 
 namespace Integration.API;
 
-public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions> {
-  private readonly ICoreDatabase database_;
+public class
+  ApiKeyAuthenticationHandler : AuthenticationHandler<
+  ApiKeyAuthenticationOptions> {
   private const string C_HEADER_NAME_ = "X-API-KEY";
+  private readonly ICoreDatabase database_;
 
   public ApiKeyAuthenticationHandler(
     IOptionsMonitor<ApiKeyAuthenticationOptions> options,
@@ -21,7 +24,10 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
   }
 
   protected override async Task<AuthenticateResult> HandleAuthenticateAsync() {
-    if (!Request.Headers.TryGetValue(C_HEADER_NAME_, out var api_key_header_values)) {
+    if (!Request.Headers.TryGetValue(
+          C_HEADER_NAME_,
+          out StringValues api_key_header_values
+        )) {
       return AuthenticateResult.NoResult();
     }
 

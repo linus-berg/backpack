@@ -11,13 +11,13 @@ using MassTransit;
 namespace Processor.Container;
 
 /// <summary>
-/// Consumer for container artifact processing requests.
+///   Consumer for container artifact processing requests.
 /// </summary>
 public class Consumer : IProcessor {
   private readonly SkopeoClient skopeo_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Consumer"/> class.
+  ///   Initializes a new instance of the <see cref="Consumer" /> class.
   /// </summary>
   /// <param name="skopeo">The Skopeo client.</param>
   public Consumer(SkopeoClient skopeo) {
@@ -25,7 +25,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact process request.
+  ///   Consumes the artifact process request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -37,7 +37,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact preview request.
+  ///   Consumes the artifact preview request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -48,9 +48,17 @@ public class Consumer : IProcessor {
         processor = context.Message.processor
       };
       await GetTags(artifact);
-      await context.RespondAsync(new ArtifactPreviewResponse { artifact = artifact });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          artifact = artifact
+        }
+      );
     } catch (Exception e) {
-      await context.RespondAsync(new ArtifactPreviewResponse { error = e.Message });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          error = e.Message
+        }
+      );
     }
   }
 

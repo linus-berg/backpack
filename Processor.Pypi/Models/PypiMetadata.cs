@@ -4,21 +4,21 @@
 namespace Processor.Pypi.Models;
 
 /// <summary>
-/// Represents the metadata for a PyPI package including all releases.
+///   Represents the metadata for a PyPI package including all releases.
 /// </summary>
 public class PypiMetadata {
   /// <summary>
-  /// Gets or sets the general information for the latest version.
+  ///   Gets or sets the general information for the latest version.
   /// </summary>
   public PypiInfo info { get; set; }
 
   /// <summary>
-  /// Gets or sets the releases for the package, grouped by version.
+  ///   Gets or sets the releases for the package, grouped by version.
   /// </summary>
   public Dictionary<string, List<PypiRelease>> releases { get; set; }
 
   /// <summary>
-  /// Retrieves all versions that have valid releases.
+  ///   Retrieves all versions that have valid releases.
   /// </summary>
   /// <returns>A dictionary of version strings and their corresponding list of valid releases.</returns>
   public Dictionary<string, List<PypiRelease>> GetAllValidReleases() {
@@ -35,6 +35,7 @@ public class PypiMetadata {
         if (!valid.ContainsKey(version)) {
           valid[version] = new List<PypiRelease>();
         }
+
         valid[version].Add(release);
       }
     }

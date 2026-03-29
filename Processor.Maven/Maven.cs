@@ -16,7 +16,7 @@ using Artifact = Core.Kernel.Models.Artifact;
 namespace Processor.Maven;
 
 /// <summary>
-/// Implementation of Maven artifact processing.
+///   Implementation of Maven artifact processing.
 /// </summary>
 public class Maven : IMaven {
   private const string C_MAVEN_ = "https://repo1.maven.org/maven2";
@@ -26,7 +26,7 @@ public class Maven : IMaven {
   private readonly MavenCentralRepository repo_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Maven"/> class.
+  ///   Initializes a new instance of the <see cref="Maven" /> class.
   /// </summary>
   /// <param name="logger">The logger instance.</param>
   public Maven(ILogger<Maven> logger) {
@@ -35,7 +35,7 @@ public class Maven : IMaven {
   }
 
   /// <summary>
-  /// Processes the artifact to find Maven versions and dependencies.
+  ///   Processes the artifact to find Maven versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>
@@ -86,7 +86,7 @@ public class Maven : IMaven {
   }
 
   /// <summary>
-  /// Searches Maven for versions and files of an artifact.
+  ///   Searches Maven for versions and files of an artifact.
   /// </summary>
   /// <param name="g">The group identifier.</param>
   /// <param name="id">The artifact identifier.</param>
@@ -113,7 +113,7 @@ public class Maven : IMaven {
   }
 
   /// <summary>
-  /// Gets metadata for a Maven artifact.
+  ///   Gets metadata for a Maven artifact.
   /// </summary>
   /// <param name="g">The group identifier.</param>
   /// <param name="id">The artifact identifier.</param>
@@ -131,7 +131,7 @@ public class Maven : IMaven {
   }
 
   /// <summary>
-  /// Gets the POM (Project Object Model) for a specific version of a Maven artifact.
+  ///   Gets the POM (Project Object Model) for a specific version of a Maven artifact.
   /// </summary>
   /// <param name="g">The group identifier.</param>
   /// <param name="id">The artifact identifier.</param>
@@ -150,7 +150,7 @@ public class Maven : IMaven {
   }
 
   /// <summary>
-  /// Constructs the URL for a Maven artifact file.
+  ///   Constructs the URL for a Maven artifact file.
   /// </summary>
   /// <param name="group">The group identifier.</param>
   /// <param name="id">The artifact identifier.</param>

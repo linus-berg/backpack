@@ -9,14 +9,14 @@ using RestSharp;
 namespace Processor.Jetbrains.IDE;
 
 /// <summary>
-/// Logic for processing JetBrains IDE products.
+///   Logic for processing JetBrains IDE products.
 /// </summary>
 public class Jetbrains : IJetbrains {
   private const string C_API_ = "https://data.services.jetbrains.com";
   private readonly RestClient client_ = new(C_API_);
 
   /// <summary>
-  /// Processes the artifact to find JetBrains IDE releases.
+  ///   Processes the artifact to find JetBrains IDE releases.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

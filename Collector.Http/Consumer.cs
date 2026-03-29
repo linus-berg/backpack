@@ -22,8 +22,14 @@ public class Consumer : ICollector {
   /// <param name="fs">The file system.</param>
   public Consumer(FileSystem fs) {
     fs_ = fs;
-    delta_ = Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_HTTP_DELTA) == "true";
-    forward_ = Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_HTTP_MODE) == "forward";
+    delta_ =
+      Configuration.GetBackpackVariable(
+        CoreVariables.BP_COLLECTOR_HTTP_DELTA
+      ) ==
+      "true";
+    forward_ =
+      Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_HTTP_MODE) ==
+      "forward";
   }
 
   /// <inheritdoc />

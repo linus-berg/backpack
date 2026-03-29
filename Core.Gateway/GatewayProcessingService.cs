@@ -2,7 +2,6 @@ using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using MassTransit;
-using System.Text.Json;
 
 namespace Core.Gateway;
 
@@ -21,7 +20,8 @@ public class GatewayProcessingService : IGatewayProcessingService {
     logger_ = logger;
   }
 
-  public async Task ProcessArtifact(ConsumeContext<ArtifactProcessedRequest> context) {
+  public async Task ProcessArtifact(
+    ConsumeContext<ArtifactProcessedRequest> context) {
     ArtifactProcessedRequest request = context.Message;
     Artifact artifact = request.artifact;
     Artifact? stored = await db_.GetArtifact(artifact.id, artifact.processor);
@@ -62,38 +62,65 @@ public class GatewayProcessingService : IGatewayProcessingService {
 
   private bool AreDeepEqual(Artifact a, Artifact b) {
     // Basic fields
-    if (a.id != b.id || a.processor != b.processor || a.filter != b.filter || a.root != b.root) {
+    if (a.id != b.id ||
+        a.processor != b.processor ||
+        a.filter != b.filter ||
+        a.root != b.root) {
       return false;
     }
 
     // Config dictionary comparison
-    if (!DictionariesAreEqual(a.config, b.config)) return false;
+    if (!DictionariesAreEqual(a.config, b.config)) {
+      return false;
+    }
 
     // Versions dictionary comparison
-    if (a.versions.Count != b.versions.Count) return false;
+    if (a.versions.Count != b.versions.Count) {
+      return false;
+    }
+
     foreach (KeyValuePair<string, ArtifactVersion> kv in a.versions) {
-      if (!b.versions.TryGetValue(kv.Key, out ArtifactVersion? b_val)) return false;
+      if (!b.versions.TryGetValue(kv.Key, out ArtifactVersion? b_val)) {
+        return false;
+      }
+
       // We could do deeper here if ArtifactVersion has complex nested data
-      if (kv.Value.status != b_val.status) return false;
-      if (kv.Value.files.Count != b_val.files.Count) return false;
+      if (kv.Value.status != b_val.status) {
+        return false;
+      }
+
+      if (kv.Value.files.Count != b_val.files.Count) {
+        return false;
+      }
     }
 
     // Dependencies comparison
-    if (a.dependencies.Count != b.dependencies.Count) return false;
+    if (a.dependencies.Count != b.dependencies.Count) {
+      return false;
+    }
+
     foreach (ArtifactDependency dep in a.dependencies) {
-      if (!b.dependencies.Contains(dep)) return false;
+      if (!b.dependencies.Contains(dep)) {
+        return false;
+      }
     }
 
     return true;
   }
 
-  private bool DictionariesAreEqual<TKey, TValue>(IDictionary<TKey, TValue> dict1, IDictionary<TKey, TValue> dict2) {
-    if (dict1.Count != dict2.Count) return false;
+  private bool DictionariesAreEqual<TKey, TValue>(
+    IDictionary<TKey, TValue> dict1, IDictionary<TKey, TValue> dict2) {
+    if (dict1.Count != dict2.Count) {
+      return false;
+    }
+
     foreach (KeyValuePair<TKey, TValue> kv in dict1) {
-      if (!dict2.TryGetValue(kv.Key, out TValue value) || !EqualityComparer<TValue>.Default.Equals(kv.Value, value)) {
+      if (!dict2.TryGetValue(kv.Key, out TValue value) ||
+          !EqualityComparer<TValue>.Default.Equals(kv.Value, value)) {
         return false;
       }
     }
+
     return true;
   }
 

@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Core.Kernel.Messages;
 
 /// <summary>
-/// Represents a request to route an artifact for processing.
+///   Represents a request to route an artifact for processing.
 /// </summary>
 public class ArtifactRouteRequest {
   /// <summary>
-  /// Gets or sets the artifact to be routed.
+  ///   Gets or sets the artifact to be routed.
   /// </summary>
   public Artifact artifact { get; set; }
 }

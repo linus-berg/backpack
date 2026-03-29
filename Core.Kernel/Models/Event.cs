@@ -1,5 +1,3 @@
-using System;
-
 namespace Core.Kernel.Models;
 
 public enum EventSeverity {
@@ -15,6 +13,6 @@ public class Event {
   public string source { get; set; }
   public string message { get; set; }
   public EventSeverity severity { get; set; } = EventSeverity.INFO;
-  
+
   public string user { get; set; }
 }

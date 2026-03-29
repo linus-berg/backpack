@@ -4,11 +4,11 @@
 namespace Processor.Maven.Models;
 
 /// <summary>
-/// Represents a Maven search result.
+///   Represents a Maven search result.
 /// </summary>
 public class MavenSearch {
   /// <summary>
-  /// Gets or sets the search response.
+  ///   Gets or sets the search response.
   /// </summary>
   public MavenSearchResponse response { get; set; }
 }

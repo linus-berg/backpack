@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Core.Kernel.Models;
 
 public class PendingArtifact {

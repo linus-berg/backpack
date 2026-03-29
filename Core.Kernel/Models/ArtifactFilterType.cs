@@ -4,15 +4,16 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Specifies the type of filter used for artifact versions.
+///   Specifies the type of filter used for artifact versions.
 /// </summary>
 public enum ArtifactFilterType {
   /// <summary>
-  /// Regular expression filter.
+  ///   Regular expression filter.
   /// </summary>
   REGEX = 0,
+
   /// <summary>
-  /// Semantic versioning range filter.
+  ///   Semantic versioning range filter.
   /// </summary>
   SEMVER_RANGE = 1
 }

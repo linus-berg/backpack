@@ -4,11 +4,11 @@
 namespace Processor.Pypi;
 
 /// <summary>
-/// Worker service for the PyPI processor.
+///   Worker service for the PyPI processor.
 /// </summary>
 public class Worker : BackgroundService {
   /// <summary>
-  /// Executes the worker's background operations.
+  ///   Executes the worker's background operations.
   /// </summary>
   /// <param name="stoppingToken">The cancellation token.</param>
   /// <returns>A task that represents the execution operation.</returns>

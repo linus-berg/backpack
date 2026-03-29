@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Security.Claims;
 using Integration.API.Output;
 using Microsoft.AspNetCore.Authorization;
@@ -22,8 +21,10 @@ public class AuthController : ControllerBase {
   [AllowAnonymous]
   public OidcOptions GetOidcConfig() {
     return new OidcOptions {
-      authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ?? "http://localhost:8090/realms/master",
-      client_id = Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ?? "backpack"
+      authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ??
+                  "http://localhost:8090/realms/master",
+      client_id = Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ??
+                  "backpack"
     };
   }
 }

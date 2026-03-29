@@ -13,11 +13,11 @@ using OpenTelemetry.Trace;
 namespace Core.Kernel.Extensions;
 
 /// <summary>
-/// Provides extension methods for <see cref="IServiceCollection"/> to configure system telemetry.
+///   Provides extension methods for <see cref="IServiceCollection" /> to configure system telemetry.
 /// </summary>
 public static class ServiceExtensions {
   /// <summary>
-  /// Adds OpenTelemetry tracing and metrics to the service collection.
+  ///   Adds OpenTelemetry tracing and metrics to the service collection.
   /// </summary>
   /// <param name="s">The service collection to configure.</param>
   /// <param name="registration">The module registration information.</param>
@@ -48,7 +48,9 @@ public static class ServiceExtensions {
          builder.AddOtlpExporter(
            cfg => {
              cfg.Endpoint =
-               new Uri(Configuration.GetBackpackVariable(CoreVariables.BP_OTEL_HOST));
+               new Uri(
+                 Configuration.GetBackpackVariable(CoreVariables.BP_OTEL_HOST)
+               );
              cfg.Protocol = OtlpExportProtocol.Grpc;
            }
          );
@@ -62,7 +64,9 @@ public static class ServiceExtensions {
          builder.AddOtlpExporter(
            cfg => {
              cfg.Endpoint =
-               new Uri(Configuration.GetBackpackVariable(CoreVariables.BP_OTEL_HOST));
+               new Uri(
+                 Configuration.GetBackpackVariable(CoreVariables.BP_OTEL_HOST)
+               );
              cfg.Protocol = OtlpExportProtocol.Grpc;
            }
          );

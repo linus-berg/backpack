@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Processor.Jetbrains.Plugins;
 
 /// <summary>
-/// Interface for JetBrains plugins processing.
+///   Interface for JetBrains plugins processing.
 /// </summary>
 public interface IJetbrains {
   /// <summary>
-  /// Processes the artifact to find JetBrains plugin updates.
+  ///   Processes the artifact to find JetBrains plugin updates.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

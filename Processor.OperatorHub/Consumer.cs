@@ -20,7 +20,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact preview request.
+  ///   Consumes the artifact preview request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -31,9 +31,17 @@ public class Consumer : IProcessor {
         processor = context.Message.processor
       };
       await operator_hub_.ProcessArtifact(artifact);
-      await context.RespondAsync(new ArtifactPreviewResponse { artifact = artifact });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          artifact = artifact
+        }
+      );
     } catch (Exception e) {
-      await context.RespondAsync(new ArtifactPreviewResponse { error = e.Message });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          error = e.Message
+        }
+      );
     }
   }
 }

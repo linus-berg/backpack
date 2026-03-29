@@ -4,23 +4,26 @@
 namespace Core.Kernel.Constants;
 
 /// <summary>
-/// Specifies the type of module within the system.
+///   Specifies the type of module within the system.
 /// </summary>
 public enum ModuleType {
   /// <summary>
-  /// A processor module.
+  ///   A processor module.
   /// </summary>
   PROCESSOR,
+
   /// <summary>
-  /// A collector module.
+  ///   A collector module.
   /// </summary>
   COLLECTOR,
+
   /// <summary>
-  /// A tracker module.
+  ///   A tracker module.
   /// </summary>
   TRACKER,
+
   /// <summary>
-  /// A core system module.
+  ///   A core system module.
   /// </summary>
   CORE
 }

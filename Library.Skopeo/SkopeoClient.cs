@@ -18,7 +18,9 @@ public class SkopeoClient {
   public async Task<bool> CopyToRegistry(string remote_image) {
     Image image = new(remote_image);
     string? registry =
-      Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_CONTAINER_REGISTRY);
+      Configuration.GetBackpackVariable(
+        CoreVariables.BP_COLLECTOR_CONTAINER_REGISTRY
+      );
 
     string internal_image = $"docker://{registry}/{image.Repository}";
     StringBuilder std_out = new();
@@ -85,10 +87,10 @@ public class SkopeoClient {
     } catch (Exception e) {
       logger_.LogError("{Error}", e.ToString());
     }
-    
+
     logger_.LogInformation("{StdOut}", std_out.ToString());
     logger_.LogInformation("{StdErr}", std_err.ToString());
-    
+
     if (result is { IsSuccess: false }) {
       throw new ExecutionEngineException("Skopeo exception");
     }
@@ -118,7 +120,9 @@ public class SkopeoClient {
   public async Task<SkopeoManifest?> ImageExists(string input) {
     Image image = new(input);
     string? registry =
-      Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_CONTAINER_REGISTRY);
+      Configuration.GetBackpackVariable(
+        CoreVariables.BP_COLLECTOR_CONTAINER_REGISTRY
+      );
     Command cmd = Cli.Wrap("skopeo")
                      .WithArguments(
                        args => {

@@ -1,7 +1,6 @@
 using Core.Kernel;
 using Core.Kernel.Models;
 using Core.Services;
-using Integration.API.Output;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,11 +9,12 @@ namespace Integration.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 public class StatusController : ControllerBase {
-  private readonly IStatusService status_service_;
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
+  private readonly IStatusService status_service_;
 
-  public StatusController(IStatusService status_service, ICoreDatabase database, IEventService event_service) {
+  public StatusController(IStatusService status_service, ICoreDatabase database,
+                          IEventService event_service) {
     status_service_ = status_service;
     database_ = database;
     event_service_ = event_service;
@@ -24,7 +24,7 @@ public class StatusController : ControllerBase {
   public ActionResult GetStatus() {
     return Ok("Backpack is OK.");
   }
-  
+
   [HttpGet("queue")]
   public async Task<List<QueueStatus>> GetQueueStatus() {
     return await status_service_.QueueStatus();

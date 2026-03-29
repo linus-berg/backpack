@@ -11,11 +11,12 @@ namespace Integration.API.Controllers;
 [ApiController]
 [Authorize]
 public class SchedulerController : ControllerBase {
-  private readonly ICoreDatabase database_;
   private readonly IArtifactService aps_;
+  private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
 
-  public SchedulerController(ICoreDatabase database, IArtifactService aps, IEventService event_service) {
+  public SchedulerController(ICoreDatabase database, IArtifactService aps,
+                             IEventService event_service) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;
@@ -38,6 +39,7 @@ public class SchedulerController : ControllerBase {
         // Log or handle invalid cron
       }
     }
+
     return schedules;
   }
 
@@ -51,7 +53,11 @@ public class SchedulerController : ControllerBase {
       EventSeverity.INFO,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
-    return Ok(new { Message = $"Sync triggered for {processor}" });
+    return Ok(
+      new {
+        Message = $"Sync triggered for {processor}"
+      }
+    );
   }
 
   [HttpPost]

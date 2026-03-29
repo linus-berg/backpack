@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Processor.Pypi;
 
 /// <summary>
-/// Interface for PyPI artifact processing.
+///   Interface for PyPI artifact processing.
 /// </summary>
 public interface IPypi {
   /// <summary>
-  /// Processes the artifact to find PyPI package versions and dependencies.
+  ///   Processes the artifact to find PyPI package versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

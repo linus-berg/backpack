@@ -6,15 +6,16 @@ using Core.Kernel.Models;
 namespace Core.Kernel.Messages;
 
 /// <summary>
-/// Represents a request to process a specific artifact.
+///   Represents a request to process a specific artifact.
 /// </summary>
 public class ArtifactProcessRequest {
   /// <summary>
-  /// Gets or sets the context ID associated with this process request.
+  ///   Gets or sets the context ID associated with this process request.
   /// </summary>
   public Guid ctx { get; set; }
+
   /// <summary>
-  /// Gets or sets the artifact to be processed.
+  ///   Gets or sets the artifact to be processed.
   /// </summary>
   public Artifact artifact { get; set; }
 }

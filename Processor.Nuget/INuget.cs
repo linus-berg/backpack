@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Processor.Nuget;
 
 /// <summary>
-/// Interface for NuGet package processing.
+///   Interface for NuGet package processing.
 /// </summary>
 public interface INuget {
   /// <summary>
-  /// Processes the artifact to find NuGet package versions and dependencies.
+  ///   Processes the artifact to find NuGet package versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

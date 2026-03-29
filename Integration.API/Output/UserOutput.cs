@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Integration.API.Output;
 
 public class UserOutput {

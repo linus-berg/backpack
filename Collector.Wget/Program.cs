@@ -17,7 +17,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                        new FolderFileStorage(
                          b => {
                            b.Folder(
-                             Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_DIRECTORY)
+                             Configuration.GetBackpackVariable(
+                               CoreVariables.BP_COLLECTOR_DIRECTORY
+                             )
                            );
                            return b;
                          }

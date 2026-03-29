@@ -10,13 +10,13 @@ using MassTransit;
 namespace Processor.Github.Releases;
 
 /// <summary>
-/// Consumer for GitHub releases artifact processing requests.
+///   Consumer for GitHub releases artifact processing requests.
 /// </summary>
 public class Consumer : IProcessor {
   private readonly IGithubReleases gh_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Consumer"/> class.
+  ///   Initializes a new instance of the <see cref="Consumer" /> class.
   /// </summary>
   /// <param name="gh">The GitHub releases processor.</param>
   public Consumer(IGithubReleases gh) {
@@ -24,7 +24,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact process request.
+  ///   Consumes the artifact process request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -35,7 +35,7 @@ public class Consumer : IProcessor {
   }
 
   /// <summary>
-  /// Consumes the artifact preview request.
+  ///   Consumes the artifact preview request.
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
@@ -46,9 +46,17 @@ public class Consumer : IProcessor {
         processor = context.Message.processor
       };
       await gh_.ProcessArtifact(artifact);
-      await context.RespondAsync(new ArtifactPreviewResponse { artifact = artifact });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          artifact = artifact
+        }
+      );
     } catch (Exception e) {
-      await context.RespondAsync(new ArtifactPreviewResponse { error = e.Message });
+      await context.RespondAsync(
+        new ArtifactPreviewResponse {
+          error = e.Message
+        }
+      );
     }
   }
 }

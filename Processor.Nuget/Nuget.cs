@@ -13,7 +13,7 @@ using ILogger = NuGet.Common.ILogger;
 namespace Processor.Nuget;
 
 /// <summary>
-/// Logic for processing NuGet packages from NuGet.org.
+///   Logic for processing NuGet packages from NuGet.org.
 /// </summary>
 public class Nuget : INuget {
   private const string C_API_ = "https://api.nuget.org/v3/index.json";
@@ -26,7 +26,7 @@ public class Nuget : INuget {
   private FindPackageByIdResource resource_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Nuget"/> class.
+  ///   Initializes a new instance of the <see cref="Nuget" /> class.
   /// </summary>
   public Nuget() {
     repository_ = Repository.Factory.GetCoreV3(C_API_);
@@ -37,7 +37,7 @@ public class Nuget : INuget {
   }
 
   /// <summary>
-  /// Processes the artifact to find NuGet package versions and dependencies.
+  ///   Processes the artifact to find NuGet package versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

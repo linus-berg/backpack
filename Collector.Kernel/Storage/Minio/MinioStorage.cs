@@ -144,7 +144,10 @@ public class MinioStorage : IDisposable {
   ///   Gets information about the specified file.
   /// </summary>
   /// <param name="path">The file path.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result contains the file info, or null if the file does not exist.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result contains the file info, or null if the file
+  ///   does not exist.
+  /// </returns>
   public async Task<FileSpec?> GetFileInfoAsync(string path) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
@@ -236,7 +239,10 @@ public class MinioStorage : IDisposable {
   /// <param name="path">The file path.</param>
   /// <param name="stream">The file content stream.</param>
   /// <param name="cancellation_token">The cancellation token.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully saved.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   saved.
+  /// </returns>
   public async Task<bool> SaveFileAsync(string path, Stream stream,
                                         CancellationToken cancellation_token =
                                           default) {
@@ -317,7 +323,10 @@ public class MinioStorage : IDisposable {
   /// <param name="path">The current file path.</param>
   /// <param name="new_path">The new file path.</param>
   /// <param name="cancellation_token">The cancellation token.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully renamed.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   renamed.
+  /// </returns>
   public async Task<bool> RenameFileAsync(string path, string new_path,
                                           CancellationToken cancellation_token =
                                             default) {
@@ -372,7 +381,10 @@ public class MinioStorage : IDisposable {
   /// </summary>
   /// <param name="path">The file path.</param>
   /// <param name="contents">The file contents.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully saved.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   saved.
+  /// </returns>
   public Task<bool> SaveFileAsync(string path, string contents) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
@@ -390,7 +402,10 @@ public class MinioStorage : IDisposable {
   /// <param name="path">The source file path.</param>
   /// <param name="target_path">The target file path.</param>
   /// <param name="cancellation_token">The cancellation token.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully copied.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   copied.
+  /// </returns>
   public async Task<bool> CopyFileAsync(string path, string target_path,
                                         CancellationToken cancellation_token =
                                           default) {
@@ -442,7 +457,10 @@ public class MinioStorage : IDisposable {
   /// </summary>
   /// <param name="path">The file path.</param>
   /// <param name="cancellation_token">The cancellation token.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the file was successfully deleted.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
+  ///   deleted.
+  /// </returns>
   public async Task<bool> DeleteFileAsync(string path,
                                           CancellationToken cancellation_token =
                                             default) {

@@ -24,8 +24,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Core.Infrastructure\Core.Infrastructure.csproj" />
-        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj" />
-        <ProjectReference Include="..\Core.Services\Core.Services.csproj" />
+        <ProjectReference Include="..\Core.Infrastructure\Core.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj"/>
+        <ProjectReference Include="..\Core.Services\Core.Services.csproj"/>
     </ItemGroup>
 </Project>

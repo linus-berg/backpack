@@ -9,7 +9,7 @@ using RestSharp;
 namespace Processor.Helm;
 
 /// <summary>
-/// Logic for processing Helm charts from Artifact Hub.
+///   Logic for processing Helm charts from Artifact Hub.
 /// </summary>
 public class Helm {
   private const string C_API_ = "https://artifacthub.io/api/v1/packages/helm";
@@ -17,7 +17,7 @@ public class Helm {
   private readonly ILogger<Helm> logger_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="Helm"/> class.
+  ///   Initializes a new instance of the <see cref="Helm" /> class.
   /// </summary>
   /// <param name="logger">The logger instance.</param>
   public Helm(ILogger<Helm> logger) {
@@ -38,7 +38,7 @@ public class Helm {
   }
 
   /// <summary>
-  /// Processes the artifact to find Helm chart versions and dependencies.
+  ///   Processes the artifact to find Helm chart versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation.</returns>

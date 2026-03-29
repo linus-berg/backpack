@@ -7,7 +7,8 @@ using Microsoft.Extensions.Hosting;
 namespace Core.Infrastructure.Services;
 
 public static class ProcessorHost {
-  public static IHost Create(string[] args, ModuleRegistration registration, Action<IServiceCollection> configure_services) {
+  public static IHost Create(string[] args, ModuleRegistration registration,
+                             Action<IServiceCollection> configure_services) {
     return Host.CreateDefaultBuilder(args)
                .AddLogging(registration)
                .ConfigureServices(

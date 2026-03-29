@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Processor.Npm;
 
 /// <summary>
-/// Interface for NPM package processing.
+///   Interface for NPM package processing.
 /// </summary>
 public interface INpm {
   /// <summary>
-  /// Processes the artifact to find NPM package versions and dependencies.
+  ///   Processes the artifact to find NPM package versions and dependencies.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

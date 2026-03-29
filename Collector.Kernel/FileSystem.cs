@@ -11,7 +11,7 @@ using Polly.Registry;
 namespace Collector.Kernel;
 
 /// <summary>
-/// Provides high-level file system operations abstraction using a Minio storage backend.
+///   Provides high-level file system operations abstraction using a Minio storage backend.
 /// </summary>
 public class FileSystem {
   private readonly string? base_dir_ =
@@ -21,7 +21,7 @@ public class FileSystem {
   private readonly ResiliencePipeline<bool> storage_pipeline_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="FileSystem"/> class.
+  ///   Initializes a new instance of the <see cref="FileSystem" /> class.
   /// </summary>
   /// <param name="storage_backend">The Minio storage backend to use.</param>
   /// <param name="polly">The resilience pipeline provider.</param>
@@ -32,7 +32,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Checks if a file or directory exists at the specified path.
+  ///   Checks if a file or directory exists at the specified path.
   /// </summary>
   /// <param name="path">The path to check.</param>
   /// <returns>True if it exists; otherwise, false.</returns>
@@ -41,7 +41,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Retrieves a list of files matching the specified search pattern.
+  ///   Retrieves a list of files matching the specified search pattern.
   /// </summary>
   /// <param name="search_pattern">The pattern to match files against.</param>
   /// <returns>A collection of matching file specifications.</returns>
@@ -51,7 +51,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Retrieves a paged list of files matching the specified search pattern.
+  ///   Retrieves a paged list of files matching the specified search pattern.
   /// </summary>
   /// <param name="search_pattern">The pattern to match files against.</param>
   /// <param name="page_size">The maximum number of files per page.</param>
@@ -65,7 +65,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Deletes the file at the specified path.
+  ///   Deletes the file at the specified path.
   /// </summary>
   /// <param name="path">The path of the file to delete.</param>
   /// <returns>True if the file was deleted; otherwise, false.</returns>
@@ -74,7 +74,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Renames or moves a file from one path to another.
+  ///   Renames or moves a file from one path to another.
   /// </summary>
   /// <param name="a">The source path.</param>
   /// <param name="b">The destination path.</param>
@@ -84,7 +84,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Opens a stream for reading the file at the specified path.
+  ///   Opens a stream for reading the file at the specified path.
   /// </summary>
   /// <param name="path">The path of the file to read.</param>
   /// <returns>A stream for reading the file.</returns>
@@ -93,7 +93,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Reads the entire content of a file as a string.
+  ///   Reads the entire content of a file as a string.
   /// </summary>
   /// <param name="path">The path of the file to read.</param>
   /// <returns>The string content of the file.</returns>
@@ -102,7 +102,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Writes a string to a file at the specified path.
+  ///   Writes a string to a file at the specified path.
   /// </summary>
   /// <param name="path">The path where the string will be written.</param>
   /// <param name="content">The string content to write.</param>
@@ -119,7 +119,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Writes a stream to a file at the specified path.
+  ///   Writes a stream to a file at the specified path.
   /// </summary>
   /// <param name="path">The path where the stream will be written.</param>
   /// <param name="stream">The stream content to write.</param>
@@ -138,7 +138,7 @@ public class FileSystem {
 
 
   /// <summary>
-  /// Gets the daily deposit path for deltas of a specific module.
+  ///   Gets the daily deposit path for deltas of a specific module.
   /// </summary>
   /// <param name="module">The module name.</param>
   /// <returns>The relative path for the daily delta deposit.</returns>
@@ -148,7 +148,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Creates a delta link for a given module and artifact URI.
+  ///   Creates a delta link for a given module and artifact URI.
   /// </summary>
   /// <param name="module">The module name.</param>
   /// <param name="uri_str">The URI of the artifact.</param>
@@ -163,7 +163,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Creates a link in S3 by writing a target path into a link file.
+  ///   Creates a link in S3 by writing a target path into a link file.
   /// </summary>
   /// <param name="link">The link file path.</param>
   /// <param name="target">The target path.</param>
@@ -173,7 +173,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Gets the full path for an artifact based on its module and URI.
+  ///   Gets the full path for an artifact based on its module and URI.
   /// </summary>
   /// <param name="module">The module name.</param>
   /// <param name="uri_str">The URI of the artifact.</param>
@@ -185,7 +185,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Retrieves the size of a file in bytes.
+  ///   Retrieves the size of a file in bytes.
   /// </summary>
   /// <param name="filepath">The path of the file.</param>
   /// <returns>The size of the file in bytes.</returns>
@@ -197,7 +197,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Determines the disk location based on a URI.
+  ///   Determines the disk location based on a URI.
   /// </summary>
   /// <param name="uri">The URI to parse.</param>
   /// <returns>A string representing the disk location.</returns>
@@ -206,7 +206,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Cleans a file path by removing special markers.
+  ///   Cleans a file path by removing special markers.
   /// </summary>
   /// <param name="location">The file path to clean.</param>
   /// <returns>The cleaned file path.</returns>
@@ -215,7 +215,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Combines a module name and a file path into a module-specific path.
+  ///   Combines a module name and a file path into a module-specific path.
   /// </summary>
   /// <param name="module">The module name.</param>
   /// <param name="filepath">The file path.</param>
@@ -225,7 +225,7 @@ public class FileSystem {
   }
 
   /// <summary>
-  /// Gets the directory path for a module, optionally creating it.
+  ///   Gets the directory path for a module, optionally creating it.
   /// </summary>
   /// <param name="module">The module name.</param>
   /// <param name="create">Whether to create the directory if it doesn't exist.</param>

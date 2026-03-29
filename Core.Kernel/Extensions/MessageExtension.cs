@@ -8,11 +8,11 @@ using MassTransit;
 namespace Core.Kernel.Extensions;
 
 /// <summary>
-/// Provides extension methods for <see cref="ConsumeContext"/> to simplify message sending and processing.
+///   Provides extension methods for <see cref="ConsumeContext" /> to simplify message sending and processing.
 /// </summary>
 public static class MessageExtension {
   /// <summary>
-  /// Sends a collection request for an artifact at a specific location.
+  ///   Sends a collection request for an artifact at a specific location.
   /// </summary>
   /// <param name="ctx">The consume context.</param>
   /// <param name="location">The location of the artifact.</param>
@@ -31,7 +31,7 @@ public static class MessageExtension {
   }
 
   /// <summary>
-  /// Sends a reply to the gateway indicating that an artifact has been processed.
+  ///   Sends a reply to the gateway indicating that an artifact has been processed.
   /// </summary>
   /// <param name="context">The consume context for the process request.</param>
   /// <param name="artifact">The processed artifact.</param>

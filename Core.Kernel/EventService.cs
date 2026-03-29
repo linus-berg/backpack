@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using MassTransit;
@@ -16,13 +14,16 @@ public class EventService : IEventService {
   public async Task LogEvent(string source, string message,
                              EventSeverity severity = EventSeverity.INFO,
                              string user = "System") {
-    ISendEndpoint endpoint = await bus_.GetSendEndpoint(Endpoints.S_SYSTEM_EVENT);
-    await endpoint.Send(new SystemEventMessage {
-      source = source,
-      message = message,
-      severity = severity,
-      user = user,
-      timestamp = DateTime.UtcNow
-    });
+    ISendEndpoint endpoint =
+      await bus_.GetSendEndpoint(Endpoints.S_SYSTEM_EVENT);
+    await endpoint.Send(
+      new SystemEventMessage {
+        source = source,
+        message = message,
+        severity = severity,
+        user = user,
+        timestamp = DateTime.UtcNow
+      }
+    );
   }
 }

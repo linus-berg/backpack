@@ -9,11 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Core.Kernel;
 
 /// <summary>
-/// Provides utility methods for registering modules and configuring MassTransit with RabbitMQ.
+///   Provides utility methods for registering modules and configuring MassTransit with RabbitMQ.
 /// </summary>
 public static class RegistrationUtils {
   /// <summary>
-  /// Registers a module with MassTransit and configures its endpoints.
+  ///   Registers a module with MassTransit and configures its endpoints.
   /// </summary>
   /// <param name="sc">The service collection to register with.</param>
   /// <param name="registration">The module registration information.</param>
@@ -54,7 +54,7 @@ public static class RegistrationUtils {
   }
 
   /// <summary>
-  /// Configures retry and redelivery policies for a RabbitMQ receive endpoint.
+  ///   Configures retry and redelivery policies for a RabbitMQ receive endpoint.
   /// </summary>
   /// <param name="endpoint">The endpoint configurator.</param>
   private static void ConfigureRetrying(
@@ -83,7 +83,7 @@ public static class RegistrationUtils {
   }
 
   /// <summary>
-  /// Sets up the RabbitMQ host and authentication for the bus factory.
+  ///   Sets up the RabbitMQ host and authentication for the bus factory.
   /// </summary>
   /// <param name="cfg">The bus factory configurator.</param>
   public static void SetupRabbitMq(this IRabbitMqBusFactoryConfigurator cfg) {
@@ -91,8 +91,12 @@ public static class RegistrationUtils {
       Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_HOST),
       "/",
       h => {
-        h.Username(Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_USER));
-        h.Password(Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_PASS));
+        h.Username(
+          Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_USER)
+        );
+        h.Password(
+          Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_PASS)
+        );
       }
     );
   }

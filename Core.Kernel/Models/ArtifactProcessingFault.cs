@@ -4,23 +4,26 @@
 namespace Core.Kernel.Models;
 
 /// <summary>
-/// Represents a fault that occurred during artifact processing.
+///   Represents a fault that occurred during artifact processing.
 /// </summary>
 public class ArtifactProcessingFault {
   /// <summary>
-  /// Gets or sets the unique identifier for the fault.
+  ///   Gets or sets the unique identifier for the fault.
   /// </summary>
   public int id { get; set; }
+
   /// <summary>
-  /// Gets or sets the name of the fault.
+  ///   Gets or sets the name of the fault.
   /// </summary>
   public string name { get; set; }
+
   /// <summary>
-  /// Gets or sets the name of the processor that encountered the fault.
+  ///   Gets or sets the name of the processor that encountered the fault.
   /// </summary>
   public string processor { get; set; }
+
   /// <summary>
-  /// Gets or sets the time when the fault occurred.
+  ///   Gets or sets the time when the fault occurred.
   /// </summary>
   public DateTime time { get; set; }
 }

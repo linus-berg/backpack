@@ -4,16 +4,16 @@
 namespace Processor.Npm.Models;
 
 /// <summary>
-/// Represents the distribution information of an NPM package version.
+///   Represents the distribution information of an NPM package version.
 /// </summary>
 public class Distribution {
   /// <summary>
-  /// Gets or sets the SHA sum of the package.
+  ///   Gets or sets the SHA sum of the package.
   /// </summary>
   public string shasum { get; set; }
 
   /// <summary>
-  /// Gets or sets the URL to the tarball.
+  ///   Gets or sets the URL to the tarball.
   /// </summary>
   public string tarball { get; set; }
 }

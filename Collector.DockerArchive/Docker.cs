@@ -35,7 +35,10 @@ public class Docker {
   ///   Gets a tar archive of a remote image.
   /// </summary>
   /// <param name="remote_image">The remote image location.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the archive was successfully retrieved.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the archive was
+  ///   successfully retrieved.
+  /// </returns>
   public async Task<bool> GetTarArchive(string remote_image) {
     SkopeoArchive archive;
     try {
@@ -61,7 +64,10 @@ public class Docker {
   ///   Pushes the archive to storage.
   /// </summary>
   /// <param name="archive">The archive to push.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the archive was successfully pushed.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the archive was
+  ///   successfully pushed.
+  /// </returns>
   private async Task<bool> PushToStorage(SkopeoArchive archive) {
     if (!File.Exists(archive.TarPath)) {
       throw new FileNotFoundException($"{archive.TarPath} not found on disk.");

@@ -4,15 +4,16 @@
 namespace Core.Kernel.Registrations;
 
 /// <summary>
-/// Represents a message queue endpoint with a specific name and concurrency level.
+///   Represents a message queue endpoint with a specific name and concurrency level.
 /// </summary>
 public class Endpoint {
   /// <summary>
-  /// Gets or sets the name of the endpoint.
+  ///   Gets or sets the name of the endpoint.
   /// </summary>
   public string name { get; set; }
+
   /// <summary>
-  /// Gets or sets the maximum number of concurrent messages to process for this endpoint.
+  ///   Gets or sets the maximum number of concurrent messages to process for this endpoint.
   /// </summary>
   public int concurrency { get; set; } = 10;
 }

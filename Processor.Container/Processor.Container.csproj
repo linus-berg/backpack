@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj" />
-        <ProjectReference Include="..\Library.Skopeo\Library.Skopeo.csproj" />
+        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj"/>
+        <ProjectReference Include="..\Library.Skopeo\Library.Skopeo.csproj"/>
     </ItemGroup>
 </Project>

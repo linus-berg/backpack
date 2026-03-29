@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Collector.Kernel\Collector.Kernel.csproj" />
+        <ProjectReference Include="..\Collector.Kernel\Collector.Kernel.csproj"/>
     </ItemGroup>
 
 </Project>

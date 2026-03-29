@@ -13,8 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Collector.Kernel\Collector.Kernel.csproj" />
-        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj" />
-        <ProjectReference Include="..\Library.Skopeo\Library.Skopeo.csproj" />
+        <ProjectReference Include="..\Collector.Kernel\Collector.Kernel.csproj"/>
+        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj"/>
+        <ProjectReference Include="..\Library.Skopeo\Library.Skopeo.csproj"/>
     </ItemGroup>
 </Project>

@@ -29,7 +29,10 @@ public class Wget {
   ///   Mirrors a remote location using wget.
   /// </summary>
   /// <param name="remote">The remote location.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the mirroring was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the mirroring was
+  ///   successful.
+  /// </returns>
   public async Task<bool> Mirror(string remote) {
     return await Archive(remote);
   }
@@ -38,7 +41,10 @@ public class Wget {
   ///   Executes the wget command to archive the remote location.
   /// </summary>
   /// <param name="remote">The remote location.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the operation was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the operation was
+  ///   successful.
+  /// </returns>
   private async Task<bool> Archive(string remote) {
     return await Bin.Execute(
              "wget",

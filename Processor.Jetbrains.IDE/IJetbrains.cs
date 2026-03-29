@@ -6,11 +6,11 @@ using Core.Kernel.Models;
 namespace Processor.Jetbrains.IDE;
 
 /// <summary>
-/// Interface for JetBrains IDE processing.
+///   Interface for JetBrains IDE processing.
 /// </summary>
 public interface IJetbrains {
   /// <summary>
-  /// Processes the artifact to find JetBrains IDE releases.
+  ///   Processes the artifact to find JetBrains IDE releases.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>

@@ -8,14 +8,14 @@ using RestSharp.Authenticators;
 namespace Core.Infrastructure.Services;
 
 public class RabbitMqStatusService : IStatusService {
-  private RestClient client_;
-
   private readonly string[] allowed_prefixes_ = {
     "collector",
     "gateway",
     "processor",
     "system"
   };
+
+  private readonly RestClient client_;
 
   public RabbitMqStatusService() {
     RestClientOptions options = new() {
@@ -38,7 +38,7 @@ public class RabbitMqStatusService : IStatusService {
     List<RabbitMqQueue>? queues =
       await client_.GetAsync<List<RabbitMqQueue>>("api/queues");
     if (queues == null) {
-      return new();
+      return new List<QueueStatus>();
     }
 
     List<QueueStatus> queue_statuses = new();
@@ -58,7 +58,7 @@ public class RabbitMqStatusService : IStatusService {
       }
 
       queue_statuses.Add(
-        new QueueStatus() {
+        new QueueStatus {
           name = queue.name,
           consumers = queue.consumers,
           messages = queue.messages,
@@ -81,7 +81,7 @@ public class RabbitMqStatusService : IStatusService {
 
     // 3. Set up the DELETE request to the /contents endpoint
     string endpoint = $"api/queues/{encoded_vhost}/{encoded_queue}/contents";
-    RestRequest request = new RestRequest(endpoint, Method.Delete);
+    RestRequest request = new(endpoint, Method.Delete);
     request.AddHeader("Accept", "*/*");
 
     // 4. Execute the request

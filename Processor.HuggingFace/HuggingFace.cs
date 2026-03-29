@@ -9,16 +9,19 @@ using RestSharp;
 namespace Processor.HuggingFace;
 
 /// <summary>
-/// Logic for processing HuggingFace models from the hub.
+///   Logic for processing HuggingFace models from the hub.
 /// </summary>
 public class HuggingFace : IHuggingFace {
   private const string C_HUB_API_ = "https://huggingface.co/api/";
-  private const string C_RESOLVE_URL_ = "https://huggingface.co/{0}/resolve/{1}/{2}";
+
+  private const string C_RESOLVE_URL_ =
+    "https://huggingface.co/{0}/resolve/{1}/{2}";
+
   private readonly IRestClient client_;
   private readonly ILogger<HuggingFace> logger_;
 
   /// <summary>
-  /// Initializes a new instance of the <see cref="HuggingFace"/> class.
+  ///   Initializes a new instance of the <see cref="HuggingFace" /> class.
   /// </summary>
   /// <param name="logger">The logger instance.</param>
   /// <param name="client">The optional RestClient instance.</param>
@@ -28,7 +31,7 @@ public class HuggingFace : IHuggingFace {
   }
 
   /// <summary>
-  /// Processes the artifact to find HuggingFace model versions and files.
+  ///   Processes the artifact to find HuggingFace model versions and files.
   /// </summary>
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>
@@ -38,14 +41,15 @@ public class HuggingFace : IHuggingFace {
     return artifact;
   }
 
-  private void ProcessArtifactVersions(Artifact artifact, HuggingFaceModel? metadata) {
+  private void ProcessArtifactVersions(Artifact artifact,
+                                       HuggingFaceModel? metadata) {
     if (metadata == null || string.IsNullOrEmpty(metadata.sha)) {
       return;
     }
-    
+
     /* This ensures no new versions are downloaded.
        It's an ugly hack to not mass-download models
-       TODO: Develop a new way to only collect certain files in new releases. 
+       TODO: Develop a new way to only collect certain files in new releases.
     */
     if (artifact.versions.Count > 0) {
       return;
@@ -57,7 +61,12 @@ public class HuggingFace : IHuggingFace {
 
     if (metadata.siblings != null) {
       foreach (HuggingFaceSibling sibling in metadata.siblings) {
-        string url = string.Format(C_RESOLVE_URL_, metadata.id, metadata.sha, sibling.rfilename);
+        string url = string.Format(
+          C_RESOLVE_URL_,
+          metadata.id,
+          metadata.sha,
+          sibling.rfilename
+        );
         version.AddFile(sibling.rfilename, url);
       }
     }
@@ -68,7 +77,8 @@ public class HuggingFace : IHuggingFace {
   private async Task<HuggingFaceModel?> GetMetadata(string id) {
     try {
       RestRequest request = new($"models/{id}");
-      RestResponse<HuggingFaceModel> response = await client_.ExecuteAsync<HuggingFaceModel>(request);
+      RestResponse<HuggingFaceModel> response =
+        await client_.ExecuteAsync<HuggingFaceModel>(request);
       return response.Data;
     } catch (TimeoutException ex) {
       logger_.LogError("Timeout error: {Exception}", ex.ToString());

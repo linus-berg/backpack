@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Library.Github\Library.Github.csproj" />
-        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj" />
+        <ProjectReference Include="..\Library.Github\Library.Github.csproj"/>
+        <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj"/>
     </ItemGroup>
 </Project>

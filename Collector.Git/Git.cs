@@ -64,7 +64,10 @@ public class Git {
   /// </summary>
   /// <param name="remote">The remote repository URL.</param>
   /// <param name="token">The cancellation token.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the mirroring was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the mirroring was
+  ///   successful.
+  /// </returns>
   public async Task<bool> Mirror(string remote, CancellationToken token) {
     Repository repository = new(remote, dir_);
     logger_.LogDebug("{Remote}: Starting", remote);
@@ -89,7 +92,10 @@ public class Git {
   /// </summary>
   /// <param name="repository">The repository to clone or update.</param>
   /// <param name="token">The cancellation token.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the operation was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the operation was
+  ///   successful.
+  /// </returns>
   private async Task<bool> CloneOrUpdateLocalMirror(
     Repository repository, CancellationToken token = default) {
     if (!Directory.Exists(repository.local_path)) {
@@ -199,7 +205,7 @@ public class Git {
         );
       }
     }
-    
+
     /* Always delete git bundle at the end */
     logger_.LogInformation("Deleting {BundleFilePath}", bundle_file_path);
     if (File.Exists(bundle_file_path)) {
@@ -219,7 +225,10 @@ public class Git {
   ///   Pushes the git bundle to storage.
   /// </summary>
   /// <param name="bundle_file_path">The path to the bundle file.</param>
-  /// <returns>A task that represents the asynchronous operation. The task result indicates whether the upload was successful.</returns>
+  /// <returns>
+  ///   A task that represents the asynchronous operation. The task result indicates whether the upload was
+  ///   successful.
+  /// </returns>
   private async Task<bool> PushToStorage(string bundle_file_path) {
     if (!File.Exists(bundle_file_path)) {
       throw new FileNotFoundException($"{bundle_file_path} not found on disk.");
