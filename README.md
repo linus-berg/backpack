@@ -42,7 +42,7 @@ A batteries included starter pack is included under /examples and /Compose, howe
 
 | Service                 | Requirement                             |
 |-------------------------|-----------------------------------------|
-| Keycloak                | Required (only for API and GUI)         |
+| OIDC Provider           | Required (only for API and GUI)         |
 | RabbitMq                | Required                                |
 | Minio                   | Required                                |
 | MongoDb                 | Required                                |
@@ -96,7 +96,7 @@ graph TD
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | `Core.Gateway`      | The central message bus for the Backpack system. It uses MassTransit to route messages between services.                                   |
 | `Tracker.Scheduler` | Schedules and triggers artifact tracking jobs using Quartz.NET. It reads a schedule configuration to define when to check for new artifacts. |
-| `Integration.API`   | A RESTful API that provides an external interface to the Backpack system. It uses Keycloak for authentication and authorization.           |
+| `Integration.API`   | A RESTful API that provides an external interface to the Backpack system. It uses generic OIDC for authentication and authorization.           |
 
 ### Collectors
 Collectors are responsible for retrieving artifacts from their sources.

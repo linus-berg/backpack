@@ -2,7 +2,6 @@ using Core.Kernel;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Output;
-using Keycloak.AuthServices.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,19 +10,14 @@ namespace Integration.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 public class StatusController : ControllerBase {
-  private readonly KeycloakAuthenticationOptions kc_opt_ = new();
   private readonly IStatusService status_service_;
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
 
-  public StatusController(IConfiguration configuration, IStatusService status_service, ICoreDatabase database, IEventService event_service) {
-    KeycloakAuthenticationOptions opts = new();
+  public StatusController(IStatusService status_service, ICoreDatabase database, IEventService event_service) {
     status_service_ = status_service;
     database_ = database;
     event_service_ = event_service;
-    configuration
-      .GetSection(KeycloakAuthenticationOptions.Section)
-      .Bind(kc_opt_, opt => opt.BindNonPublicProperties = true);
   }
 
   [HttpGet("status")]
@@ -50,16 +44,5 @@ public class StatusController : ControllerBase {
     }
 
     return result ? Ok() : BadRequest();
-  }
-  
-  [HttpGet("keycloak")]
-  public ActionResult GetKeycloak() {
-    return Ok(
-      new KeycloakOptions {
-        url = kc_opt_.AuthServerUrl,
-        realm = kc_opt_.Realm,
-        resource = kc_opt_.Resource
-      }
-    );
   }
 }

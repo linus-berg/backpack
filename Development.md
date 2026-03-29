@@ -5,30 +5,22 @@ Run the external services in the Compose folder with
 
 This will setup the required external services required to run the APC framework.
 
-### Keycloak (required for GUI & API)
-Create a client in keycloak named `apc` with the following config.
-```
-Valid redirect URIs = *
-Valid post logout redirect URIs = *
-Web origins = *
-```
-Create a role for the client called `Administrator`.
+### OIDC Provider (required for GUI & API)
+You can use any OIDC-compatible provider (e.g., Keycloak, Auth0, Okta).
 
-Export the configuration and place it in the root of `APC.Api`.
+1.  **Configure Authority and Audience**:
+    *   Set the `OIDC_AUTHORITY` environment variable for the API (e.g., `http://localhost:8080/realms/backpack`).
+    *   Set the `OIDC_AUDIENCE` environment variable for the API (e.g., `backpack-gui`).
+    *   For the GUI, update the `VITE_OIDC_AUTHORITY` and `VITE_OIDC_CLIENT_ID` in your `.env` or `oidc.ts`.
 
-The configuration should look something like this:
-```json
-{
-  "realm": "master",
-  "auth-server-url": "http://localhost:8090",
-  "ssl-required": "external",
-  "resource": "apc",
-  "public-client": true,
-  "verify-token-audience": false,
-  "use-resource-role-mappings": true,
-  "confidential-port": 0
-}
-```
+2.  **Client Configuration**:
+    *   Create a public client.
+    *   Set Valid Redirect URIs to `*` (for development).
+    *   Set Web Origins to `*`.
+
+3.  **Roles**:
+    *   The application expects an `Administrator` role.
+    *   By default, the API looks for roles in the `resource_access` claim (Keycloak style) or a flat `roles` claim.
 
 ### Minio (required for ACM development)
 Create a bucket named `apc`.
