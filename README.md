@@ -137,6 +137,30 @@ Processors are responsible for extracting metadata and dependencies from artifac
 | `Backpack.Toolbox`     | A service containing various tools for interacting with the Backpack system.                              |
 | `Backpack.GitUnpack`   | A service for unpacking Git repositories.                                                               |
 
+## Development
+
+### Scaffolding New Processors
+Backpack provides a official .NET template to quickly scaffold new artifact processors.
+
+#### Installation
+Run the following command from the root of the repository:
+```bash
+dotnet new install ./Templates/ProcessorTemplate
+```
+
+#### Usage
+To create a new processor (e.g., for Go Modules):
+```bash
+mkdir Processor.Go
+cd Processor.Go
+dotnet new backpack-processor -n Go --ENDPOINT go --BASE_URL https://proxy.golang.org
+```
+
+This will generate a pre-configured project including:
+- A standardized MassTransit consumer.
+- Automatic integration with the system-wide activity feed.
+- Interface-driven logic classes for metadata fetching.
+
 ## Environment Variables
 | Name                            | Default   | Modules                            |
 |---------------------------------|-----------|------------------------------------|
