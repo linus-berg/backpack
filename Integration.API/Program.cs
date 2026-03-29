@@ -93,7 +93,7 @@ builder.Services.AddAuthentication(options => {
     ValidIssuers = new[] { authority, authority.TrimEnd('/') + "/", authority.TrimEnd('/') },
     ValidateAudience = false,
     ValidateLifetime = true,
-    NameClaimType = ClaimTypes.NameIdentifier,
+    NameClaimType = "preferred_username",
     RoleClaimType = ClaimTypes.Role
   };
 
