@@ -9,6 +9,7 @@ using Processor.Maven;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("maven");
+registration.AddEndpoint("maven-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

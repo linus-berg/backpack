@@ -10,6 +10,7 @@ using Processor.Container;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("container");
+registration.AddEndpoint("container-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

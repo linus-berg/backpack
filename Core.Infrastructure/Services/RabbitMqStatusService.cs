@@ -10,6 +10,13 @@ namespace Core.Infrastructure.Services;
 public class RabbitMqStatusService : IStatusService {
   private RestClient client_;
 
+  private readonly string[] allowed_prefixes_ = {
+    "collector",
+    "gateway",
+    "processor",
+    "system"
+  };
+
   public RabbitMqStatusService() {
     RestClientOptions options = new() {
       BaseUrl = new Uri(
@@ -35,8 +42,18 @@ public class RabbitMqStatusService : IStatusService {
     }
 
     List<QueueStatus> queue_statuses = new();
+
     foreach (RabbitMqQueue queue in queues) {
       if (queue.name.Contains("error")) {
+        continue;
+      }
+
+      if (!allowed_prefixes_.Any(
+            prefix => queue.name.StartsWith(
+              prefix,
+              StringComparison.OrdinalIgnoreCase
+            )
+          )) {
         continue;
       }
 

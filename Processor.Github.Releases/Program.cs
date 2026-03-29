@@ -10,6 +10,7 @@ using Processor.Github.Releases;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("github-releases");
+registration.AddEndpoint("github-releases-preview");
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {

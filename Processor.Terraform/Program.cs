@@ -6,6 +6,7 @@ using Processor.Terraform;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("terraform");
+registration.AddEndpoint("terraform-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

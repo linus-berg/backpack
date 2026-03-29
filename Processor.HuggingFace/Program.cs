@@ -9,6 +9,7 @@ using Processor.HuggingFace;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("huggingface");
+registration.AddEndpoint("huggingface-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

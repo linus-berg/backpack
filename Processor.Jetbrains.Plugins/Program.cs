@@ -9,6 +9,7 @@ using Processor.Jetbrains.Plugins;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("jetbrains-plugins");
+registration.AddEndpoint("jetbrains-plugins-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

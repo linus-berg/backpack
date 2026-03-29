@@ -7,7 +7,7 @@ using MassTransit;
 namespace Core.Kernel;
 
 /// <summary>
-/// Defines a processor module that consumes <see cref="ArtifactProcessRequest"/> messages.
+/// Defines a processor module that consumes <see cref="ArtifactProcessRequest"/> messages and <see cref="ArtifactPreviewRequest"/> messages.
 /// </summary>
-public interface IProcessor : IConsumer<ArtifactProcessRequest> {
+public interface IProcessor : IConsumer<ArtifactProcessRequest>, IConsumer<ArtifactPreviewRequest> {
 }

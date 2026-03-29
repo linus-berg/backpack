@@ -9,6 +9,7 @@ using Processor.Npm;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("npm");
+registration.AddEndpoint("npm-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

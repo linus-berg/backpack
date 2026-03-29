@@ -9,6 +9,7 @@ using Processor.Helm;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("helm");
+registration.AddEndpoint("helm-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

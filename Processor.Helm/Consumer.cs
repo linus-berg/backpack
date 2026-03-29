@@ -33,4 +33,22 @@ public class Consumer : IProcessor {
     await helm_.ProcessArtifact(artifact);
     await context.ProcessorReply(artifact);
   }
+
+  /// <summary>
+  /// Consumes the artifact preview request.
+  /// </summary>
+  /// <param name="context">The consume context.</param>
+  /// <returns>A task that represents the consume operation.</returns>
+  public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
+    try {
+      Artifact artifact = new() {
+        id = context.Message.id,
+        processor = context.Message.processor
+      };
+      await helm_.ProcessArtifact(artifact);
+      await context.RespondAsync(new ArtifactPreviewResponse { artifact = artifact });
+    } catch (Exception e) {
+      await context.RespondAsync(new ArtifactPreviewResponse { error = e.Message });
+    }
+  }
 }

@@ -15,6 +15,8 @@ using Serilog.Events;
 using StackExchange.Redis;
 using System.Security.Claims;
 using System.Text.Json;
+using Core.Kernel.Messages;
+using Integration.API.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTelemetry(
@@ -65,6 +67,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
     }
   )
 );
+
+builder.Services.AddSingleton<PreviewRoutingService>();
 builder.Services.AddScoped<ICoreDatabase, MongoDatabase>();
 builder.Services.AddSingleton<ICoreCache, CoreCache>();
 builder.Services.AddScoped<IArtifactService, ArtifactService>();

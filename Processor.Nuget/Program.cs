@@ -7,9 +7,9 @@ using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using Processor.Nuget;
 
-ModuleRegistration registration =
-  new(ModuleType.PROCESSOR, typeof(Consumer));
+ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("nuget");
+registration.AddEndpoint("nuget-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

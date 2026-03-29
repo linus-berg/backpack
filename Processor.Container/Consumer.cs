@@ -36,6 +36,24 @@ public class Consumer : IProcessor {
     await context.ProcessorReply(artifact);
   }
 
+  /// <summary>
+  /// Consumes the artifact preview request.
+  /// </summary>
+  /// <param name="context">The consume context.</param>
+  /// <returns>A task that represents the consume operation.</returns>
+  public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
+    try {
+      Artifact artifact = new() {
+        id = context.Message.id,
+        processor = context.Message.processor
+      };
+      await GetTags(artifact);
+      await context.RespondAsync(new ArtifactPreviewResponse { artifact = artifact });
+    } catch (Exception e) {
+      await context.RespondAsync(new ArtifactPreviewResponse { error = e.Message });
+    }
+  }
+
   private async Task GetTags(Artifact artifact) {
     SkopeoListTagsOutput? list_tags = await skopeo_.GetTags(artifact.id);
     if (list_tags?.Tags != null) {

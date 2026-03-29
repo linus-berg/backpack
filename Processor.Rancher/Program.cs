@@ -7,6 +7,7 @@ using Processor.Rancher;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("rancher");
+registration.AddEndpoint("rancher-preview");
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {

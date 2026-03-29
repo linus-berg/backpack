@@ -10,7 +10,7 @@ using MassTransit;
 namespace Processor.Npm;
 
 /// <summary>
-/// Consumer for NPM artifact processing requests.
+/// Consumer for NPM artifact processing and preview requests.
 /// </summary>
 public class Consumer : IProcessor {
   private readonly INpm npm_;
@@ -32,5 +32,27 @@ public class Consumer : IProcessor {
     Artifact artifact = context.Message.artifact;
     await npm_.ProcessArtifact(artifact);
     await context.ProcessorReply(artifact);
+  }
+
+  /// <summary>
+  /// Consumes the artifact preview request.
+  /// </summary>
+  /// <param name="context">The consume context.</param>
+  /// <returns>A task that represents the consume operation.</returns>
+  public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
+    Artifact artifact = new() {
+      id = context.Message.id,
+      processor = context.Message.processor
+    };
+    try {
+      await npm_.ProcessArtifact(artifact);
+      await context.RespondAsync(new ArtifactPreviewResponse {
+        artifact = artifact
+      });
+    } catch (Exception e) {
+      await context.RespondAsync(new ArtifactPreviewResponse {
+        error = e.Message
+      });
+    }
   }
 }

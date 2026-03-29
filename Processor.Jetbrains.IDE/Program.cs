@@ -9,6 +9,7 @@ using Processor.Jetbrains.IDE;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("jetbrains-ide");
+registration.AddEndpoint("jetbrains-ide-preview");
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {

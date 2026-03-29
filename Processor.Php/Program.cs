@@ -6,6 +6,7 @@ using Processor.Php;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("php", 4);
+registration.AddEndpoint("php-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(

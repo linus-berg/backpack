@@ -6,6 +6,8 @@ using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Input;
+using Integration.API.Services;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
@@ -20,13 +22,16 @@ public class ArtifactController : ControllerBase {
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
   private readonly ILogger log_;
+  private readonly PreviewRoutingService router_;
 
   public ArtifactController(IArtifactService aps, ICoreDatabase database, IEventService event_service,
+                            PreviewRoutingService router,
                             ILogger log) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;
     log_ = log.ForContext<ArtifactController>();
+    router_ = router;
   }
 
   // GET: api/Artifact
@@ -50,6 +55,27 @@ public class ArtifactController : ControllerBase {
     }
 
     return Ok(artifact);
+  }
+
+  [HttpGet("preview")]
+  public async Task<ActionResult<Artifact>> Preview(
+    [FromQuery] string id, [FromQuery] string processor) {
+    
+    // Explicitly address the processor's preview queue
+    string routing_key= $"processor-{processor.ToLower()}-preview";
+
+    ArtifactPreviewRequest req = new ArtifactPreviewRequest {
+      id = id,
+      processor = processor
+    };
+
+    ArtifactPreviewResponse resp = await router_.GetDataDynamicallyAsync(routing_key, req);
+
+    if (resp.artifact != null) {
+      return Ok(resp.artifact);
+    }
+
+    return BadRequest(resp.error ?? "Failed to preview artifact");
   }
 
   // POST: api/Artifact
