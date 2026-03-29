@@ -97,13 +97,13 @@ builder.Services.AddAuthentication(options => {
     OnTokenValidated = context => {
       if (context.Principal?.Identity is ClaimsIdentity identity) {
         // Map Keycloak/Standard OIDC resource roles to .NET roles
-        var resourceAccessClaim = identity.FindFirst("resource_access");
-        if (resourceAccessClaim != null) {
+        Claim? resource_access_claim = identity.FindFirst("resource_access");
+        if (resource_access_claim != null) {
           try {
-            using var jsonDoc = JsonDocument.Parse(resourceAccessClaim.Value);
-            if (jsonDoc.RootElement.TryGetProperty(audience, out var clientElement) &&
-                clientElement.TryGetProperty("roles", out var rolesElement)) {
-              foreach (var role in rolesElement.EnumerateArray()) {
+            using JsonDocument json_doc = JsonDocument.Parse(resource_access_claim.Value);
+            if (json_doc.RootElement.TryGetProperty(audience, out JsonElement client_element) &&
+                client_element.TryGetProperty("roles", out JsonElement roles_element)) {
+              foreach (JsonElement role in roles_element.EnumerateArray()) {
                 identity.AddClaim(new Claim(ClaimTypes.Role, role.GetString()!));
               }
             }
@@ -113,8 +113,8 @@ builder.Services.AddAuthentication(options => {
         }
 
         // Also handle a flat 'roles' claim if present
-        var rolesClaim = identity.FindAll("roles");
-        foreach (var rc in rolesClaim) {
+        IEnumerable<Claim> roles_claim = identity.FindAll("roles");
+        foreach (Claim rc in roles_claim) {
           identity.AddClaim(new Claim(ClaimTypes.Role, rc.Value));
         }
       }
@@ -126,12 +126,12 @@ builder.Services.AddAuthentication(options => {
   ApiKeyAuthenticationOptions.C_SCHEME, null);
 
 builder.Services.AddAuthorization(options => {
-  var defaultPolicy = new AuthorizationPolicyBuilder(
-      JwtBearerDefaults.AuthenticationScheme,
-      ApiKeyAuthenticationOptions.C_SCHEME)
-    .RequireAuthenticatedUser()
-    .Build();
-  options.DefaultPolicy = defaultPolicy;
+  AuthorizationPolicy default_policy = new AuthorizationPolicyBuilder(
+                                        JwtBearerDefaults.AuthenticationScheme,
+                                        ApiKeyAuthenticationOptions.C_SCHEME)
+                                      .RequireAuthenticatedUser()
+                                      .Build();
+  options.DefaultPolicy = default_policy;
 });
 
 builder.Services.AddHttpContextAccessor();
