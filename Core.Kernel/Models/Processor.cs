@@ -38,6 +38,11 @@ public class Processor {
   public bool is_external { get; set; } = false;
 
   /// <summary>
+  ///   Gets or sets a value indicating whether the preview function is available for this processor.
+  /// </summary>
+  public bool preview_enabled { get; set; } = true;
+
+  /// <summary>
   ///   Gets or sets a dictionary of auxiliary configuration fields for the processor.
   /// </summary>
   public Dictionary<string, ProcessorAuxiliaryField> config { get; set; }

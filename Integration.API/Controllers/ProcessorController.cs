@@ -39,7 +39,8 @@ public class ProcessorController : ControllerBase {
           direct_collect = processor.direct_collect,
           requires_approval = processor.requires_approval,
           multi_add = processor.multi_add,
-          is_external = processor.is_external
+          is_external = processor.is_external,
+          preview_enabled = processor.preview_enabled
         }
       );
     }
@@ -58,6 +59,7 @@ public class ProcessorController : ControllerBase {
     processor.requires_approval = input.requires_approval;
     processor.multi_add = input.multi_add;
     processor.is_external = input.is_external;
+    processor.preview_enabled = input.preview_enabled;
     if (!string.IsNullOrEmpty(input.config)) {
       processor.config =
         JsonSerializer.Deserialize<
@@ -100,6 +102,7 @@ public class ProcessorController : ControllerBase {
         requires_approval = input.requires_approval,
         multi_add = input.multi_add,
         is_external = input.is_external,
+        preview_enabled = input.preview_enabled,
         description = "",
         config = new Dictionary<string, ProcessorAuxiliaryField>()
       }
