@@ -1,3 +1,4 @@
+using System.Configuration;
 using System.Security.Claims;
 using System.Text.Json;
 using Core.Infrastructure;
@@ -16,6 +17,7 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 using StackExchange.Redis;
+using Configuration = Core.Kernel.Configuration;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTelemetry(
@@ -79,10 +81,14 @@ builder.Services.AddSingleton<IStatusService, RabbitMqStatusService>();
 builder.Services.AddScoped<IEventService, EventService>();
 
 /* Authentication & Authorization */
-string authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ??
-                   "http://localhost:8090/realms/backpack";
-string audience =
-  Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ?? "backpack";
+string? authority =
+  Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUTHORITY);
+string? audience =
+  Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUDIENCE);
+
+if (string.IsNullOrEmpty(authority) || string.IsNullOrEmpty(audience)) {
+  throw new ConfigurationErrorsException("OIDC is not configured.");
+}
 
 builder.Services.AddAuthentication(
          options => {
