@@ -1,7 +1,9 @@
 using Core.Kernel;
+using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Cronos;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,12 +16,15 @@ public class SchedulerController : ControllerBase {
   private readonly IArtifactService aps_;
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
+  private readonly IPublishEndpoint publish_endpoint_;
 
   public SchedulerController(ICoreDatabase database, IArtifactService aps,
-                             IEventService event_service) {
+                             IEventService event_service,
+                             IPublishEndpoint publish_endpoint) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;
+    publish_endpoint_ = publish_endpoint;
   }
 
   [HttpGet]
@@ -60,9 +65,14 @@ public class SchedulerController : ControllerBase {
     );
   }
 
-  [HttpPost]
+  [HttpPut]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Update([FromBody] Schedule schedule) {
+    if (string.IsNullOrEmpty(schedule.processor) ||
+        string.IsNullOrEmpty(schedule.cron)) {
+      return BadRequest("Processor and Cron are required");
+    }
+
     await database_.UpdateSchedule(schedule);
     await event_service_.LogEvent(
       "API",
@@ -70,6 +80,84 @@ public class SchedulerController : ControllerBase {
       EventSeverity.INFO,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
+    await publish_endpoint_.Publish(new ReloadSchedulesRequest());
     return Ok(schedule);
+  }
+
+  [HttpPost]
+  [Authorize(Roles = "Administrator")]
+  public async Task<ActionResult> Add([FromBody] Schedule schedule) {
+    if (string.IsNullOrEmpty(schedule.processor) ||
+        string.IsNullOrEmpty(schedule.cron)) {
+      return BadRequest("Processor and Cron are required");
+    }
+
+    schedule.id ??= Guid.NewGuid().ToString();
+    await database_.AddSchedule(schedule);
+    await event_service_.LogEvent(
+      "API",
+      $"Schedule added for {schedule.processor}",
+      EventSeverity.INFO,
+      HttpContext.User.Identity?.Name ?? "Unknown"
+    );
+    await publish_endpoint_.Publish(new ReloadSchedulesRequest());
+    return Ok(schedule);
+  }
+
+  [HttpDelete("{id}")]
+  [Authorize(Roles = "Administrator")]
+  public async Task<ActionResult> Delete(string id) {
+    bool deleted = await database_.DeleteSchedule(id);
+    if (!deleted) {
+      return NotFound();
+    }
+
+    await event_service_.LogEvent(
+      "API",
+      $"Schedule deleted: {id}",
+      EventSeverity.INFO,
+      HttpContext.User.Identity?.Name ?? "Unknown"
+    );
+    await publish_endpoint_.Publish(new ReloadSchedulesRequest());
+    return NoContent();
+  }
+
+  [HttpPost("validate")]
+  [Authorize(Roles = "Administrator")]
+  public ActionResult Validate([FromBody] Schedule schedule) {
+    try {
+      if (string.IsNullOrEmpty(schedule.cron)) {
+        return Ok(
+          new {
+            Valid = true,
+            NextOccurrences = Array.Empty<DateTime>()
+          }
+        );
+      }
+
+      CronExpression expression =
+        CronExpression.Parse(schedule.cron, CronFormat.IncludeSeconds);
+      IEnumerable<DateTime> next_occurrences =
+        expression.GetOccurrences(
+          DateTime.UtcNow,
+          DateTime.UtcNow.AddYears(1),
+          fromInclusive: false,
+          toInclusive: false
+        ).Take(5);
+
+      return Ok(
+        new {
+          Valid = true,
+          NextOccurrences = next_occurrences
+        }
+      );
+    } catch (Exception ex) {
+      return BadRequest(
+        new {
+          Valid = false,
+          Error = ex.Message
+        }
+      );
+    }
   }
 }
