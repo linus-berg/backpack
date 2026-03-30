@@ -22,7 +22,7 @@ public class AuthController : ControllerBase {
   public OidcOptions GetOidcConfig() {
     return new OidcOptions {
       authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ??
-                  "http://localhost:8090/realms/master",
+                  "http://localhost:8090/realms/backpack",
       client_id = Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ??
                   "backpack"
     };

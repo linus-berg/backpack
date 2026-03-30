@@ -80,7 +80,7 @@ builder.Services.AddScoped<IEventService, EventService>();
 
 /* Authentication & Authorization */
 string authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ??
-                   "http://localhost:8090/realms/master";
+                   "http://localhost:8090/realms/backpack";
 string audience =
   Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ?? "backpack";
 
