@@ -101,12 +101,12 @@ public enum CoreVariables {
   ///   Container registry proxy for S3.
   /// </summary>
   BP_COLLECTOR_CONTAINER_REGISTRY,
-  
+
   /// <summary>
   ///   OIDC authority
   /// </summary>
   BP_OIDC_AUTHORITY,
-  
+
   /// <summary>
   ///   OIDC audience
   /// </summary>

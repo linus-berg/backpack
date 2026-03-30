@@ -4,7 +4,8 @@ Collector.DockerArchive is responsible for collecting container images stored in
 
 ## Key Components
 
-- **DockerArchiveConsumer**: Implements `IConsumer<ArtifactCollectRequest>`, handling collection requests for image archives.
+- **DockerArchiveConsumer**: Implements `IConsumer<ArtifactCollectRequest>`, handling collection requests for image
+  archives.
 - **Archive Processing**: Extracts image layers and metadata from the `.tar` file.
 - **Image Conversion**: Converts Docker archive formats to OCI-compliant artifacts as needed.
 

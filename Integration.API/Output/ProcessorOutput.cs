@@ -10,4 +10,4 @@ public class ProcessorOutput {
   public bool multi_add { get; set; }
   public bool is_external { get; set; }
   public bool preview_enabled { get; set; }
-  }
+}

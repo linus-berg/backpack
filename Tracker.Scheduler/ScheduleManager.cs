@@ -7,18 +7,20 @@ using Quartz.Impl.Matchers;
 namespace Tracker.Scheduler;
 
 public class ScheduleManager {
-  private readonly IServiceProvider service_provider_;
   private readonly ILogger<ScheduleManager> logger_;
+  private readonly IServiceProvider service_provider_;
 
-  public ScheduleManager(IServiceProvider service_provider, ILogger<ScheduleManager> logger) {
+  public ScheduleManager(IServiceProvider service_provider,
+                         ILogger<ScheduleManager> logger) {
     service_provider_ = service_provider;
     logger_ = logger;
   }
 
   public async Task InitializeSchedules() {
     using IServiceScope scope = service_provider_.CreateScope();
-    ICoreDatabase db = scope.ServiceProvider.GetRequiredService<ICoreDatabase>();
-    
+    ICoreDatabase db =
+      scope.ServiceProvider.GetRequiredService<ICoreDatabase>();
+
     /* Load schedules from disk if no schedules present in database */
     IEnumerable<Schedule> existing_schedules = await db.GetSchedules();
     if (!existing_schedules.Any()) {
@@ -47,13 +49,17 @@ public class ScheduleManager {
   public async Task ReloadSchedules() {
     logger_.LogInformation("Reloading schedules...");
     using IServiceScope scope = service_provider_.CreateScope();
-    ICoreDatabase db = scope.ServiceProvider.GetRequiredService<ICoreDatabase>();
+    ICoreDatabase db =
+      scope.ServiceProvider.GetRequiredService<ICoreDatabase>();
     IScheduler scheduler = await scope.ServiceProvider
                                       .GetRequiredService<ISchedulerFactory>()
                                       .GetScheduler();
 
     // Clear existing triggers for backpack group
-    IReadOnlyCollection<TriggerKey> trigger_keys = await scheduler.GetTriggerKeys(GroupMatcher<TriggerKey>.GroupEquals("backpack"));
+    IReadOnlyCollection<TriggerKey> trigger_keys =
+      await scheduler.GetTriggerKeys(
+        GroupMatcher<TriggerKey>.GroupEquals("backpack")
+      );
     await scheduler.UnscheduleJobs(trigger_keys.ToList());
 
     // Load from DB
@@ -73,9 +79,17 @@ public class ScheduleManager {
                                          .WithCronSchedule(schedule.cron)
                                          .Build();
         await scheduler.ScheduleJob(trigger);
-        logger_.LogInformation("Scheduled {Processor} with {Cron}", schedule.processor, schedule.cron);
+        logger_.LogInformation(
+          "Scheduled {Processor} with {Cron}",
+          schedule.processor,
+          schedule.cron
+        );
       } catch (Exception ex) {
-        logger_.LogError(ex, "Failed to schedule {Processor}", schedule.processor);
+        logger_.LogError(
+          ex,
+          "Failed to schedule {Processor}",
+          schedule.processor
+        );
       }
     }
   }

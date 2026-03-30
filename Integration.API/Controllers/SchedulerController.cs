@@ -139,11 +139,12 @@ public class SchedulerController : ControllerBase {
         CronExpression.Parse(schedule.cron, CronFormat.IncludeSeconds);
       IEnumerable<DateTime> next_occurrences =
         expression.GetOccurrences(
-          DateTime.UtcNow,
-          DateTime.UtcNow.AddYears(1),
-          fromInclusive: false,
-          toInclusive: false
-        ).Take(5);
+                    DateTime.UtcNow,
+                    DateTime.UtcNow.AddYears(1),
+                    false,
+                    false
+                  )
+                  .Take(5);
 
       return Ok(
         new {

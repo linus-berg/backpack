@@ -1,10 +1,12 @@
 # Backpack.Tester
 
-Backpack.Tester is a specialized service designed for testing the functionality and performance of the Backpack ecosystem.
+Backpack.Tester is a specialized service designed for testing the functionality and performance of the Backpack
+ecosystem.
 
 ## Key Components
 
-- **Testing Logic**: Implements various tests for different components and workflows (e.g., ingestion, processing, collection).
+- **Testing Logic**: Implements various tests for different components and workflows (e.g., ingestion, processing,
+  collection).
 - **Automation**: Provides automated testing capabilities for end-to-end scenarios.
 - **Reporting**: Generates reports on test results and performance metrics.
 

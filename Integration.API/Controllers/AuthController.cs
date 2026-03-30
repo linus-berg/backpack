@@ -1,4 +1,3 @@
-using System.Configuration;
 using System.Security.Claims;
 using Core.Kernel;
 using Integration.API.Output;
@@ -24,8 +23,10 @@ public class AuthController : ControllerBase {
   [AllowAnonymous]
   public OidcOptions GetOidcConfig() {
     return new OidcOptions {
-      authority = Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUTHORITY),
-      client_id = Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUDIENCE)
+      authority =
+        Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUTHORITY),
+      client_id =
+        Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUDIENCE)
     };
   }
 }

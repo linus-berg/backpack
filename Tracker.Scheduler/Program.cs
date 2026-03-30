@@ -1,10 +1,8 @@
-using System.Text.Json;
 using Core.Infrastructure;
 using Core.Infrastructure.Services;
 using Core.Kernel;
 using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
-using Core.Kernel.Models;
 using Core.Kernel.Registrations;
 using Core.Services;
 using MassTransit;
@@ -70,7 +68,8 @@ IHost host = Host.CreateDefaultBuilder(args)
 
 // Migrate schedules from file to DB if needed and schedule triggers
 using (IServiceScope scope = host.Services.CreateScope()) {
-  ScheduleManager manager = scope.ServiceProvider.GetRequiredService<ScheduleManager>();
+  ScheduleManager manager =
+    scope.ServiceProvider.GetRequiredService<ScheduleManager>();
   await manager.InitializeSchedules();
 }
 
