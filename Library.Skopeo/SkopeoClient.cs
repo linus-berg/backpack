@@ -64,18 +64,19 @@ public class SkopeoClient {
     if (tag_split.Length <= 1) {
       throw new SkopeoTagMissingException("No tag specified");
     }
-
     string tag = tag_split[1];
+    string docker_str = remote_image.Replace("docker-archive://", "docker://");
 
-    SkopeoManifest? manifest = await GetManifest(
-                                 remote_image.Replace(
-                                   "docker-archive://",
-                                   "docker://"
-                                 )
-                               );
+    logger_.LogInformation(
+      "Attempting to fetch manifest. Image: {Image} tag: {Tag}",
+      img,
+      tag
+    );
+    
+    SkopeoManifest? manifest = await GetManifest(docker_str);
     /* If manifest cannot be found */
     if (manifest == null) {
-      throw new ApplicationException("Manifest not found");
+      throw new ApplicationException($"Manifest for {docker_str} not found");
     }
 
     SkopeoArchive archive = new(manifest.Name, tag, target_dir);

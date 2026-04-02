@@ -87,7 +87,7 @@ SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
   "docker-archive",
   "docker-archive://docker.io/docker_archive_test_1-2-3-4.tar"
 );*/
-await sk.CopyToTar("docker-archive://nginx:latest", "docker-archive");
+await sk.CopyToTar("docker-archive://docker.io/amazon/aws-cli:2.31.12", "docker-archive");
 
 Artifact php_artifact = new() {
   id = "shardj/zf1-future"
