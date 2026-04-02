@@ -169,6 +169,7 @@ public class SkopeoClient {
     try {
       manifest = await cmd.ExecuteWithResult<SkopeoManifest>();
     } catch (Exception e) {
+      logger_.LogError(e.ToString());
       return null;
     }
     return manifest;
