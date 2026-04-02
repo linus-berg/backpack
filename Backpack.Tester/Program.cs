@@ -69,7 +69,7 @@ IHuggingFace hf = sp.GetRequiredService<IHuggingFace>();
 
 IPypi py = sp.GetRequiredService<IPypi>();
 
-Artifact? hf_res = await hf.ProcessArtifact(
+/*Artifact? hf_res = await hf.ProcessArtifact(
                      new Artifact {
                        id = "zai-org/GLM-5"
                      }
@@ -80,14 +80,14 @@ Artifact? res = await tf.ProcessArtifact(
                     id = "vmware/vsphere"
                   }
                 );
-
+*/
 FileSystem fs = sp.GetRequiredService<FileSystem>();
 SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
 /*await fs.CreateDeltaLink(
   "docker-archive",
   "docker-archive://docker.io/docker_archive_test_1-2-3-4.tar"
 );*/
-//await sk.CopyToTar("docker://docker.io/nginx:latest");
+await sk.CopyToTar("docker-archive://nginx:latest", "docker-archive");
 
 Artifact php_artifact = new() {
   id = "shardj/zf1-future"
