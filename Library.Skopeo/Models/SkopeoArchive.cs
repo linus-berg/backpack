@@ -4,7 +4,7 @@ public class SkopeoArchive {
   public SkopeoArchive(string remote_image, string target_dir) {
     Uri = new Uri(remote_image);
     Target = $"{Uri.Host}{Uri.PathAndQuery}";
-    TarName = Target.Replace("/", "_").Replace(":", "_").Replace(".", "_");
+    TarName = Target.Replace("/", "_").Replace(":", "_TAG_").Replace(".", "_");
     TarPath = Path.Join(target_dir, $"{TarName}.tar");
   }
 
