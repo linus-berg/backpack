@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-# Infrastructure
+  # Infrastructure
   # required to run container syncs
   bp-prometheus:
     image: prom/prometheus:latest
@@ -12,10 +12,10 @@ services:
       - "9090:9090"
     volumes:
       - "./prometheus.yml:/etc/prometheus.yaml:Z"
-  
+
   bp-telemetry-otel:
     image: otel/opentelemetry-collector-contrib:0.79.0
-    command: [ "--config=/etc/otel-collector.yaml" ]
+    command: ["--config=/etc/otel-collector.yaml"]
     volumes:
       - "./otel.yml:/etc/otel-collector.yaml:Z"
     extra_hosts: ["host.docker.internal:host-gateway"]
@@ -35,7 +35,7 @@ services:
       MINIO_PROMETHEUS_JOB_ID: minio-job
       MINIO_PROMETHEUS_AUTH_TYPE: public
     command: server --console-address ":9001" /data
-  
+
   bp-internal-registry:
     image: registry:2.8
     restart: always
@@ -50,7 +50,7 @@ services:
       REGISTRY_STORAGE_S3_SECURE: "false"
       REGISTRY_STORAGE_S3_region: ignored-for-minio
       REGISTRY_STORAGE_REDIRECT_DISABLE: "true"
-    
+
   bp-mongo:
     image: mongo
     restart: always
@@ -76,13 +76,14 @@ services:
     image: quay.io/keycloak/keycloak:20.0.3
     restart: always
     depends_on:
-     - bp-keycloak-db
+      - bp-keycloak-db
     command:
-      - start --proxy edge --hostname-strict=false --hostname-url=http://localhost:8090 --db postgres --db-url-host bp-keycloak-db --db-username pg --db-password pg123
+      - start --proxy edge --hostname-strict=false --hostname-url=http://localhost:8090 --db postgres --db-url-host bp-keycloak-db --db-username pg --db-password pg123 --import-realm
     ports:
       - 8090:8080
     volumes:
       - "./volumes/kc_data:/opt/keycloak/data/h2:Z"
+      - "./backpack-realm.json:/opt/keycloak/data/import/backpack-realm.json:Z"
     environment:
       PROXY_ADDRESS_FORWARDING: "true"
       KEYCLOAK_ADMIN: admin
@@ -97,7 +98,6 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
       ME_CONFIG_MONGODB_URL: mongodb://root:example@bp-mongo:27017/
-
 
   bp-ingest-redis:
     image: redis/redis-stack:6.2.6-v9
@@ -116,4 +116,3 @@ services:
     ports:
       - 15672:15672
       - 5672:5672
-  

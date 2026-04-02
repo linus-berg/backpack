@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using Core.Kernel;
 using Integration.API.Output;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Configuration = Core.Kernel.Configuration;
 
 namespace Integration.API.Controllers;
 
@@ -21,10 +23,10 @@ public class AuthController : ControllerBase {
   [AllowAnonymous]
   public OidcOptions GetOidcConfig() {
     return new OidcOptions {
-      authority = Environment.GetEnvironmentVariable("OIDC_AUTHORITY") ??
-                  "http://localhost:8090/realms/master",
-      client_id = Environment.GetEnvironmentVariable("OIDC_AUDIENCE") ??
-                  "backpack"
+      authority =
+        Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUTHORITY),
+      client_id =
+        Configuration.GetBackpackVariable(CoreVariables.BP_OIDC_AUDIENCE)
     };
   }
 }

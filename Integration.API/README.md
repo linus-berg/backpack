@@ -1,13 +1,14 @@
 # Integration.API
 
-Integration.API is the primary external entry point for the Backpack system. It provides a RESTful API for clients to interact with the artifact repository.
+Integration.API is the primary external entry point for the Backpack system. It provides a RESTful API for clients to
+interact with the artifact repository.
 
 ## Key Components
 
 - **ArtifactController**: Exposes endpoints for:
-  - Ingesting artifacts (`POST /api/artifact/ingest`)
-  - Querying artifact status and metadata
-  - Listing available artifacts
+    - Ingesting artifacts (`POST /api/artifact/ingest`)
+    - Querying artifact status and metadata
+    - Listing available artifacts
 - **Authentication**: Uses Keycloak for secure access control.
 - **MassTransit Integration**: Publishes `ArtifactIngestRequest` messages to the message bus (`Core.Gateway`).
 

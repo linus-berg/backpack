@@ -35,6 +35,10 @@ public static class Configuration {
         CoreVariables.BP_COLLECTOR_HTTP_DELTA, "true" // Create daily deltas
       }, {
         CoreVariables.BP_COLLECTOR_HTTP_MODE, "lake" // lake, forward 
+      }, {
+        CoreVariables.BP_OIDC_AUTHORITY, "http://localhost:8090/realms/backpack"
+      }, {
+        CoreVariables.BP_OIDC_AUDIENCE, "backpack"
       }
     };
 

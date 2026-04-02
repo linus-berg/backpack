@@ -27,6 +27,7 @@ public interface ICoreDatabase {
   public Task<IEnumerable<Schedule>> GetSchedules();
   public Task UpdateSchedule(Schedule schedule);
   public Task AddSchedule(Schedule schedule);
+  public Task<bool> DeleteSchedule(string id);
 
   public Task AddPendingArtifact(PendingArtifact artifact);
   public Task<IEnumerable<PendingArtifact>> GetPendingArtifacts();
