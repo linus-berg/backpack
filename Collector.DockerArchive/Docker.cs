@@ -35,14 +35,15 @@ public class Docker {
   ///   Gets a tar archive of a remote image.
   /// </summary>
   /// <param name="remote_image">The remote image location.</param>
+  /// <param name="force">Forces a tar download even if file already exists.</param>
   /// <returns>
   ///   A task that represents the asynchronous operation. The task result indicates whether the archive was
   ///   successfully retrieved.
   /// </returns>
-  public async Task<bool> GetTarArchive(string remote_image) {
+  public async Task<bool> GetTarArchive(string remote_image, bool force = false) {
     SkopeoArchive archive;
     try {
-      archive = await skopeo_.CopyToTar(remote_image, dir_);
+      archive = await skopeo_.CopyToTar(remote_image, dir_, force);
     } catch (SkopeoArchiveExistsException ex) {
       /* Ignore if file exists */
       return true;

@@ -32,7 +32,7 @@ public class Consumer : ICollector {
     /* Collect if missing manifest or layers */
     await pipeline_.ExecuteAsync(
       async (state, token) =>
-        await docker_.GetTarArchive(state.location),
+        await docker_.GetTarArchive(state.location, state.force),
       request,
       context.CancellationToken
     );

@@ -53,12 +53,18 @@ public class SkopeoClient {
   }
 
   public async Task<SkopeoArchive> CopyToTar(string remote_image,
-                                             string target_dir) {
+                                             string target_dir,
+                                             bool force = false) {
     SkopeoArchive archive = new(remote_image, target_dir);
     if (File.Exists(archive.TarPath)) {
-      throw new SkopeoArchiveExistsException(
-        $"File {archive.TarPath} already exists"
-      );
+      if (force) {
+        logger_.LogInformation("Force flag present, deleting existing archive: {Path}", archive.TarPath);
+        File.Delete(archive.TarPath);
+      } else {
+        throw new SkopeoArchiveExistsException(
+          $"File {archive.TarPath} already exists"
+        );
+      }
     }
 
     string internal_image =
