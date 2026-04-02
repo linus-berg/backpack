@@ -157,6 +157,8 @@ public class SkopeoClient {
   }
 
   private async Task<SkopeoManifest?> GetManifest(string image) {
+    StringBuilder std_out = new();
+    StringBuilder std_err = new();
     Command cmd = Cli.Wrap("skopeo")
                      .WithArguments(
                        args => {
@@ -164,12 +166,20 @@ public class SkopeoClient {
                          args.Add("--tls-verify=false");
                          args.Add(image);
                        }
+                     )
+                     .WithStandardOutputPipe(
+                       PipeTarget.ToStringBuilder(std_out)
+                     )
+                     .WithStandardErrorPipe(
+                       PipeTarget.ToStringBuilder(std_err)
                      );
     SkopeoManifest manifest;
     try {
       manifest = await cmd.ExecuteWithResult<SkopeoManifest>();
     } catch (Exception e) {
       logger_.LogError(e.ToString());
+      logger_.LogInformation("{StdOut}", std_out.ToString());
+      logger_.LogInformation("{StdErr}", std_err.ToString());
       return null;
     }
     return manifest;
