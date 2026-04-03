@@ -55,7 +55,31 @@ public class SkopeoClient {
   public async Task<SkopeoArchive> CopyToTar(string remote_image,
                                              string target_dir,
                                              bool force = false) {
-    SkopeoArchive archive = new(remote_image, target_dir);
+    /* Extract tag */
+    /* Image must always include docker-archive:// NOT docker:// */
+    string img = remote_image.Replace("docker-archive://", "");
+    string[] tag_split = img.Split(":");
+    
+    /* If no tag has been specified */
+    if (tag_split.Length <= 1) {
+      throw new SkopeoTagMissingException("No tag specified");
+    }
+    string tag = tag_split[1];
+    string docker_str = remote_image.Replace("docker-archive://", "docker://");
+
+    logger_.LogInformation(
+      "Attempting to fetch manifest. Image: {Image} tag: {Tag}",
+      img,
+      tag
+    );
+    
+    SkopeoManifest? manifest = await GetManifest(docker_str);
+    /* If manifest cannot be found */
+    if (manifest == null) {
+      throw new ApplicationException($"Manifest for {docker_str} not found");
+    }
+
+    SkopeoArchive archive = new(manifest.Name, tag, target_dir);
     if (File.Exists(archive.TarPath)) {
       if (force) {
         logger_.LogInformation("Force flag present, deleting existing archive: {Path}", archive.TarPath);
@@ -76,7 +100,7 @@ public class SkopeoClient {
                      .WithArguments(
                        args => {
                          args.Add("copy");
-                         args.Add($"docker://{archive.Target}");
+                         args.Add($"docker://{archive.Target}:{archive.Tag}");
                          args.Add(internal_image);
                        }
                      )
@@ -129,21 +153,35 @@ public class SkopeoClient {
       Configuration.GetBackpackVariable(
         CoreVariables.BP_COLLECTOR_CONTAINER_REGISTRY
       );
+    return await GetManifest($"docker://{registry}/{image.Repository}");
+  }
+
+  private async Task<SkopeoManifest?> GetManifest(string image) {
+    StringBuilder std_out = new();
+    StringBuilder std_err = new();
     Command cmd = Cli.Wrap("skopeo")
                      .WithArguments(
                        args => {
                          args.Add("inspect");
                          args.Add("--tls-verify=false");
-                         args.Add($"docker://{registry}/{image.Repository}");
+                         args.Add(image);
                        }
+                     )
+                     .WithStandardOutputPipe(
+                       PipeTarget.ToStringBuilder(std_out)
+                     )
+                     .WithStandardErrorPipe(
+                       PipeTarget.ToStringBuilder(std_err)
                      );
     SkopeoManifest manifest;
     try {
       manifest = await cmd.ExecuteWithResult<SkopeoManifest>();
     } catch (Exception e) {
+      logger_.LogError(e.ToString());
+      logger_.LogInformation("{StdOut}", std_out.ToString());
+      logger_.LogInformation("{StdErr}", std_err.ToString());
       return null;
     }
-
     return manifest;
   }
 }

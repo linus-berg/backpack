@@ -47,6 +47,10 @@ public class Docker {
     } catch (SkopeoArchiveExistsException ex) {
       /* Ignore if file exists */
       return true;
+    } catch (SkopeoTagMissingException ex) {
+      /* Ignore if no tag found */
+      logger_.LogWarning("{RemoteImage} image has no tag", remote_image);
+      return true;
     }
 
     bool success = await PushToStorage(archive);
