@@ -1,4 +1,4 @@
-# Ecosystem Development Guide
+# Processor Development Guide
 
 This guide provides a comprehensive overview and step-by-step tutorial for extending the Backpack system by implementing a new **Processor**.
 

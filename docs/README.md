@@ -13,7 +13,7 @@ Welcome to the Backpack documentation. This index provides a quick reference to 
 - [**Configuration**](Configuration.md) - Detailed guide on configuring the system and its services.
 
 ## Development & Extension
-- [**Ecosystem Development**](EcosystemDevelopment.md) - Guide for creating new collectors and processors.
+- [**Processor Development**](ProcessorDevelopment.md) - Guide for creating new collectors and processors.
 - [**Type Reference**](TypeReference.md) - Reference for data types and schemas used in the system.
 - [**Raw Integration**](RawIntegration.md) - Information on integrating directly with Backpack's internal systems.
 

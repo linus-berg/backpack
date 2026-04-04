@@ -29,7 +29,7 @@ To understand the system's design and operational details, refer to the followin
 - **[Troubleshooting](docs/Troubleshooting.md)**: Common failure patterns and resolution steps.
 
 ### Extension & Integration
-- **[Ecosystem Development Guide](docs/EcosystemDevelopment.md)**: Complete guide to implementing custom package managers and scaffolded processors.
+- **[Processor Development Guide](docs/ProcessorDevelopment.md)**: Complete guide to implementing custom package managers and scaffolded processors.
 - **[Raw Integration API](docs/RawIntegration.md)**: Documentation for interacting directly with the `Integration.API`.
 
 ---

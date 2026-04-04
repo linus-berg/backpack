@@ -37,6 +37,9 @@ The comprehensive process of creating and maintaining a synchronized, local copy
 #### **Delta-Link**
 The internal logic and tracking mechanism used to identify and process only the changes (deltas) that have occurred in a registry since the last successful synchronization cycle.
 
+#### **Ecosystem**
+In the context of Backpack, an **Ecosystem** refers to a specific package management platform or artifact type (e.g., NPM, PyPI, NuGet, Docker, Maven). Each ecosystem has its own dedicated **Processor** that understands its unique metadata format and dependency resolution logic.
+
 #### **Unified Storage**
 The standardized, hierarchical S3 key structure (`s3://<bucket>/<module>/<location>`) used by all collectors to ensure consistent artifact addressing across the entire system.
 
