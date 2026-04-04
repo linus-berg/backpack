@@ -16,10 +16,10 @@ The root of the S3 bucket follows a strict hierarchical pattern:
 - **`<location>`**: The unique identifier or relative path for the artifact within that ecosystem.
 
 ### Persistence Examples
-- **NPM**: `s3://backpack/npm/lodash/-/lodash-4.17.21.tgz`
-- **NuGet**: `s3://backpack/nuget/Newtonsoft.Json/13.0.1/newtonsoft.json.13.0.1.nupkg`
-- **Docker (TAR)**: `s3://backpack/docker-archive/library/alpine/3.18.tar`
-- **Git**: `s3://backpack/git/github.com/dotnet/runtime.git/`
+- **NPM**: `s3://backpack/npm/registry.npmjs.org/lodash/lodash-4.17.21.tgz`
+- **NuGet**: `s3://backpack/nuget/api.nuget.org/newtonsoft.json/13.0.1/newtonsoft.json.13.0.1.nupkg`
+- **Docker (TAR)**: `s3://backpack/docker-archive/docker.io/library/alpine/3.18.tar`
+- **Git**: `s3://backpack/git/github.com/dotnet/runtime.git`
 
 ---
 
