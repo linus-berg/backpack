@@ -45,55 +45,57 @@ After scaffolding, add the new `.csproj` to the `Backpack.sln` solution.
 
 ## 3. Implementation Steps
 
-The template generates a business logic class (e.g., `Go.cs`) implementing an interface (e.g., `IGo.cs`).
+The template generates a business logic class (e.g., `Go.cs`) implementing an interface (e.g., `IGo.cs`). Your goal is to populate the `Artifact` object with versions, files, and dependencies.
 
-### Step A: Fetch Metadata
-In your `ProcessArtifact` method, fetch the latest metadata for the requested artifact ID.
+### Full Implementation Example
 
 ```csharp
 public async Task<Artifact> ProcessArtifact(Artifact artifact) {
     logger.LogInformation("Processing Go module {Id}...", artifact.id);
 
-    // 1. Fetch metadata from the upstream registry
+    // 1. Fetch metadata from the upstream registry (e.g., https://proxy.golang.org/<module>/@v/list)
     var versions = await FetchVersionsFromUpstream(artifact.id);
-    
-    // ... logic continues below
+
+    foreach (var v in versions) {
+        // 2. Add the version to the artifact
+        var artifactVersion = new ArtifactVersion { version = v };
+        
+        // 3. Add the physical files that need to be collected
+        // The Gateway will route these to the appropriate Collector (HTTP, Git, etc.)
+        artifactVersion.AddFile(
+            name: $"{artifact.id}-{v}.zip", 
+            uri: $"{_baseUrl}/{artifact.id}/@v/{v}.zip"
+        );
+
+        artifact.AddVersion(artifactVersion);
+
+        // 4. Resolve and add dependencies for this version
+        // This triggers the recursive Exhaustive collection logic
+        var deps = await ResolveDependencies(artifact.id, v);
+        foreach (var dep in deps) {
+            artifact.AddDependency(dep.Id, "go");
+        }
+    }
+
+    return artifact;
 }
 ```
-
-### Step B: Map Versions & Files
-Iterate through the upstream versions and map them to the `Artifact.versions` dictionary. For each version, identify the physical file(s) that need to be collected.
-
-```csharp
-foreach (var v in versions) {
-    var artifactVersion = new ArtifactVersion { version = v };
-    
-    // Add the physical file URI. The Gateway will route this to a Collector.
-    artifactVersion.AddFile(
-        name: $"{artifact.id}-{v}.zip", 
-        uri: $"{_baseUrl}/{artifact.id}/@v/{v}.zip"
-    );
-
-    artifact.AddVersion(artifactVersion);
-}
-```
-
-### Step C: Identify Dependencies
-Parse the manifest for each version to find its dependencies and add them to the `Artifact.dependencies` collection to trigger the recursive loop.
-
-```csharp
-var deps = await ResolveDependencies(artifact.id, v);
-foreach (var dep in deps) {
-    artifact.AddDependency(dep.Id, "go"); // Specify the processor for the dependency
-}
-```
-
-### Step D: Report Progress
-Use the standard logging and event services to report status to the system-wide feed.
 
 ---
 
-## 4. Integration & Registration
+## 4. The Ingestion Lifecycle
+
+To understand how your code triggers system-wide behavior, follow this lifecycle:
+
+1.  **Request**: The `Core.Gateway` sends an `ArtifactProcessRequest` to your processor's endpoint (`go`).
+2.  **Resolution**: Your `Go.cs` logic fetches metadata and identifies all versions, files, and dependencies.
+3.  **Reply**: The `Consumer.cs` calls `context.ProcessorReply(artifact)`, sending the populated object back to the Gateway.
+4.  **Collection**: The Gateway inspects the `files` in each `ArtifactVersion` and sends `ArtifactCollectRequest` messages to the specialized **Collectors** (e.g., `Collector.Http`).
+5.  **Recursion**: The Gateway inspects the `dependencies` and triggers new `ArtifactProcessRequest` messages for those artifacts, continuing until the entire tree is mirrored locally.
+
+---
+
+## 5. Integration & Registration
 
 1.  **Deployment**: Deploy your new microservice container to your infrastructure.
 2.  **Web GUI**: Register the new processor endpoint (`go`) in the Backpack Dashboard.
