@@ -20,7 +20,7 @@ To understand the system's design and operational details, refer to the followin
 ### Deployment & Configuration
 - **[Configuration Guide](docs/Configuration.md)**: Environment variables, service endpoints, and infrastructure settings.
 - **[Deployment Guide](docs/DeploymentGuide.md)**: Full solution deployment (Docker Compose and Kubernetes/Helm).
-- **[Development Setup](Development.md)**: Instructions for local development (Docker Compose, MinIO, OIDC setup).
+- **[Development Setup](docs/DevelopmentSetup.md)**: Detailed technical instructions for local development environments.
 - **[Troubleshooting](docs/Troubleshooting.md)**: Common failure patterns and resolution steps.
 
 ### Extension & Integration
