@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/header-image.png" alt="Backpack Header" width="100%">
+</p>
+
 # Backpack: Distributed Artifact Synchronization & Mirroring Engine
 
 Backpack is a high-performance, distributed system designed for the **greedy, recursive ingestion** of software artifacts and package ecosystems. It is engineered to facilitate the creation of comprehensive, offline-ready mirrors for **air-gapped** or high-security environments where direct access to public registries is prohibited.
