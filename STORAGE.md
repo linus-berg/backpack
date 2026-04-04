@@ -29,23 +29,28 @@ The primary collector for generic web resources.
 - **Storage**: Maps the URI path directly to the S3 `<location>`.
 
 ### 2. Collector.Git
-Produces and manages Git Bundle files.
-- **Logic**: Instead of a full clone, it generates incremental `.bundle` files.
-- **Incremental Sync**: Uses a specific naming convention `<repo>@<timestamp>-<timestamp>.bundle` to track increments.
-- **Reconstruction**: These bundles can be verified and applied to a mirror repository to keep it up to date without high bandwidth overhead.
+Produces and manages full Git repository mirrors.
+- **Logic**: Performs a full repository synchronization using standard Git protocols.
+- **Storage**: Stores the repository in its native Git structure, allowing for full integrity verification and downstream mirroring.
 
-### 3. Collector.DockerArchive (Skopeo)
-Handles container image mirroring.
-- **Logic**: Wraps the `skopeo` library to interact with Docker registries.
-- **Storage**: Stores images as OCI layout archives or exploded layers depending on configuration.
+### 3. Collector.Container (Skopeo)
+Handles container image mirroring between registries.
+- **Logic**: Wraps the `skopeo` library to interact with remote Docker registries.
+- **Storage**: Stores images as OCI-compliant artifacts or exploded layers depending on configuration.
 - **Key Feature**: Can copy images between different registry types while maintaining layer integrity.
 
-### 4. Collector.Wget
+### 4. Collector.DockerArchive
+Fetches container images from remote registries and saves them as Docker archives (`.tar`).
+- **Logic**: Uses Skopeo to pull remote images and encapsulate them into a single TAR archive.
+- **Storage**: Persists the resulting `.tar` file to the unified S3 structure.
+- **Use Case**: Preferred for environments that require full Docker image archives rather than exploded OCI layers.
+
+### 5. Collector.Wget
 A specialized collector for recursive website mirroring.
 - **Logic**: Uses `wget` mirrors to download entire directory structures or documentation sites.
 - **Storage**: Preserves the directory hierarchy of the mirrored site under the specified `<module>` prefix.
 
-### 5. Collector.Rsync
+### 6. Collector.Rsync
 Used for high-speed file synchronization.
 - **Logic**: Interfaces with the `rsync` protocol.
 - **Value**: Extremely efficient for large repositories that provide rsync access (e.g., Linux distribution mirrors).

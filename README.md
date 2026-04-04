@@ -14,7 +14,6 @@ To understand the system's design and operational details, refer to the followin
 - **[System Philosophy & Standards](GEMINI.md)**: Core mandates, greedy collection logic, and architectural principles.
 - **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
 - **[Storage Architecture](STORAGE.md)**: Detailed breakdown of the S3-hierarchical structure and `Collector.Kernel` implementation.
-- **[Project Roadmap & Status](PROJECT_CONTEXT.md)**: Current state of ecosystem modules and future development goals.
 - **[Type Reference](docs/TypeReference.md)**: Technical schemas for internal messages and metadata structures.
 
 ### Deployment & Configuration
@@ -50,7 +49,7 @@ Processors are ecosystem-specific logic units responsible for metadata extractio
 
 ### 3. Artifact Collectors
 Collectors are protocol-specific workers responsible for the physical retrieval of resources.
-- **Protocols**: **HTTP/HTTPS**, **Git** (generating incremental `.bundle` files), **Skopeo** (for OCI/Docker registry-to-registry copies), **Rsync**, and **Wget**.
+- **Protocols**: **HTTP/HTTPS**, **Git** (full repository synchronization), **Skopeo/OCI** (registry-to-registry copies), **Docker Archive** (.tar image files), **Rsync**, and **Wget**.
 - **Efficiency**: Implements daily delta logic, utilizing `ETags` and `Last-Modified` headers to minimize egress costs and bandwidth usage.
 
 ## 🏗 Service & Module Inventory
@@ -71,8 +70,9 @@ Collectors are protocol-specific workers responsible for the physical retrieval 
 | Service | Protocol / Tool | Description |
 | :--- | :--- | :--- |
 | **`Collector.Http`** | HTTP/HTTPS | Generic web resource retrieval with ETag/Delta support. |
-| **`Collector.Git`** | Git | Incremental Git Bundle generation for repository mirroring. |
-| **`Collector.Container`** | Skopeo/OCI | Registry-to-registry container image synchronization. |
+| **`Collector.Git`** | Git | Full repository synchronization for Git-based artifact ecosystems. |
+| **`Collector.Container`** | Skopeo/OCI | Remote registry-to-registry image synchronization (OCI/Layers). |
+| **`Collector.DockerArchive`**| Skopeo/TAR | Fetches remote images and saves them as Docker TAR archives. |
 | **`Collector.Wget`** | Wget | Recursive website and documentation mirroring. |
 | **`Collector.Rsync`** | Rsync | High-speed file synchronization for large mirrors. |
 | **`Collector.Router`** | Logic | Internal routing of collection requests to specialized workers. |
