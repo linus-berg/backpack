@@ -69,7 +69,7 @@ Collectors are protocol-specific workers responsible for the physical retrieval 
 ### Specialized Collectors
 | Service | Protocol / Tool | Description |
 | :--- | :--- | :--- |
-| **`Collector.Http`** | HTTP/HTTPS | Generic web resource retrieval with ETag/Delta support. |
+| **`Collector.Http`** | HTTP/HTTPS | Generic web resource retrieval with existence-based synchronization. |
 | **`Collector.Git`** | Git | Full repository synchronization for Git-based artifact ecosystems. |
 | **`Collector.Container`** | Skopeo/OCI | Remote registry-to-registry image synchronization (OCI/Layers). |
 | **`Collector.DockerArchive`**| Skopeo/TAR | Fetches remote images and saves them as Docker TAR archives. |

@@ -25,7 +25,7 @@ Collectors are responsible for the physical retrieval of artifacts from upstream
 ### 1. Collector.Http
 The primary collector for generic web resources.
 - **Logic**: Performs a standard HTTP GET request to the upstream URI.
-- **Delta Support**: Uses `ETag` and `Last-Modified` headers to avoid redundant downloads.
+- **Delta Support**: Implements existence checks to avoid redundant downloads.
 - **Storage**: Maps the URI path directly to the S3 `<location>`.
 
 ### 2. Collector.Git
