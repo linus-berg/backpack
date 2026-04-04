@@ -1,356 +1,145 @@
-# WARNING: This is not meant as a production ready/secure installation.
-# This only serves as a basic guideline of how to deploy the APC's full capabilities.
 version: "3.8"
-name: apc
+name: backpack-full-stack
+
 services:
-# Example variables
-# apc_data: "/opt/apc/data" <- this is the output directory. Note: S3 replacement is currently being tested.
-# apc_cfg: "/opt/apc/cfg"
-# apc_volumes: "/opt/apc/volumes"
+  # --- INFRASTRUCTURE LAYER ---
 
-# apc_hostname: apc.eat-the-internet.com
-
-# apc_rabbitmq_username: "apc"
-# apc_rabbitmq_password: "dummy_rmq"
-
-# apc_keycloak_username: "admin"
-# apc_keycloak_password: "dummy_kc"
-
-# kc_postgres_username: "postgres"
-# kc_postgres_password: "dummy_pgsql"
-
-# apc_mongodb_username: "apc"
-# apc_mongodb_password: "dummy_mongodb"
-
-# apc_redis_username: "apc"
-# apc_redis_password: "dummy_redis"
-
-## Exclusively for the Helm APM.
-# artifacthub_api_key_id: "API-ID"
-# artifacthub_api_key_secret: "API-SECRET"
-
-# Infrastructure
-  # Required for artifact storage, not production configured.
   minio:
     image: minio/minio
     restart: always
     ports:
       - "9000:9000"
       - "9001:9001"
-    volumes:
-      - "./volumes/minio:/data"
     environment:
-      MINIO_ROOT_USER: {{ minio_root_user }}
-      MINIO_ROOT_PASSWORD: {{ minio_root_password }}
-      MINIO_PROMETHEUS_URL: http://apc-telemetry-prometheus:9090
-      MINIO_PROMETHEUS_JOB_ID: minio-job
-      MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-backpack_pass}
     command: server --console-address ":9001" /data
     networks:
-      apc-infra-network:
-        aliases:
-          - apc-minio
-  
-  # This acts as a proxy to allow skopeo copy storage in S3.
-  internal-registry:
-    image: registry:2.8
-    restart: always
-    ports:
-      - "6000:5000"
-    environment:
-      REGISTRY_STORAGE: s3
-      REGISTRY_STORAGE_S3_ACCESSKEY: minio-apc
-      REGISTRY_STORAGE_S3_SECRETKEY: minio-apc
-      REGISTRY_STORAGE_S3_REGIONENDPOINT: http://apc-minio:9000
-      REGISTRY_STORAGE_S3_BUCKET: docker-registry
-      REGISTRY_STORAGE_S3_SECURE: "false"
-      REGISTRY_STORAGE_S3_REGION: ignored-for-minio
-      REGISTRY_STORAGE_REDIRECT_DISABLE: "true"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-internal-registry
-  mongo:
-    image: mongo
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: {{ apc_mongodb_username }}
-      MONGO_INITDB_ROOT_PASSWORD: {{ apc_mongodb_password }}
-    volumes:
-      - "{{ apc_volumes }}/mongo_data:/data/db"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-mongo
+      - backpack-network
 
-  # Optional and should be removed in production, good for debugging and development.
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-backpack_pass}) do echo '...waiting for minio...' && sleep 1; done;
+      /usr/bin/mc mb --ignore-existing myminio/backpack;
+      exit 0;
+      "
+    networks:
+      - backpack-network
+
+  mongo:
+    image: mongo:6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-backpack}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-backpack_pass}
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - backpack-network
+
   mongo-express:
     image: mongo-express
     restart: always
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: {{ apc_mongodb_username }}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: {{ apc_mongodb_password }}
-      ME_CONFIG_MONGODB_URL: mongodb://{{ apc_mongodb_username }}:{{ apc_mongodb_password }}@apc-mongo:27017/
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER:-backpack}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS:-backpack_pass}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER:-backpack}:${MONGO_PASS:-backpack_pass}@mongo:27017/
+    ports:
+      - "8081:8081"
     networks:
-      apc-infra-network:
-        aliases:
-          - apc-mongo-express
+      - backpack-network
 
-  #### Keycloak is optional if user interface is not used, also not production configured.
-  keycloak-db:
-    image: postgres:13
+  redis:
+    image: redis:7-alpine
     restart: always
-    volumes:
-      - "{{ apc_volumes }}/kc_db:/var/lib/postgresql/data"
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: {{ kc_postgres_username }}
-      POSTGRES_PASSWORD: {{ kc_postgres_password }}
     networks:
-      apc-infra-network:
-        aliases:
-          - apc-keycloak-db
+      - backpack-network
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:20.0.3
-    restart: always
-    depends_on:
-     - keycloak-db
-    command:
-      - start --proxy edge --hostname-strict=false --hostname-url=https://{{ apc_hostname }}:10000 --db postgres --db-url-host apc-keycloak-db --db-username {{ kc_postgres_username }} --db-password {{ kc_postgres_password }}
-    volumes:
-      - "{{ apc_volumes }}/kc_data:/opt/keycloak/data/h2:Z"
-    environment:
-      PROXY_ADDRESS_FORWARDING: "true"
-      KEYCLOAK_ADMIN: {{ apc_keycloak_username }}
-      KEYCLOAK_ADMIN_PASSWORD: {{ apc_keycloak_password }} 
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-keycloak
-
-  # Required for caching, this is kind of stateless (keys expire, no stored data), cluster for HA but not required.
-  ingest-redis:
-    image: redis/redis-stack:latest
-    restart: always
-    volumes:
-      - "{{ apc_volumes }}/redis_data:/data"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-ingest-redis
-
-  # Required, it works, but not a production configured instance, see MassTransit for required addons.
   rabbitmq:
     image: masstransit/rabbitmq:3
-    hostname: 'apc-rabbitmq'
     restart: always
-    volumes:
-      - "{{ apc_volumes }}/rabbitmq_data:/var/lib/rabbitmq"
     environment:
-      - RABBITMQ_DEFAULT_USER={{ apc_rabbitmq_username }}
-      - RABBITMQ_DEFAULT_PASSWORD={{ apc_rabbitmq_password }}
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-rabbitmq
-  
-  # Optional   
-  haproxy:
-    image: haproxy 
-    volumes:
-      - "{{ apc_cfg }}/haproxy:/usr/local/etc/haproxy"
-    restart: always
-    # Only expose the services you want external access to.
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-backpack}
+      RABBITMQ_DEFAULT_PASSWORD: ${RABBIT_PASS:-backpack_pass}
     ports:
-      - 443:8000    # GUI
-      - 8001:8001   # RabbitMQ web interface
-      - 8002:8002   # MongoDB express
-      - 8003:8003   # Redis Insights 
-      - 8004:8004   # API
-      - 9000:9000   # Grafana
-      - 10000:10000 # Keycloak
+      - "15672:15672"
     networks:
-      - apc-infra-network
+      - backpack-network
 
-  # Ingest service is required, it manages all the artifacts being processed.  
-  ingestion:
-    image: ghcr.io/linus-berg/apc/ingestion:latest
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    restart: always
+    command: start-dev --http-port 8090 --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_PASS:-backpack_pass}
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./backpack-realm.json:/opt/keycloak/data/import/backpack-realm.json:ro
+    networks:
+      - backpack-network
+
+  # --- BACKPACK CORE SERVICES ---
+
+  gateway:
+    image: ghcr.io/backpack/core/gateway:latest
     restart: always
     env_file:
-      - "vars.env"
+      - vars.env
     networks:
-      - apc-infra-network
+      - backpack-network
 
-  # Optional if gui or API is not used. 
   api:
-    image: ghcr.io/linus-berg/apc/api:latest
+    image: ghcr.io/backpack/integration/api:latest
     restart: always
     env_file:
-      - "vars.env"
-    volumes:
-      # This is an exported keycloak configuration.
-      - "{{ apc_cfg }}/keycloak.json:/app/keycloak.json"
-      - "{{ apc_volumes }}/logs:/logs"
+      - vars.env
+    ports:
+      - "8004:80"
     networks:
-      apc-infra-network:
-        aliases:
-          - apc-api
+      - backpack-network
 
-  # Optional if no scheduling is needed. Note: Schedule is hardcoded (TODO: make parameter)
   scheduler:
-    image: ghcr.io/linus-berg/apc/scheduler:latest
+    image: ghcr.io/backpack/tracker/scheduler:latest
     restart: always
     env_file:
-      - "vars.env"
-    volumes:
-      - "{{ apc_volumes }}/logs:/logs"
+      - vars.env
     networks:
-      apc-infra-network:
-        aliases:
-          - apc-scheduler
+      - backpack-network
 
-  # Optional if no gui is needed (own interface can be created)
-  gui:
-    image: ghcr.io/linus-berg/apc/gui:latest
+  # --- PROCESSORS (Examples) ---
+
+  processor-npm:
+    image: ghcr.io/backpack/processor/npm:latest
     restart: always
     env_file:
-      - "vars.env"
+      - vars.env
     networks:
-      apc-infra-network:
-        aliases:
-          - apc-gui
+      - backpack-network
 
-  # Represent a APM module.
-{% for apm in apc_apms %}
-  apm-{{ apm.id }}:
-    image: {{ apm.image }}:{{ apm.tag }}
+  # --- COLLECTORS (Examples) ---
+
+  collector-router:
+    image: ghcr.io/backpack/collector/router:latest
     restart: always
     env_file:
-      - "vars.env"
+      - vars.env
     networks:
-      - apc-infra-network
-    deploy:
-        mode: replicated
-        replicas: {{ apm.replicas }}
-{% endfor %} 
+      - backpack-network
 
-  # Required for protocol routing and filtering.
-  acm-router:
-    image: ghcr.io/linus-berg/apc/acm/router:latest
+  collector-http:
+    image: ghcr.io/backpack/collector/http:latest
     restart: always
     env_file:
-      - "vars.env"
+      - vars.env
     networks:
-      - apc-infra-network
-    deploy:
-        mode: replicated
-        replicas: 6
+      - backpack-network
 
-  # Optional if HTTP protocol is not needed (unlikely).
-  acm-http:
-    image: ghcr.io/linus-berg/apc/acm/http:latest
-    restart: always
-    env_file:
-      - "vars.env"
-    volumes:
-      - "/data:/data"
-    networks:
-      - apc-infra-network
-    deploy:
-        mode: replicated
-        replicas: 3
-
-  # Optional if no Git repositories are being collected. 
-  acm-git:
-    image: ghcr.io/linus-berg/apc/acm/git:latest
-    restart: always
-    env_file:
-      - "vars.env"
-    volumes:
-      - "/data:/data"
-    networks:
-      - apc-infra-network
-
-  # Optional if no containers are being collected.  
-  acm-container:
-    image: ghcr.io/linus-berg/apc/acm/container:latest
-    restart: always
-    env_file:
-      - "vars.env"
-    volumes:
-      - "/data:/data"
-      # Instead of logging into docker each container restart, mount docker config into the container.
-      # TODO: this is a very manual process and might even be mounted wrong for skopeo.
-      - "/root/.docker:/root/.docker"
-    networks:
-      - apc-infra-network
-  
-  # TELEMETRY (everything optional, though highly recommended, for service graph and tracing)
-  telemetry-grafana:
-    image: grafana/grafana-oss:latest
-    # WARNING: Fix for grafana being buggy with permissions and crashing in docker?
-    user: "0:0"
-    volumes:
-      - "{{ apc_volumes }}/grafana_data:/var/lib/grafana"
-      - "{{ apc_cfg }}/grafana.ini:/etc/grafana/grafana.ini"
-      - "{{ apc_cfg }}/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-telemetry-grafana
-  
-  telemetry-tempo:
-    image: grafana/tempo:latest
-    command: [ "-config.file=/etc/tempo.yaml" ]
-    volumes:
-      - "{{ apc_cfg }}/tempo.yml:/etc/tempo.yaml"
-      - "{{ apc_volumes }}/tempo-data:/tmp/tempo"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-telemetry-tempo
-
-  # NOT OPTIONAL IF TELEMETRY IS WANTED (each service implements the OTEL protocol)
-  telemetry-otel:
-    image: otel/opentelemetry-collector-contrib:0.79.0
-    command: [ "--config=/etc/otel-collector.yaml" ]
-    volumes:
-      - "{{ apc_cfg }}/otel.yml:/etc/otel-collector.yaml"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-telemetry-otel
-    extra_hosts: ["host.docker.internal:host-gateway"]
-
-  telemetry-prometheus:
-    image: prom/prometheus:latest
-    command:
-      - --config.file=/etc/prometheus.yaml
-      - --web.enable-remote-write-receiver
-      - --enable-feature=exemplar-storage
-    volumes:
-      - "{{ apc_cfg }}/prometheus.yml:/etc/prometheus.yaml"
-    networks:
-      apc-infra-network:
-        aliases:
-          - apc-telemetry-prometheus
-  
-  telemetry-node-exporter:
-      image: prom/node-exporter:latest
-      restart: unless-stopped
-      network_mode: host
-      volumes:
-        - /proc:/host/proc:ro
-        - /sys:/host/sys:ro
-        - /:/rootfs:ro
-      command:
-        - '--path.procfs=/host/proc'
-        - '--path.rootfs=/rootfs'
-        - '--path.sysfs=/host/sys'
-        - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-      
 networks:
-  apc-infra-network:
-    name: apc-infra-network
-
+  backpack-network:
+    name: backpack-network

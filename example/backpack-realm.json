@@ -1,0 +1,52 @@
+{
+  "realm": "backpack",
+  "enabled": true,
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "firstName": "Backpack",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "backpack_pass",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "backpack": [
+          "Administrator"
+        ]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "backpack",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "webOrigins": [
+        "*"
+      ],
+      "redirectUris": [
+        "*"
+      ],
+      "fullScopeAllowed": true
+    }
+  ],
+  "roles": {
+    "client": {
+      "backpack": [
+        {
+          "name": "Administrator",
+          "clientRole": true
+        }
+      ]
+    }
+  }
+}
