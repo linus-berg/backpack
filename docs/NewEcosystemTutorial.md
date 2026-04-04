@@ -87,8 +87,18 @@ To make the system aware of your new processor:
 1.  **Deployment**: Deploy your new microservice container.
 2.  **Configuration**: Register the `go` endpoint in the Backpack Web GUI or via the `Integration.API`.
 
-## 7. Best Practices
+## 8. Implementing in Other Languages
+
+While the .NET template is the recommended path for native integration, processors can be implemented in any language that supports **RabbitMQ** and **JSON** serialization.
+
+If you are developing a processor in Python, Go, or another language:
+-   **Direct Interaction**: Refer to the **[Raw Integration Guide](RawIntegration.md)** for technical details on the `ArtifactProcessRequest` and `ArtifactProcessedRequest` message schemas.
+- **MassTransit Compatibility**: Ensure your message structures and headers are compatible with MassTransit's JSON serialization format.
+
+## 9. Best Practices
 
 -   **Atomic Operations**: Use the `Artifact` model's helper methods (`AddVersion`, `AddFile`, `AddDependency`) to maintain consistency.
 -   **Logging**: Use the provided `ILogger` for structured logging. These logs are automatically captured by OpenTelemetry.
--   - **Error Handling**: Throwing an exception in the logic will trigger MassTransit's retry policy. Ensure your metadata fetching is resilient.
+-   **Error Handling**: Throwing an exception in the logic will trigger MassTransit's retry policy. Ensure your metadata fetching is resilient.
+
+
