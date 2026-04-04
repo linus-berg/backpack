@@ -1,185 +1,114 @@
-<h1 align="center"><img src="images/backpack-256.png" alt="backpack"/></h1>
+# Backpack: Distributed Artifact Synchronization & Mirroring Engine
 
-:warning: Warning: This project is still under heavy development, to be considered a beta, at best.
+Backpack is a high-performance, distributed system designed for the **greedy, recursive ingestion** of software artifacts and package ecosystems. It is engineered to facilitate the creation of comprehensive, offline-ready mirrors for **air-gapped** or high-security environments where direct access to public registries is prohibited.
 
-Backpack is used to collect and store a varied and large amounts of artifacts, for example npm, nuget...
+## 📖 Documentation Index
 
-Primary use-case is transferring to airgapped / high security networks for offline consumption via an artifact repository.
+To understand the system's design and operational details, refer to the following guides:
 
-The complex keeps track of already collected artifacts, dependencies, and versions.
+### Core Architecture & Strategy
+- **[System Philosophy & Standards](GEMINI.md)**: Core mandates, greedy collection logic, and architectural principles.
+- **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
+- **[Storage Architecture](STORAGE.md)**: Detailed breakdown of the S3-hierarchical structure and `Collector.Kernel` implementation.
+- **[Project Roadmap & Status](PROJECT_CONTEXT.md)**: Current state of ecosystem modules and future development goals.
+- **[Type Reference](docs/TypeReference.md)**: Technical schemas for internal messages and metadata structures.
 
-The Backpack's collection of artifacts is greedy, it will by default collect every version and every dependency version, recursively, 
-until every item is collected, artifact filters can be applied to reduce the amount collected.
+### Deployment & Configuration
+- **[Configuration Guide](docs/Configuration.md)**: Environment variables, service endpoints, and infrastructure settings.
+- **[Deployment Guide](docs/DeploymentGuide.md)**: Full solution deployment (Docker Compose and Kubernetes/Helm).
+- **[Development Setup](Development.md)**: Instructions for local development (Docker Compose, MinIO, OIDC setup).
+- **[Troubleshooting](docs/Troubleshooting.md)**: Common failure patterns and resolution steps.
 
-It builds daily deltas to reduce the day-to-day load on the transfer device.
+### Extension & Integration
+- **[Ecosystem Integration](docs/EcosystemIntegration.md)**: How to implement new Processors and integrate custom package managers.
+- **[Raw Integration API](docs/RawIntegration.md)**: Documentation for interacting directly with the `Integration.API`.
 
-The design is microservice oriented and intended to minimize the amount of work needed to build a new "Processor", for example maven.
+## Core Architectural Principles
 
-Processors can safely rely on the core infrastructure of Backpack, the core infrastructure handles the memorization of metadata, 
-and the collection via standard protocols, for example http, git, or docker.
-## Deploy
-An early stage helm chart is available at
-https://github.com/linus-berg/helm-charts/tree/main/charts/backpack
+The system follows a **microservice-oriented architecture** centered around a decoupled message-passing pattern.
 
-https://linus-berg.github.io/helm-charts/
+*   **Distributed Orchestration:** Leveraging **MassTransit** and **RabbitMQ** for reliable message delivery and service discovery.
+*   **Greedy Ingestion Logic:** By default, the system performs exhaustive dependency graph resolution. It recursively identifies and collects every version and every dependency version of a target artifact until the entire tree is mirrored locally.
+*   **Storage Abstraction:** All persistence operations are handled via a unified `FileSystem` kernel, abstracting S3-compatible object storage (MinIO/AWS S3) for long-term retention.
+*   **Ecosystem-Agnostic Core:** The logic for "how to find" (Processors) is separated from "how to fetch" (Collectors), allowing for rapid integration of new package managers.
 
-See the `values.examples.yaml` file for configuration.
-The auxiliary services such as mongodb still needs to be provided by the administrator.
+## System Components
 
-## Recommended minimum requirements (single node)
-| Resource | Req                                  |
-|----------|--------------------------------------|
-| RAM      | 16GB                                 |
-| CPU      | 8 cores                              |
-| Storage  | 2TB * Collector (depending on usage) |
-| Network  | >= 1 Gbps                            |
+### 1. Core Services
+- **`Core.Gateway`**: The central orchestrator. It manages the state machine for artifact ingestion, routing requests between Processors and Collectors, and ensuring metadata consistency in **MongoDB**.
+- **`Integration.API`**: A RESTful gateway for system management and manual ingestion triggers, secured via **OIDC** (OpenID Connect).
+- **`Tracker.Scheduler`**: A **Quartz.NET**-driven scheduling engine that monitors external registries for updates and triggers periodic synchronization jobs.
 
-Backpack is designed to be horizontally scalable and suitable for kubernetes, however, kubernetes deployments have not been tested thoroughly.
+### 2. Artifact Processors
+Processors are ecosystem-specific logic units responsible for metadata extraction and dependency resolution.
+- **Ecosystems**: NPM, PyPi, NuGet, Maven, Helm, Terraform, HuggingFace, Container Images (OCI), and JetBrains IDEs.
+- **Function**: They consume an `ArtifactProcessRequest`, resolve the dependency manifest, and emit `ArtifactRouteRequest` messages for individual files.
 
-The following services are required to run the complete suite of Backpack capabilities.
-A batteries included starter pack is included under /examples and /Compose, however, these are not production ready configurations, and are only intended as an development/test environment.
+### 3. Artifact Collectors
+Collectors are protocol-specific workers responsible for the physical retrieval of resources.
+- **Protocols**: **HTTP/HTTPS**, **Git** (generating incremental `.bundle` files), **Skopeo** (for OCI/Docker registry-to-registry copies), **Rsync**, and **Wget**.
+- **Efficiency**: Implements daily delta logic, utilizing `ETags` and `Last-Modified` headers to minimize egress costs and bandwidth usage.
 
+## 🏗 Service & Module Inventory
 
-| Service                 | Requirement                             |
-|-------------------------|-----------------------------------------|
-| OIDC Provider           | Required (only for API and GUI)         |
-| RabbitMq                | Required                                |
-| Minio                   | Required                                |
-| MongoDb                 | Required                                |
-| Redis                   | Required                                |
-| Container Registry      | Required (only for Collector.Container) |
-| OpenTelemetry Collector | Recommended but required for Telemetry  | 
-| Grafana                 | Recommended                             | 
-| Prometheus              | Recommended                             | 
-| Tempo                   | Recommended                             | 
-
-
-## Architecture
-
-### Message Propagation Diagram
-The following diagram illustrates how messages flow between the different services in the Backpack ecosystem.
-
-```mermaid
-graph TD
-    API[Integration.API] -- ArtifactIngestRequest --> GW(Core.Gateway)
-    SCHED[Tracker.Scheduler] -- ArtifactIngestRequest --> GW
-    GW -- ArtifactProcessRequest --> PROC{Processors}
-    PROC -- ArtifactProcessedRequest --> GW
-    GW -- ArtifactRouteRequest --> ROUTER[Collector.Router]
-    ROUTER -- ArtifactCollectRequest --> COLL{Collectors}
-    COLL -- Download --> STORAGE[(S3 Storage)]
-
-    subgraph Processors
-        PROC_NPM[Processor.Npm]
-        PROC_PYPI[Processor.Pypi]
-        PROC_...[...]
-    end
-
-    subgraph Collectors
-        COLL_HTTP[Collector.Http]
-        COLL_GIT[Collector.Git]
-        COLL_...[...]
-    end
-```
-
-## Modules
-| Tag       | Name                        | Description                                                           |
-|-----------|-----------------------------|-----------------------------------------------------------------------|
-| Tracker   | Artifact Tracking Module    | Handles the tracking of artifacts to request an update by the APC.    |
-| Processor | Artifact Processing Module  | Handles the processing of a defined artifact-type.                    |
-| Collector | Artifact Collector Module   | Handles the collection of artifact-types based on standard protocols. |
-
-## Services
+### Modules
+| Tag | Name | Description |
+| :--- | :--- | :--- |
+| **Tracker** | Artifact Tracking | Monitoring and update scheduling for external registries. |
+| **Processor** | Artifact Processing | Ecosystem-specific metadata extraction and dependency resolution. |
+| **Collector** | Artifact Collection | Physical retrieval of artifacts via standard protocols. |
 
 ### Core Services
-| Service             | Description                                                                                                                              |
-|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `Core.Gateway`      | The central message bus for the Backpack system. It uses MassTransit to route messages between services.                                   |
-| `Tracker.Scheduler` | Schedules and triggers artifact tracking jobs using Quartz.NET. It reads a schedule configuration to define when to check for new artifacts. |
-| `Integration.API`   | A RESTful API that provides an external interface to the Backpack system. It uses generic OIDC for authentication and authorization.           |
+- **`Core.Gateway`**: Central message bus (MassTransit) orchestrating the ingestion lifecycle.
+- **`Tracker.Scheduler`**: Quartz.NET-based scheduling for recurring registry synchronization.
+- **`Integration.API`**: REST interface for management, monitoring, and OIDC-secured triggers.
 
-### Collectors
-Collectors are responsible for retrieving artifacts from their sources.
+### Specialized Collectors
+| Service | Protocol / Tool | Description |
+| :--- | :--- | :--- |
+| **`Collector.Http`** | HTTP/HTTPS | Generic web resource retrieval with ETag/Delta support. |
+| **`Collector.Git`** | Git | Incremental Git Bundle generation for repository mirroring. |
+| **`Collector.Container`** | Skopeo/OCI | Registry-to-registry container image synchronization. |
+| **`Collector.Wget`** | Wget | Recursive website and documentation mirroring. |
+| **`Collector.Rsync`** | Rsync | High-speed file synchronization for large mirrors. |
+| **`Collector.Router`** | Logic | Internal routing of collection requests to specialized workers. |
 
-| Service                   | Description                                                                                             |
-|---------------------------|---------------------------------------------------------------------------------------------------------|
-| `Collector.Git`           | Collects artifacts from Git repositories.                                                               |
-| `Collector.Http`          | Collects artifacts over HTTP/HTTPS.                                                                     |
-| `Collector.Wget`          | A collector that uses `wget` to download artifacts.                                                     |
-| `Collector.Rsync`         | A collector that uses `rsync` to synchronize artifacts.                                                 |
-| `Collector.Router`        | Routes collection requests to the appropriate collector based on the artifact type.                     |
-| `Collector.Container`     | Collects container images from a registry.                                                              |
-| `Collector.DockerArchive` | Collects Docker images from a local Docker archive (`.tar` file).                                       |
+### Ecosystem Processors
+| Service | Ecosystem |
+| :--- | :--- |
+| **`Processor.Npm`** | Node.js (NPM) packages. |
+| **`Processor.Pypi`** | Python (PyPI) packages. |
+| **`Processor.Nuget`** | .NET (NuGet) packages. |
+| **`Processor.Maven`** | Java (Maven) packages. |
+| **`Processor.Container`** | OCI/Docker container images. |
+| **`Processor.Helm`** | Kubernetes Helm charts. |
+| **`Processor.Terraform`** | Terraform modules. |
+| **`Processor.OperatorHub`** | Kubernetes Operators. |
+| **`Processor.HuggingFace`** | AI/ML models and datasets. |
+| **`Processor.Github.Releases`** | GitHub Release artifacts. |
+| **`Processor.Jetbrains.*`** | IDE binaries and plugin ecosystems. |
 
-### Processors
-Processors are responsible for extracting metadata and dependencies from artifacts.
+### Utility Services
+- **`Backpack.Toolbox`**: CLI utilities for administrative tasks and index management.
+- **`Backpack.GitUnpack`**: Dedicated service for decompressing and verifying Git bundles.
+- **`Backpack.Tester`**: Automated integration and regression testing suite.
 
-| Service                       | Description                                                                                             |
-|-------------------------------|---------------------------------------------------------------------------------------------------------|
-| `Processor.Npm`               | Processes Node.js packages from the npm registry.                                                       |
-| `Processor.Php`               | Processes PHP packages.                                                                                 |
-| `Processor.Helm`              | Processes Helm charts.                                                                                  |
-| `Processor.Pypi`              | Processes Python packages from PyPI.                                                                    |
-| `Processor.Maven`             | Processes Java packages from a Maven repository.                                                        |
-| `Processor.Nuget`             | Processes .NET packages from a NuGet repository.                                                        |
-| `Processor.Rancher`           | Processes Rancher artifacts.                                                                            |
-| `Processor.Container`         | Processes container images to extract metadata.                                                         |
-| `Processor.Terraform`         | Processes Terraform modules.                                                                            |
-| `Processor.OperatorHub`       | Processes operators from OperatorHub.io.                                                                |
-| `Processor.Jetbrains.IDE`     | Processes JetBrains IDEs.                                                                               |
-| `Processor.Github.Releases`   | Processes releases from GitHub.                                                                         |
-| `Processor.Jetbrains.Plugins` | Processes plugins for JetBrains IDEs.                                                                   |
+## Technical Stack
 
-### Other Services
-| Service                | Description                                                                                             |
-|------------------------|---------------------------------------------------------------------------------------------------------|
-| `Backpack.Tester`      | A service for testing Backpack functionality.                                                           |
-| `Backpack.Toolbox`     | A service containing various tools for interacting with the Backpack system.                              |
-| `Backpack.GitUnpack`   | A service for unpacking Git repositories.                                                               |
+- **Runtime**: .NET 8.0 (C#)
+- **Messaging**: MassTransit with RabbitMQ transport.
+- **Persistence**: S3-compatible Object Storage (Artifacts), MongoDB (Metadata), Redis (Distributed Caching).
+- **Observability**: Fully instrumented with **OpenTelemetry** (Tracing, Metrics, Logs).
+- **Security**: Generic OIDC provider support with RBAC (Role-Based Access Control).
 
-## Development
+## Infrastructure Requirements
 
-### Scaffolding New Processors
-Backpack provides a official .NET template to quickly scaffold new artifact processors.
+To run a full production-ready suite of Backpack services, the following infrastructure sidecars are required:
+- **RabbitMQ**: Message brokering.
+- **MinIO/S3**: Artifact persistence.
+- **MongoDB**: Metadata and tracking state.
+- **Redis**: Rate limiting and caching.
+- **OIDC Provider**: Authentication (e.g., Keycloak).
 
-#### Installation
-Run the following command from the root of the repository:
-```bash
-dotnet new install ./Templates/ProcessorTemplate
-```
-
-#### Usage
-To create a new processor (e.g., for Go Modules):
-```bash
-mkdir Processor.Go
-cd Processor.Go
-dotnet new backpack-processor -n Go --ENDPOINT go --BASE_URL https://proxy.golang.org
-```
-
-This will generate a pre-configured project including:
-- A standardized MassTransit consumer.
-- Automatic integration with the system-wide activity feed.
-- Interface-driven logic classes for metadata fetching.
-
-## Environment Variables
-| Name                            | Default   | Modules                            |
-|---------------------------------|-----------|------------------------------------|
-| BP_OTEL_HOST                    | -         | Gateway, API, Processor, Collector |
-| BP_RABBIT_MQ_HOST               | localhost | Gateway, API, Processor, Collector |
-| BP_RABBIT_MQ_USER               | guest     | Gateway, API, Processor, Collector |
-| BP_RABBIT_MQ_PASS               | guest     | Gateway, API, Processor, Collector |
-| BP_REDIS_HOST                   | localhost | Gateway, API                       |
-| BP_REDIS_USER                   | -         | Gateway, API                       |
-| BP_REDIS_PASS                   | -         | Gateway, API                       |
-| BP_MONGO_STR                    | -         | Gateway, API                       |
-| BP_API_HOST                     | localhost | GUI, Tracker, API                  |
-| BP_API_PORT                     | 4000      | GUI, Tracker, API                  |
-| BP_S3_ACCESS_KEY                | -         | Collector                          |
-| BP_S3_SECRET_KEY                | -         | Collector                          |
-| BP_S3_REGION                    | -         | Collector                          |
-| BP_S3_ENDPOINT                  | -         | Collector                          |
-| BP_S3_BUCKET                    | -         | Collector                          |
-| BP_COLLECTOR_DIRECTORY          | /data/    | Collector.Git                      |
-| BP_COLLECTOR_HTTP_DELTA         | true      | Collector.Http                     |
-| BP_COLLECTOR_HTTP_MODE          | lake      | Collector.Http                     |
-| BP_COLLECTOR_CONTAINER_REGISTRY | -         | Collector.Container                |
+---
+*Note: This project is optimized for horizontal scalability and high-concurrency ingestion workloads.*
