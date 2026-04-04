@@ -14,6 +14,7 @@ To understand the system's design and operational details, refer to the followin
 - **[System Philosophy & Standards](GEMINI.md)**: Core mandates, greedy collection logic, and architectural principles.
 - **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
 - **[Storage Architecture](STORAGE.md)**: Detailed breakdown of the S3-hierarchical structure and `Collector.Kernel` implementation.
+- **[Glossary of Terms](docs/Glossary.md)**: Standardized definitions for Backpack architecture, roles, and components.
 - **[Type Reference](docs/TypeReference.md)**: Technical schemas for internal messages and metadata structures.
 
 ### Deployment & Configuration
@@ -23,7 +24,8 @@ To understand the system's design and operational details, refer to the followin
 - **[Troubleshooting](docs/Troubleshooting.md)**: Common failure patterns and resolution steps.
 
 ### Extension & Integration
-- **[Ecosystem Integration](docs/EcosystemIntegration.md)**: How to implement new Processors and integrate custom package managers.
+- **[Ecosystem Integration Guide](docs/EcosystemIntegration.md)**: High-level overview of implementing custom package managers.
+- **[Tutorial: New Ecosystem Processor](docs/NewEcosystemTutorial.md)**: Step-by-step guide to scaffolding and implementing a new processor.
 - **[Raw Integration API](docs/RawIntegration.md)**: Documentation for interacting directly with the `Integration.API`.
 
 ## Core Architectural Principles
