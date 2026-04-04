@@ -49,18 +49,25 @@ Once the infrastructure is healthy, you can start the individual Backpack micros
 
 ## ☸️ Option 2: Kubernetes & Helm (Production Scale)
 
-For large-scale, resilient deployments, use the official Helm charts.
+For large-scale, resilient deployments, use the official Helm charts hosted at the **[linus-berg/helm-charts](https://linus-berg.github.io/helm-charts/)** repository.
 
 ### 1. Prerequisites
 - A functional Kubernetes cluster.
 - Helm 3.x installed.
 - Access to the infrastructure services (can be external or deployed within the cluster).
 
-### 2. Configure Values
-Copy the example values file and modify it for your environment:
+### 2. Add the Helm Repository
+```bash
+helm repo add backpack https://linus-berg.github.io/helm-charts/
+helm repo update
+```
+
+### 3. Configure Values
+You can retrieve the default values from the chart:
 
 ```bash
-cp helm-charts/charts/backpack/values.example.yaml my-values.yaml
+# Get default values from chart
+helm show values backpack/backpack > my-values.yaml
 ```
 
 Update the following sections in `my-values.yaml`:
@@ -69,11 +76,11 @@ Update the following sections in `my-values.yaml`:
 - **Infrastructure**: Point `rabbitmq`, `mongo`, and `redis` to your cluster-internal or external services.
 - **Replicas**: Adjust the `replicas` count for the API, Gateway, and specific Processors/Collectors based on expected load.
 
-### 3. Deploy
+### 4. Deploy
 Install the chart into your namespace:
 
 ```bash
-helm install backpack ./helm-charts/charts/backpack -f my-values.yaml -n backpack --create-namespace
+helm install backpack backpack/backpack -f my-values.yaml -n backpack --create-namespace
 ```
 
 ---
