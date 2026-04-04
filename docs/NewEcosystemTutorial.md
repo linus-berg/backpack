@@ -37,7 +37,7 @@ The template generates three core files:
 
 ## 4. Implement the Processing Logic
 
-Open `Go.cs`. This is where the "Greedy" logic is implemented. Your goal is to populate the `Artifact` object with versions, files, and dependencies.
+Open `Go.cs`. This is where the "Exhaustive" logic is implemented. Your goal is to populate the `Artifact` object with versions, files, and dependencies.
 
 ### Example: Basic Implementation
 
@@ -62,7 +62,7 @@ public async Task<Artifact> ProcessArtifact(Artifact artifact) {
         artifact.AddVersion(artifactVersion);
 
         // 4. Resolve and add dependencies for this version
-        // This triggers the recursive "Greedy" collection logic
+        // This triggers the recursive "Exhaustive" collection logic
         var deps = await ResolveDependencies(artifact.id, v);
         foreach (var dep in deps) {
             artifact.AddDependency(dep.Id, "go");

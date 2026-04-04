@@ -15,7 +15,7 @@ Think of it as a professional-grade, recursively-obsessive digital hoarder: Back
 To understand the system's design and operational details, refer to the following guides:
 
 ### Core Architecture & Strategy
-- **[System Philosophy & Standards](GEMINI.md)**: Core mandates, greedy collection logic, and architectural principles.
+- **[System Philosophy & Standards](GEMINI.md)**: Core mandates, exhaustive collection logic, and architectural principles.
 - **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
 - **[Service & Module Inventory](docs/ServiceInventory.md)**: Detailed inventory of all core modules, processors, and collectors.
 - **[Storage Architecture](STORAGE.md)**: Detailed breakdown of the S3-hierarchical structure and `Collector.Kernel` implementation.
@@ -38,7 +38,7 @@ To understand the system's design and operational details, refer to the followin
 The system follows a **microservice-oriented architecture** centered around a decoupled message-passing pattern.
 
 *   **Distributed Orchestration:** Leveraging **MassTransit** and **RabbitMQ** for reliable message delivery and service discovery.
-*   **Greedy Ingestion Logic:** By default, the system performs exhaustive dependency graph resolution. It recursively identifies and collects every version and every dependency version of a target artifact until the entire tree is mirrored locally.
+*   **Exhaustive Ingestion Logic:** By default, the system performs exhaustive dependency graph resolution. It recursively identifies and collects every version and every dependency version of a target artifact until the entire tree is mirrored locally.
 *   **Storage Abstraction:** All persistence operations are handled via a unified `FileSystem` kernel, abstracting S3-compatible object storage (MinIO/AWS S3) for long-term retention.
 *   **Ecosystem-Agnostic Core:** The logic for "how to find" (Processors) is separated from "how to fetch" (Collectors), allowing for rapid integration of new package managers.
 

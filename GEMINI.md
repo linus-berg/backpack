@@ -1,13 +1,13 @@
 # Project: Backpack
 
 ## Project Overview
-Backpack is a distributed system designed for the recursive, greedy collection and tracking of software artifacts and packages (e.g., NPM, PyPi, Docker, NuGet). Its primary purpose is to build comprehensive, offline-ready mirrors for high-security or air-gapped environments.
+Backpack is a distributed system designed for the recursive, exhaustive collection and tracking of software artifacts and packages (e.g., NPM, PyPi, Docker, NuGet). Its primary purpose is to build comprehensive, offline-ready mirrors for high-security or air-gapped environments.
 
 ## Core Architecture & Principles
 - **Collectors (Artifact Retrieval):** Responsible for the physical download of resources using standard protocols (HTTP, Git, Skopeo/Docker, Rsync, Wget).
 - **Processors (Metadata & Logic):** Ecosystem-specific services that resolve dependency trees, extract metadata, and identify which specific files need to be collected.
 - **Core.Gateway:** The central message bus (using MassTransit) that routes requests between the API, Processors, and Collectors.
-- **Greedy Collection Logic:** By default, Backpack is designed to be exhaustive. It recursively identifies and collects every version and every dependency version of a requested artifact until the entire tree is mirrored locally.
+- **Exhaustive Collection Logic:** By default, Backpack is designed to be exhaustive. It recursively identifies and collects every version and every dependency version of a requested artifact until the entire tree is mirrored locally.
 - **Backend-Only Focus:** Backpack is a collection and synchronization engine. It manages storage (S3/MinIO) and tracking (MongoDB/Redis) but does not provide a public-facing repository server or "upload" artifacts to external registries.
 
 ## Technical Standards

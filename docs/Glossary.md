@@ -28,7 +28,7 @@ The RESTful interface for external management, monitoring, and triggering manual
 #### **Air-Gap**
 A high-security network environment that is physically and logically isolated from the public internet. Backpack’s primary goal is to provide these environments with up-to-date software mirrors.
 
-#### **Greedy Collection**
+#### **Exhaustive Collection**
 The default exhaustive synchronization logic. When an artifact is requested, Backpack recursively identifies and collects **every version** and **every dependency version** until the entire dependency tree is mirrored locally.
 
 #### **Mirroring**

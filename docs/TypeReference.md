@@ -47,7 +47,7 @@ A reference to another artifact required by the parent.
 Any processor (standard or raw) is expected to handle the following responsibilities:
 
 1.  **Metadata Discovery**: Convert a single Artifact ID into a complete list of versions.
-2.  **Greedy Discovery**: Identify **direct** dependencies. The Gateway handles the recursion; the processor only needs to look one level deep.
+2.  **Exhaustive Discovery**: Identify **direct** dependencies. The Gateway handles the recursion; the processor only needs to look one level deep.
 3.  **URI Mapping**: Provide direct download links for every file in every version.
 4.  **Filter Application**: While the Router filters versions later, the processor should return all metadata found; the system will decide what to collect based on the user's regex.
 5.  **State Ignorance**: Processors should be stateless. Do not check if a file already exists in S3 or if a version is in the DB; the Gateway and Router handle those checks.

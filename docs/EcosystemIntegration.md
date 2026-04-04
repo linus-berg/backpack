@@ -22,8 +22,8 @@ Every item in Backpack is an `Artifact`. Your job is to fill this object with da
 *   **`versions`**: A dictionary where keys are version strings and values are `ArtifactVersion` objects.
 *   **`dependencies`**: A list of `ArtifactDependency` objects required by this artifact.
 
-### Recursive Discovery (The "Greedy" Nature)
-Backpack is designed to be **greedy**. When a processor identifies a dependency, it should not download it. Instead, it should add it to the `dependencies` list. The `Core.Gateway` will automatically detect new dependencies and trigger new processing requests for them, creating a recursive discovery loop until the entire tree is mirrored.
+### Recursive Discovery (The "Exhaustive" Nature)
+Backpack is designed to be **exhaustive**. When a processor identifies a dependency, it should not download it. Instead, it should add it to the `dependencies` list. The `Core.Gateway` will automatically detect new dependencies and trigger new processing requests for them, creating a recursive discovery loop until the entire tree is mirrored.
 
 ## 3. Implementation Steps
 
