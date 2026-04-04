@@ -7,10 +7,10 @@ This glossary defines the core terminology used throughout the Backpack ecosyste
 ### 🟢 Core Architectural Components
 
 #### **Collector**
-A protocol-specific microservice responsible for the physical retrieval of artifacts from upstream sources (e.g., HTTP, Git, OCI Registry). Collectors are "workers" that execute the actual download and persistence to S3-compatible storage.
+A protocol-specific microservice responsible for the physical retrieval of artifacts from upstream sources (e.g., HTTP, Git, OCI Registry). Collectors are "workers" that execute the actual download and persistence to S3-compatible storage. See the **[Service Inventory](ServiceInventory.md)** for a full list.
 
 #### **Processor**
-An ecosystem-specific microservice responsible for metadata extraction and dependency graph resolution. Processors understand the logic of a specific package manager (e.g., NPM, NuGet) and identify which specific files need to be collected.
+An ecosystem-specific microservice responsible for metadata extraction and dependency graph resolution. Processors understand the logic of a specific package manager (e.g., NPM, NuGet) and identify which specific files need to be collected. See the **[Service Inventory](ServiceInventory.md)** for a full list.
 
 #### **Gateway (Core.Gateway)**
 The central orchestrator and message bus of the system. It manages the ingestion state machine, routes requests between Processors and Collectors, and ensures metadata consistency.
@@ -51,4 +51,4 @@ The distributed application framework used for message-based communication betwe
 The underlying utility used by `Collector.Container` and `Collector.DockerArchive` for inspecting and synchronizing container images across various registry types.
 
 #### **Git Bundle**
-(Legacy / Reference) A single file containing a Git repository's objects and references. *Note: Current Git collectors utilize full repository synchronization.*
+(Legacy Reference) A single file containing a Git repository's objects and references. While Backpack previously relied on bundles for mirroring, it now utilizes full repository synchronization for the `Collector.Git` service. The `Backpack.GitUnpack` utility remains available for legacy bundle processing.

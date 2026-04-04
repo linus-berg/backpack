@@ -16,8 +16,8 @@ To understand the system's design and operational details, refer to the followin
 
 ### Core Architecture & Strategy
 - **[System Philosophy & Standards](GEMINI.md)**: Core mandates, exhaustive collection logic, and architectural principles.
-- **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
 - **[Service & Module Inventory](docs/ServiceInventory.md)**: Detailed inventory of all core modules, processors, and collectors.
+- **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
 - **[Storage Architecture](STORAGE.md)**: Detailed breakdown of the S3-hierarchical structure and `Collector.Kernel` implementation.
 - **[Glossary of Terms](docs/Glossary.md)**: Standardized definitions for Backpack architecture, roles, and components.
 - **[Type Reference](docs/TypeReference.md)**: Technical schemas for internal messages and metadata structures.
@@ -29,37 +29,27 @@ To understand the system's design and operational details, refer to the followin
 - **[Troubleshooting](docs/Troubleshooting.md)**: Common failure patterns and resolution steps.
 
 ### Extension & Integration
-- **[Ecosystem Integration Guide](docs/EcosystemIntegration.md)**: High-level overview of implementing custom package managers.
-- **[Tutorial: New Ecosystem Processor](docs/NewEcosystemTutorial.md)**: Step-by-step guide to scaffolding and implementing a new processor.
+- **[Ecosystem Development Guide](docs/EcosystemDevelopment.md)**: Complete guide to implementing custom package managers and scaffolded processors.
 - **[Raw Integration API](docs/RawIntegration.md)**: Documentation for interacting directly with the `Integration.API`.
 
-## Core Architectural Principles
+---
 
-The system follows a **microservice-oriented architecture** centered around a decoupled message-passing pattern.
+## 🏗 System Architecture Overview
 
-*   **Distributed Orchestration:** Leveraging **MassTransit** and **RabbitMQ** for reliable message delivery and service discovery.
-*   **Exhaustive Ingestion Logic:** By default, the system performs exhaustive dependency graph resolution. It recursively identifies and collects every version and every dependency version of a target artifact until the entire tree is mirrored locally.
-*   **Storage Abstraction:** All persistence operations are handled via a unified `FileSystem` kernel, abstracting S3-compatible object storage (MinIO/AWS S3) for long-term retention.
-*   **Ecosystem-Agnostic Core:** The logic for "how to find" (Processors) is separated from "how to fetch" (Collectors), allowing for rapid integration of new package managers.
+Backpack follows a **microservice-oriented architecture** centered around a decoupled message-passing pattern using **MassTransit** and **RabbitMQ**.
 
-## System Components
+For a complete list of all services, see the **[Service & Module Inventory](docs/ServiceInventory.md)**.
 
 ### 1. Core Services
-- **`Core.Gateway`**: The central orchestrator. It manages the state machine for artifact ingestion, routing requests between Processors and Collectors, and ensuring metadata consistency in **MongoDB**.
-- **`Integration.API`**: A RESTful gateway for system management and manual ingestion triggers, secured via **OIDC** (OpenID Connect).
-- **`Tracker.Scheduler`**: A **Quartz.NET**-driven scheduling engine that monitors external registries for updates and triggers periodic synchronization jobs.
+The central orchestrators of the ingestion lifecycle, managing state and routing through **MongoDB**.
 
 ### 2. Artifact Processors
-Processors are ecosystem-specific logic units responsible for metadata extraction and dependency resolution.
-- **Ecosystems**: NPM, PyPi, NuGet, Maven, Helm, Terraform, HuggingFace, Container Images (OCI), and JetBrains IDEs.
-- **Function**: They consume an `ArtifactProcessRequest`, resolve the dependency manifest, and emit `ArtifactRouteRequest` messages for individual files.
+Ecosystem-specific logic units (NPM, PyPi, Docker, etc.) that resolve dependency manifests and identify required files.
 
 ### 3. Artifact Collectors
-Collectors are protocol-specific workers responsible for the physical retrieval of resources.
-- **Protocols**: **HTTP/HTTPS**, **Git** (full repository synchronization), **Skopeo/OCI** (registry-to-registry copies), **Docker Archive** (.tar image files), **Rsync**, and **Wget**.
-- **Efficiency**: Implements daily delta logic, utilizing `ETags` and `Last-Modified` headers to minimize egress costs and bandwidth usage.
+Protocol-specific workers (HTTP, Git, Skopeo, etc.) that perform the physical retrieval and persistence to **S3-compatible storage**.
 
-## Technical Stack
+## 🛠 Technical Stack
 
 - **Runtime**: .NET 8.0 (C#)
 - **Messaging**: MassTransit with RabbitMQ transport.
@@ -67,7 +57,7 @@ Collectors are protocol-specific workers responsible for the physical retrieval 
 - **Observability**: Fully instrumented with **OpenTelemetry** (Tracing, Metrics, Logs).
 - **Security**: Generic OIDC provider support with RBAC (Role-Based Access Control).
 
-## Infrastructure Requirements
+## 🚀 Infrastructure Requirements
 
 To run a full production-ready suite of Backpack services, the following infrastructure sidecars are required:
 - **RabbitMQ**: Message brokering.

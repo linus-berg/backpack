@@ -39,7 +39,7 @@ The `Integration.API` and `backpack-gui` require a functional OpenID Connect (OI
 
 ### 1. Provider Configuration
 While any OIDC-compliant provider is supported, the local environment is optimized for Keycloak.
-- **Authority**: The realm URL (e.g., `http://localhost:8080/realms/backpack`).
+- **Authority**: The realm URL (e.g., `http://localhost:8090/realms/backpack`).
 - **Audience**: The Client ID, typically `backpack`.
 
 ### 2. Client Configuration
