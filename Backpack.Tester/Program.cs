@@ -67,24 +67,14 @@ IHuggingFace hf = sp.GetRequiredService<IHuggingFace>();
 
 IPypi py = sp.GetRequiredService<IPypi>();
 
-/*Artifact? hf_res = await hf.ProcessArtifact(
-                     new Artifact {
-                       id = "zai-org/GLM-5"
-                     }
-                   );
-
-Artifact? res = await tf.ProcessArtifact(
-                  new Artifact {
-                    id = "vmware/vsphere"
-                  }
-                );
-*/
 FileSystem fs = sp.GetRequiredService<FileSystem>();
 SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
-/*await fs.CreateDeltaLink(
-  "docker-archive",
-  "docker-archive://docker.io/docker_archive_test_1-2-3-4.tar"
-);*/
+
+SkopeoListTagsOutput? tags = await sk.GetTags("docker.io/amazon/aws-cli");
+
+foreach (string tag in tags.tags) {
+  Console.WriteLine(tag);
+}
 await sk.CopyToTar("docker-archive://docker.io/amazon/aws-cli:2.31.12", "docker-archive");
 
 Artifact php_artifact = new() {

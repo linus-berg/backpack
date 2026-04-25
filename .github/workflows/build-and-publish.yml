@@ -43,9 +43,6 @@ jobs:
           - name: processor/terraform
             directory: Processor.Terraform
           
-          - name: processor/php
-            directory: Processor.Php
-          
           - name: processor/github-releases
             directory: Processor.Github.Releases
 
@@ -60,9 +57,6 @@ jobs:
             
           - name: processor/nuget
             directory: Processor.Nuget
-            
-          - name: processor/maven
-            directory: Processor.Maven
             
           - name: processor/pypi
             directory: Processor.Pypi
