@@ -2,7 +2,7 @@ using Backpack.GitUnpack.Services;
 
 namespace Backpack.GitUnpack;
 
-public class Program {
+public static class Program {
   public static void Main(string[] args) {
     IHost host = Host.CreateDefaultBuilder(args)
                      .ConfigureServices(
