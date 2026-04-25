@@ -81,7 +81,7 @@ public class Repository {
   /// <returns>The owner string.</returns>
   private string GetOwner() {
     string host = uri_.Host;
-    string path = Path.GetDirectoryName(uri_.Uri.LocalPath);
+    string path = Path.GetDirectoryName(uri_.Uri.LocalPath) ?? "";
     return Path.Join(host, path);
   }
 }

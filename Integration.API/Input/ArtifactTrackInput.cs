@@ -1,6 +1,6 @@
 namespace Integration.API.Input;
 
 public class ArtifactTrackInput {
-  public string id { get; set; }
-  public string processor { get; set; }
+  public required string id { get; init; }
+  public required string processor { get; init; }
 }

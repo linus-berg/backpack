@@ -202,7 +202,7 @@ public class MongoDatabase : ICoreDatabase {
     return await (await collection.FindAsync(a => true)).ToListAsync();
   }
 
-  public async Task<PendingArtifact> GetPendingArtifact(
+  public async Task<PendingArtifact?> GetPendingArtifact(
     string processor, string id) {
     IMongoCollection<PendingArtifact> collection =
       GetCollection<PendingArtifact>("pending-approvals");

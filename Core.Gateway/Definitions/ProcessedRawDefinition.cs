@@ -11,6 +11,7 @@ public class
   ) {
   }
 
+  [Obsolete("Use the IRegistrationContext overload instead. Visit https://masstransit.io/obsolete for details.")]
   protected override void ConfigureConsumer(
     IReceiveEndpointConfigurator endpoint_configurator,
     IConsumerConfigurator<ProcessedRawConsumer> consumer_configurator) {

@@ -17,5 +17,5 @@ public class ArtifactProcessRequest {
   /// <summary>
   ///   Gets or sets the artifact to be processed.
   /// </summary>
-  public Artifact artifact { get; set; }
+  public required Artifact artifact { get; set; }
 }

@@ -28,7 +28,8 @@ public class Consumer : IProcessor {
     try {
       Artifact artifact = new() {
         id = context.Message.id,
-        processor = context.Message.processor
+        processor = context.Message.processor,
+        filter = string.Empty
       };
       await php_.ProcessArtifact(artifact);
       await context.RespondAsync(

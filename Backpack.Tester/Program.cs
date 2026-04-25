@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Timeout;
 using Processor.HuggingFace;
-using Processor.OperatorHub;
 using Processor.Pypi;
 using Processor.Terraform;
 
@@ -51,7 +50,6 @@ services.AddResiliencePipeline<string, bool>(
 services.AddLogging();
 services.AddSingleton<FileSystem>();
 services.AddSingleton<Git>();
-services.AddSingleton<IOperatorHub, OperatorHub>();
 services.AddSingleton<IPypi, Pypi>();
 services.AddSingleton<ITerraform, Terraform>();
 services.AddSingleton<IHuggingFace, HuggingFace>();
@@ -90,10 +88,14 @@ SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
 await sk.CopyToTar("docker-archive://docker.io/amazon/aws-cli:2.31.12", "docker-archive");
 
 Artifact php_artifact = new() {
-  id = "shardj/zf1-future"
+  id = "shardj/zf1-future",
+  processor = "php",
+  filter = string.Empty
 };
 Artifact py_artifact = new() {
-  id = "pandas"
+  id = "pandas",
+  processor = "pypi",
+  filter = string.Empty
 };
 
 Artifact response = await py.ProcessArtifact(py_artifact);

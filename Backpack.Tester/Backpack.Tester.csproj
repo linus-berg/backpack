@@ -18,7 +18,6 @@
         <ProjectReference Include="..\Processor.Jetbrains.IDE\Processor.Jetbrains.IDE.csproj"/>
         <ProjectReference Include="..\Processor.Jetbrains.Plugins\Processor.Jetbrains.Plugins.csproj"/>
         <ProjectReference Include="..\Processor.Maven\Processor.Maven.csproj"/>
-        <ProjectReference Include="..\Processor.OperatorHub\Processor.OperatorHub.csproj"/>
         <ProjectReference Include="..\Processor.Php\Processor.Php.csproj"/>
         <ProjectReference Include="..\Collector.Git\Collector.Git.csproj"/>
         <ProjectReference Include="..\Collector.Http\Collector.Http.csproj"/>

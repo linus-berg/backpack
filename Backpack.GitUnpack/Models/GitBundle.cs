@@ -4,15 +4,6 @@ public class GitBundle {
   public GitBundle(string filepath, string owner) {
     this.filepath = filepath;
     this.owner = owner;
-    Parse();
-  }
-
-  public string filepath { get; } = "";
-  public string repository { get; private set; }
-  public string repository_dir { get; private set; }
-  public string owner { get; }
-
-  private void Parse() {
     repository = Path.GetFileName(filepath);
     repository_dir =
       Path.Join(
@@ -21,4 +12,9 @@ public class GitBundle {
         repository
       );
   }
+
+  public string filepath { get; }
+  public string repository { get; init; }
+  public string repository_dir { get; init; }
+  public string owner { get; }
 }

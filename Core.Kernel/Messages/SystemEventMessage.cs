@@ -3,9 +3,9 @@ using Core.Kernel.Models;
 namespace Core.Kernel.Messages;
 
 public class SystemEventMessage {
-  public string source { get; set; }
-  public string message { get; set; }
-  public EventSeverity severity { get; set; } = EventSeverity.INFO;
-  public string user { get; set; }
-  public DateTime timestamp { get; set; } = DateTime.UtcNow;
+  public required string source { get; init; }
+  public required string message { get; init; }
+  public EventSeverity severity { get; init; } = EventSeverity.INFO;
+  public required string user { get; init; }
+  public DateTime timestamp { get; init; } = DateTime.UtcNow;
 }

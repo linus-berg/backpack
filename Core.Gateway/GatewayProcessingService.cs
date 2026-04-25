@@ -115,7 +115,7 @@ public class GatewayProcessingService : IGatewayProcessingService {
     }
 
     foreach (KeyValuePair<TKey, TValue> kv in dict1) {
-      if (!dict2.TryGetValue(kv.Key, out TValue value) ||
+      if (!dict2.TryGetValue(kv.Key, out TValue? value) ||
           !EqualityComparer<TValue>.Default.Equals(kv.Value, value)) {
         return false;
       }

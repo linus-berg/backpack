@@ -26,17 +26,18 @@ public class ArtifactService : IArtifactService {
                                           string filter,
                                           Dictionary<string, string> config,
                                           bool root = false) {
-    Artifact existing = await db_.GetArtifact(id, processor);
+    Artifact? existing = await db_.GetArtifact(id, processor);
     if (existing != null) {
       return existing;
     }
 
-    Artifact artifact = new();
-    artifact.id = id;
-    artifact.processor = processor;
-    artifact.filter = filter;
-    artifact.root = root;
-    artifact.config = config;
+    Artifact artifact = new() {
+      id = id,
+      processor = processor,
+      filter = filter,
+      root = root,
+      config = config
+    };
 
     await db_.AddArtifact(artifact);
     return artifact;
@@ -93,7 +94,7 @@ public class ArtifactService : IArtifactService {
   }
 
   public async Task<bool> Track(string id, string processor_id) {
-    Artifact artifact =
+    Artifact? artifact =
       await db_.GetArtifact(id, processor_id);
     if (artifact == null) {
       return false;
@@ -130,12 +131,13 @@ public class ArtifactService : IArtifactService {
   public async Task Validate(Processor processor) {
     IEnumerable<Artifact>
       artifacts = await db_.GetArtifacts(processor.id, false);
+    IEnumerable<Artifact> enumerable = artifacts as Artifact[] ?? artifacts.ToArray();
     logger_.LogInformation(
-      "[{processor}] Validating {artifacts} artifacts",
+      "[{Processor}] Validating {Artifacts} artifacts",
       processor.id,
-      artifacts.Count()
+      enumerable.Count()
     );
-    foreach (Artifact artifact in artifacts) {
+    foreach (Artifact artifact in enumerable) {
       await Validate(artifact, processor);
     }
   }
@@ -143,7 +145,12 @@ public class ArtifactService : IArtifactService {
   public async Task
     Validate(string id, string processor_id, bool force = false) {
     Processor processor = await db_.GetProcessor(processor_id);
-    Artifact artifact = await db_.GetArtifact(id, processor_id);
+    Artifact? artifact = await db_.GetArtifact(id, processor_id);
+    if (artifact == null) {
+      throw new ArgumentException(
+        $"Artifact with ID '{id}' not found for processor '{processor_id}'"
+      );
+    }
     await Validate(artifact, processor, force);
   }
 
@@ -167,22 +174,22 @@ public class ArtifactService : IArtifactService {
   }
 
   public async Task Track(Processor processor) {
-    logger_.LogInformation("[{processor}] Start tracking...", processor.id);
+    logger_.LogInformation("[{Processor}] Start tracking...", processor.id);
     IEnumerable<Artifact> artifacts = await db_.GetArtifacts(processor.id);
     foreach (Artifact artifact in artifacts) {
       try {
         logger_.LogDebug(
-          "[{processor}] {artifact}",
+          "[{Processor}] {Artifact}",
           processor.id,
           artifact.id
         );
         await Track(artifact, processor);
       } catch (Exception e) {
         logger_.LogError(
-          "[{processor}] Failed tracking {artifact} {exception}",
+          e,
+          "[{Processor}] Failed tracking {Artifact}",
           processor.id,
-          artifact.id,
-          e
+          artifact.id
         );
       }
     }

@@ -51,10 +51,10 @@ public class Unpacker {
                  .StartsWith("__IGNORE__")) {
           try {
             if (!await TryApplyBundle(git_bundle, cancellation_token)) {
-              logger_.LogError($"Failed to apply {git_bundle.filepath}");
+              logger_.LogError("Failed to apply {Arg1Filepath}", git_bundle.filepath);
             }
           } catch (Exception e) {
-            logger_.LogError($"Failed to apply {git_bundle.filepath}: {e}");
+            logger_.LogError(e, "Failed to apply {Arg1Filepath}", git_bundle.filepath);
           }
         }
       }
@@ -65,7 +65,7 @@ public class Unpacker {
 
   private async Task<bool> TryApplyBundle(GitBundle bundle,
                                           CancellationToken token = default) {
-    logger_.LogInformation($"Processing: {bundle.filepath}");
+    logger_.LogInformation("Processing: {BundleFilepath}", bundle.filepath);
     bool is_valid = await CheckIfValid(bundle, token);
     if (!is_valid) {
       return false;

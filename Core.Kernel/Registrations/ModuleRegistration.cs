@@ -25,7 +25,7 @@ public class ModuleRegistration {
   public ModuleRegistration(ModuleType type, Type consumer) {
     prefix_ = type.ToString().ToLower();
     this.consumer = consumer;
-    name = Assembly.GetEntryAssembly().GetName().Name;
+    name = Assembly.GetEntryAssembly()?.GetName().Name ?? throw new InvalidOperationException();
   }
 
   /// <summary>
@@ -41,12 +41,12 @@ public class ModuleRegistration {
   /// <summary>
   ///   Adds a new endpoint to the module registration.
   /// </summary>
-  /// <param name="name">The name of the endpoint (will be prefixed with the module type).</param>
+  /// <param name="endpoint_name">The name of the endpoint (will be prefixed with the module type).</param>
   /// <param name="concurrency">The concurrency limit for the endpoint.</param>
-  public void AddEndpoint(string name, int concurrency = 10) {
+  public void AddEndpoint(string endpoint_name, int concurrency = 10) {
     endpoints.Add(
       new Endpoint {
-        name = $"{prefix_}-{name}",
+        name = $"{prefix_}-{endpoint_name}",
         concurrency = concurrency
       }
     );

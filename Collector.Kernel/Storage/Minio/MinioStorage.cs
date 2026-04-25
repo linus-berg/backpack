@@ -1,6 +1,3 @@
-// Copyright (c) 2022 Linus Berg. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 using System.Text;
 using System.Text.RegularExpressions;
 using Collector.Kernel.Storage.Common;
@@ -9,6 +6,10 @@ using Minio;
 using Minio.DataModel;
 using Minio.DataModel.Args;
 using Minio.Exceptions;
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8603 // Possible null reference return.
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 
 namespace Collector.Kernel.Storage.Minio;
 

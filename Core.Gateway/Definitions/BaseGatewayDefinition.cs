@@ -9,6 +9,7 @@ public abstract class BaseGatewayDefinition<T> : ConsumerDefinition<T>
     ConcurrentMessageLimit = 10;
   }
 
+  [Obsolete("Use the IRegistrationContext overload instead. Visit https://masstransit.io/obsolete for details.")]
   protected override void ConfigureConsumer(
     IReceiveEndpointConfigurator endpoint_configurator,
     IConsumerConfigurator<T> consumer_configurator) {

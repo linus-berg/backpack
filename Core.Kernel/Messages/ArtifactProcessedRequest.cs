@@ -29,7 +29,7 @@ public class ArtifactProcessedRequest {
   /// <summary>
   ///   Gets or sets the processed artifact.
   /// </summary>
-  public Artifact artifact { get; set; }
+  public required Artifact artifact { get; set; }
 
   /// <summary>
   ///   Adds a new collection request to the list of requests.

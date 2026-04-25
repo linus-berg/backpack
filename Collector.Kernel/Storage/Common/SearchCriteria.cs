@@ -1,6 +1,3 @@
-// Copyright (c) 2022 Linus Berg. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 using System.Text.RegularExpressions;
 
 namespace Collector.Kernel.Storage.Common;
@@ -12,10 +9,12 @@ public class SearchCriteria {
   /// <summary>
   ///   Gets or sets the path prefix for the search.
   /// </summary>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
   public string prefix { get; set; }
 
   /// <summary>
   ///   Gets or sets the regular expression pattern for matching file names.
   /// </summary>
   public Regex pattern { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 }

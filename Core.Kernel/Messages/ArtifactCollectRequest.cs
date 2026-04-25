@@ -10,12 +10,12 @@ public class ArtifactCollectRequest {
   /// <summary>
   ///   Gets or sets the location of the artifact (e.g., a URL).
   /// </summary>
-  public string location { get; set; }
+  public required string location { get; set; }
 
   /// <summary>
   ///   Gets or sets the name of the module responsible for the collection.
   /// </summary>
-  public string module { get; set; }
+  public required string module { get; set; }
 
   /// <summary>
   ///   Gets or sets a value indicating whether to force the collection even if the artifact already exists.

@@ -18,7 +18,7 @@ public static class WrapperExtensions {
   /// <param name="cmd">The command to execute.</param>
   /// <returns>The deserialized result of the command execution.</returns>
   /// <exception cref="ApplicationException">Thrown when the command execution fails.</exception>
-  public static async Task<T> ExecuteWithResult<T>(this Command cmd) {
+  public static async Task<T?> ExecuteWithResult<T>(this Command cmd) {
     StringBuilder sb = new();
     StringBuilder sb_err = new();
     Command final_cmd =
@@ -28,6 +28,7 @@ public static class WrapperExtensions {
     try {
       await final_cmd.ExecuteAsync();
     } catch (Exception e) {
+      sb_err.AppendLine(e.Message);
       throw new ApplicationException(sb_err.ToString());
     }
 

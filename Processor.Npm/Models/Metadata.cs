@@ -10,5 +10,5 @@ public class Metadata {
   /// <summary>
   ///   Gets or sets the versions of the package.
   /// </summary>
-  public Dictionary<string, Package> versions { get; set; }
+  public required Dictionary<string, Package> versions { get; set; }
 }

@@ -82,7 +82,7 @@ public class ArtifactController : ControllerBase {
   [HttpPost]
   public async Task<ActionResult> Post([FromBody] ArtifactInput input) {
     ClaimsPrincipal u = HttpContext.User;
-    if (u?.Identity == null) {
+    if (u.Identity == null || string.IsNullOrEmpty(u.Identity.Name)) {
       throw new AuthenticationException("Unauthenticated user.");
     }
 
@@ -94,11 +94,11 @@ public class ArtifactController : ControllerBase {
 
     Artifact? artifact = await database_.GetArtifact(input.id, input.processor);
     Processor proc = await database_.GetProcessor(input.processor);
-    bool isAdmin = u.IsInRole("Administrator");
-    bool needsApproval = proc.requires_approval && !isAdmin;
+    bool is_admin = u.IsInRole("Administrator");
+    bool needs_approval = proc.requires_approval && !is_admin;
 
     if (artifact == null) {
-      if (needsApproval) {
+      if (needs_approval) {
         await database_.AddPendingArtifact(
           new PendingArtifact {
             id = input.id,
@@ -177,7 +177,7 @@ public class ArtifactController : ControllerBase {
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Approve(
     [FromBody] ArtifactValidationInput input) {
-    PendingArtifact pending =
+    PendingArtifact? pending =
       await database_.GetPendingArtifact(input.processor, input.id);
     if (pending == null) {
       return NotFound("Pending artifact not found");
@@ -315,7 +315,7 @@ public class ArtifactController : ControllerBase {
   [HttpDelete]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Delete([FromBody] DeleteArtifactInput input) {
-    Artifact artifact = await database_.GetArtifact(input.id, input.processor);
+    Artifact? artifact = await database_.GetArtifact(input.id, input.processor);
     if (artifact == null) {
       return NotFound();
     }

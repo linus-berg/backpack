@@ -1,4 +1,3 @@
-using Core.Infrastructure.Models;
 using Core.Kernel.Models;
 
 namespace Core.Services;
@@ -31,7 +30,7 @@ public interface ICoreDatabase {
 
   public Task AddPendingArtifact(PendingArtifact artifact);
   public Task<IEnumerable<PendingArtifact>> GetPendingArtifacts();
-  public Task<PendingArtifact> GetPendingArtifact(string processor, string id);
+  public Task<PendingArtifact?> GetPendingArtifact(string processor, string id);
   public Task<bool> DeletePendingArtifact(string processor, string id);
 
   public Task AddApiKey(ApiKey key);

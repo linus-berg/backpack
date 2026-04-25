@@ -53,7 +53,7 @@ public class Npm : INpm {
       };
       version.AddFile(C_FILE_NAME_, package.dist.tarball);
       AddDependencies(artifact, package.dependencies);
-      AddDependencies(artifact, package.peerDependencies);
+      AddDependencies(artifact, package.peer_dependencies);
       artifact.AddVersion(version);
     }
   }

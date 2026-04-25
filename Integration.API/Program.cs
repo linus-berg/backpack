@@ -31,7 +31,7 @@ builder.Host.UseSerilog(
     configuration.WriteTo.Console();
     configuration.WriteTo.File(
       Path.Combine(
-        Environment.GetEnvironmentVariable("BP_LOGS"),
+        Environment.GetEnvironmentVariable("BP_LOGS") ?? "logs/",
         "backpack_api.log"
       )
     );

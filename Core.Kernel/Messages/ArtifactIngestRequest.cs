@@ -12,5 +12,5 @@ public class ArtifactIngestRequest {
   /// <summary>
   ///   Gets or sets the artifact to be ingested.
   /// </summary>
-  public Artifact artifact { get; set; }
+  public required Artifact artifact { get; set; }
 }

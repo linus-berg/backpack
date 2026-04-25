@@ -64,7 +64,7 @@ public static class Configuration {
   /// <param name="variable">The variable to retrieve.</param>
   /// <returns>The value of the configuration variable.</returns>
   /// <exception cref="NoNullAllowedException">Thrown when the variable is not set and has no default value.</exception>
-  public static string? GetBackpackVariable(CoreVariables variable) {
+  public static string GetBackpackVariable(CoreVariables variable) {
     string? value = Environment.GetEnvironmentVariable(variable.ToString());
 
     /* If variable is set */

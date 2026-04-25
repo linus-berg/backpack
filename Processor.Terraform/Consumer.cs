@@ -22,7 +22,8 @@ public class Consumer : IProcessor {
   public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
     Artifact artifact = new() {
       id = context.Message.id,
-      processor = context.Message.processor
+      processor = context.Message.processor,
+      filter = string.Empty
     };
     try {
       await terraform_.ProcessArtifact(artifact);

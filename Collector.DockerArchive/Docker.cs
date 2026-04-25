@@ -46,10 +46,11 @@ public class Docker {
       archive = await skopeo_.CopyToTar(remote_image, dir_, force);
     } catch (SkopeoArchiveExistsException ex) {
       /* Ignore if file exists */
+      logger_.LogDebug(ex, "{RemoteImage} archive already exists", remote_image);
       return true;
     } catch (SkopeoTagMissingException ex) {
       /* Ignore if no tag found */
-      logger_.LogWarning("{RemoteImage} image has no tag", remote_image);
+      logger_.LogWarning(ex, "{RemoteImage} image has no tag", remote_image);
       return true;
     }
 

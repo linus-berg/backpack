@@ -8,12 +8,7 @@ namespace Processor.Npm.Models;
 /// </summary>
 public class Distribution {
   /// <summary>
-  ///   Gets or sets the SHA sum of the package.
-  /// </summary>
-  public string shasum { get; set; }
-
-  /// <summary>
   ///   Gets or sets the URL to the tarball.
   /// </summary>
-  public string tarball { get; set; }
+  public required string tarball { get; set; }
 }

@@ -19,17 +19,17 @@ public class Artifact {
   /// <summary>
   ///   Gets or sets the unique identifier for the artifact.
   /// </summary>
-  public string id { get; set; }
+  public required string id { get; set; }
 
   /// <summary>
   ///   Gets or sets the name of the processor associated with this artifact.
   /// </summary>
-  public string processor { get; set; }
+  public required string processor { get; set; }
 
   /// <summary>
   ///   Gets or sets the filter used for selecting artifact versions.
   /// </summary>
-  public string filter { get; set; }
+  public required string filter { get; set; }
 
   /// <summary>
   ///   Gets or sets the type of filter applied to the artifact.

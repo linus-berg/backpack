@@ -12,5 +12,5 @@ public class ArtifactRouteRequest {
   /// <summary>
   ///   Gets or sets the artifact to be routed.
   /// </summary>
-  public Artifact artifact { get; set; }
+  public required Artifact artifact { get; set; }
 }
