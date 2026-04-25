@@ -8,6 +8,7 @@ ARG TARGETARCH
 WORKDIR /src
 COPY ["Integration.API/Integration.API.csproj", "Integration.API/"]
 COPY ["Core.Kernel/Core.Kernel.csproj", "Core.Kernel/"]
+COPY ["Core.Services/Core.Services.csproj", "Core.Services/"]
 COPY ["Core.Infrastructure/Core.Infrastructure.csproj", "Core.Infrastructure/"]
 RUN dotnet restore "Integration.API/Integration.API.csproj"
 COPY . .
