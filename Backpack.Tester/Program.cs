@@ -102,8 +102,6 @@ string ind = "/storage/artifacts/mirrors/git/input";
 string path =
   $"{ind}/github.com/linus-berg/test@101001-201023.bundle";
 
-string url = "https://proxy.golang.org/golang.org/x/exp/@v/list";
-RemoteFile file = new(url, fs);
 //await fs.PutString("debug", "");
 //await file.Get("debug");
 // DEBUG MINIO

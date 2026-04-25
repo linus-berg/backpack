@@ -16,6 +16,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
+                     services.AddHttpClient();
                      services.AddStorage();
                      services.AddSingleton<FileSystem>();
                      services.Register(registration);

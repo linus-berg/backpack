@@ -9,16 +9,18 @@ namespace Collector.Http;
 ///   Represents a remote file accessible via HTTP.
 /// </summary>
 public class RemoteFile {
-  private static readonly HttpClient S_CLIENT_ = new();
+  private readonly HttpClient client_;
   private readonly FileSystem fs_;
   private readonly string url_;
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="RemoteFile" /> class.
   /// </summary>
+  /// <param name="client">The HTTP client to use for requests.</param>
   /// <param name="url">The URL of the remote file.</param>
   /// <param name="fs">The file system.</param>
-  public RemoteFile(string url, FileSystem fs) {
+  public RemoteFile(HttpClient client, string url, FileSystem fs) {
+    client_ = client;
     url_ = url;
     fs_ = fs;
   }
@@ -27,19 +29,24 @@ public class RemoteFile {
   ///   Fetches the remote file and saves it to the specified path.
   /// </summary>
   /// <param name="path">The path where the file should be saved.</param>
+  /// <param name="token">The cancellation token.</param>
   /// <returns>
   ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
   ///   retrieved.
   /// </returns>
-  public async Task<bool> Get(string path) {
+  public async Task<bool> Get(string path, CancellationToken token = default) {
     HttpResponseMessage response =
-      await S_CLIENT_.GetAsync(url_, HttpCompletionOption.ResponseHeadersRead);
+      await client_.GetAsync(
+        url_,
+        HttpCompletionOption.ResponseHeadersRead,
+        token
+      );
     if (!response.IsSuccessStatusCode) {
       return false;
     }
 
     try {
-      Stream? body = await response.Content.ReadAsStreamAsync();
+      Stream? body = await response.Content.ReadAsStreamAsync(token);
       bool result = await fs_.PutFile(path, body);
 
       if (!result) {
