@@ -1,6 +1,7 @@
 // Copyright (c) 2022 Linus Berg. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using Collector.Kernel;
 using Core.Kernel;
 using Minio.Exceptions;
@@ -13,6 +14,9 @@ namespace Collector.Git;
 ///   Handles git mirroring operations.
 /// </summary>
 public class Git {
+  private static readonly ConcurrentDictionary<string, SemaphoreSlim> S_LOCKS_ =
+    new();
+
   private readonly string bundle_dir_;
   private readonly string dir_;
   private readonly FileSystem fs_;
@@ -70,21 +74,61 @@ public class Git {
   /// </returns>
   public async Task<bool> Mirror(string remote, CancellationToken token) {
     Repository repository = new(remote, dir_);
-    logger_.LogDebug("{Remote}: Starting", remote);
-    bool success =
-      await git_timeout_.ExecuteAsync(
-        async (state, lambda_token) =>
-          await CloneOrUpdateLocalMirror(state, lambda_token),
-        repository,
-        token
-      );
-    logger_.LogDebug("{Remote}: {Success}", remote, success);
-    if (success) {
-      logger_.LogDebug("{Remote}: Creating bundle", remote);
-      await CreateIncrementalGitBundle(repository, token);
+
+    SemaphoreSlim repo_lock =
+      S_LOCKS_.GetOrAdd(repository.local_path, _ => new SemaphoreSlim(1, 1));
+    await repo_lock.WaitAsync(token);
+
+    try {
+      logger_.LogDebug("{Remote}: Starting", remote);
+      CleanStaleResources(repository.local_path);
+      CleanStaleResources(Path.Join(bundle_dir_, repository.owner));
+
+      bool success =
+        await git_timeout_.ExecuteAsync(
+          async (state, lambda_token) =>
+            await CloneOrUpdateLocalMirror(state, lambda_token),
+          repository,
+          token
+        );
+      logger_.LogDebug("{Remote}: {Success}", remote, success);
+      if (success) {
+        logger_.LogDebug("{Remote}: Creating bundle", remote);
+        await CreateIncrementalGitBundle(repository, token);
+      }
+
+      return success;
+    } finally {
+      repo_lock.Release();
+    }
+  }
+
+  /// <summary>
+  ///   Cleans up stale git lock files and temporary files from the specified path.
+  /// </summary>
+  /// <param name="path">The path to clean.</param>
+  private void CleanStaleResources(string path) {
+    if (!Directory.Exists(path)) {
+      return;
     }
 
-    return success;
+    string[] patterns = { "*.lock", "tmp_*" };
+    foreach (string pattern in patterns) {
+      string[] files =
+        Directory.GetFiles(path, pattern, SearchOption.AllDirectories);
+      foreach (string file in files) {
+        try {
+          logger_.LogWarning("Removing stale resource: {File}", file);
+          File.Delete(file);
+        } catch (Exception ex) {
+          logger_.LogError(
+            ex,
+            "Failed to remove stale resource: {File}",
+            file
+          );
+        }
+      }
+    }
   }
 
   /// <summary>
