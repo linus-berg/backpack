@@ -41,29 +41,43 @@ public class Docker {
   ///   successfully retrieved.
   /// </returns>
   public async Task<bool> GetTarArchive(string remote_image, bool force = false) {
-    SkopeoArchive archive;
+    SkopeoArchive? archive = null;
     try {
-      archive = await skopeo_.CopyToTar(remote_image, dir_, force);
-    } catch (SkopeoArchiveExistsException ex) {
-      /* Ignore if file exists */
-      logger_.LogDebug(ex, "{RemoteImage} archive already exists", remote_image);
-      return true;
-    } catch (SkopeoTagMissingException ex) {
-      /* Ignore if no tag found */
-      logger_.LogWarning(ex, "{RemoteImage} image has no tag", remote_image);
-      return true;
-    }
+      try {
+        archive = await skopeo_.CopyToTar(remote_image, dir_, force);
+      } catch (SkopeoArchiveExistsException ex) {
+        /* Ignore if file exists */
+        logger_.LogDebug(ex, "{RemoteImage} archive already exists", remote_image);
+        return true;
+      } catch (SkopeoTagMissingException ex) {
+        /* Ignore if no tag found */
+        logger_.LogWarning(ex, "{RemoteImage} image has no tag", remote_image);
+        return true;
+      }
 
-    bool success = await PushToStorage(archive);
-    if (!success) {
-      throw new ApplicationException($"Failed to fetch {remote_image}");
-    }
+      bool success = await PushToStorage(archive);
+      if (!success) {
+        throw new ApplicationException($"Failed to fetch {remote_image}");
+      }
 
-    success = await fs_.CreateDeltaLink(
-                "docker-archive",
-                $"docker-archive://{archive.tar_with_host}"
-              );
-    return success;
+      success = await fs_.CreateDeltaLink(
+                  "docker-archive",
+                  $"docker-archive://{archive.tar_with_host}"
+                );
+      return success;
+    } finally {
+      if (archive != null && File.Exists(archive.tar_path)) {
+        try {
+          File.Delete(archive.tar_path);
+        } catch (Exception ex) {
+          logger_.LogError(
+            ex,
+            "Failed to delete temporary archive: {Path}",
+            archive.tar_path
+          );
+        }
+      }
+    }
   }
 
   /// <summary>
