@@ -59,8 +59,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collector.Rsync", "Collecto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collector.Wget", "Collector.Wget\Collector.Wget.csproj", "{BFD6062C-CFD4-4D77-9360-1F77945D7F64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backpack.Toolbox", "Backpack.Toolbox\Backpack.Toolbox.csproj", "{5FC9F180-1E03-4110-9EE9-3301DDC422F0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backpack.GitUnpack", "Backpack.GitUnpack\Backpack.GitUnpack.csproj", "{6C90A3EF-8038-4197-9111-78CF3AF80E8A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{2F07C6F5-08D7-4CA0-A6DD-E275839E3E73}"
@@ -179,10 +177,6 @@ Global
 		{BFD6062C-CFD4-4D77-9360-1F77945D7F64}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFD6062C-CFD4-4D77-9360-1F77945D7F64}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFD6062C-CFD4-4D77-9360-1F77945D7F64}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5FC9F180-1E03-4110-9EE9-3301DDC422F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5FC9F180-1E03-4110-9EE9-3301DDC422F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5FC9F180-1E03-4110-9EE9-3301DDC422F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5FC9F180-1E03-4110-9EE9-3301DDC422F0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6C90A3EF-8038-4197-9111-78CF3AF80E8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6C90A3EF-8038-4197-9111-78CF3AF80E8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C90A3EF-8038-4197-9111-78CF3AF80E8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
