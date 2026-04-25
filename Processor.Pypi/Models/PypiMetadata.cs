@@ -8,14 +8,9 @@ namespace Processor.Pypi.Models;
 /// </summary>
 public class PypiMetadata {
   /// <summary>
-  ///   Gets or sets the general information for the latest version.
-  /// </summary>
-  public PypiInfo info { get; set; }
-
-  /// <summary>
   ///   Gets or sets the releases for the package, grouped by version.
   /// </summary>
-  public Dictionary<string, List<PypiRelease>> releases { get; set; }
+  public required Dictionary<string, List<PypiRelease>> releases { get; set; }
 
   /// <summary>
   ///   Retrieves all versions that have valid releases.
@@ -25,9 +20,9 @@ public class PypiMetadata {
     Dictionary<string, List<PypiRelease>> valid = new();
 
     foreach (KeyValuePair<string, List<PypiRelease>> kv in releases) {
-      List<PypiRelease> versionReleases = kv.Value;
+      List<PypiRelease> version_releases = kv.Value;
       string version = kv.Key;
-      foreach (PypiRelease release in versionReleases) {
+      foreach (PypiRelease release in version_releases) {
         if (!release.IsValid()) {
           continue;
         }

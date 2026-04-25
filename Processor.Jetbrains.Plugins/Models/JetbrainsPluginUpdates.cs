@@ -8,22 +8,12 @@ namespace Processor.Jetbrains.Plugins.Models;
 /// </summary>
 public record JetbrainsPluginUpdate {
   /// <summary>
-  ///   Gets the update identifier.
-  /// </summary>
-  public int id { get; init; }
-
-  /// <summary>
-  ///   Gets the plugin identifier.
-  /// </summary>
-  public int pluginId { get; init; }
-
-  /// <summary>
   ///   Gets the version string.
   /// </summary>
-  public string version { get; init; }
+  public required string version { get; init; }
 
   /// <summary>
   ///   Gets the file path for the update.
   /// </summary>
-  public string file { get; init; }
+  public required string file { get; init; }
 }

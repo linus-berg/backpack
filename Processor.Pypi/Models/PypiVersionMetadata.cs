@@ -10,10 +10,5 @@ public class PypiVersionMetadata {
   /// <summary>
   ///   Gets or sets the information about the package version.
   /// </summary>
-  public PypiInfo info { get; set; }
-
-  /// <summary>
-  ///   Gets or sets the list of releases for this version.
-  /// </summary>
-  public List<PypiRelease> releases { get; set; }
+  public required PypiInfo info { get; set; }
 }

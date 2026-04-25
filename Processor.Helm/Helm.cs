@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.RegularExpressions;
+using Core.Kernel.Exceptions;
 using Core.Kernel.Models;
 using Processor.Helm.Models;
 using RestSharp;
@@ -47,13 +48,19 @@ public class Helm {
   }
 
   private async Task ProcessVersions(Artifact artifact) {
-    HelmChartMetadata metadata = await GetMetadata(artifact.id);
+    HelmChartMetadata? metadata = await GetMetadata(artifact.id);
+    if (metadata == null) {
+      throw new ArtifactMetadataException($"Metadata not found {artifact.id}");
+    }
     foreach (HelmChartVersion hv in metadata.available_versions) {
       if (artifact.HasVersion(hv.version)) {
         continue;
       }
 
-      HelmChartMetadata vm = await GetMetadata(artifact.id, hv.version);
+      HelmChartVersionMetadata? vm = await GetVersionMetadata(artifact.id, hv.version);
+      if (vm == null) {
+        continue;
+      }
       ArtifactVersion version = new();
       version.AddFile("chart", vm.content_url);
       version.version = vm.version;
@@ -88,7 +95,7 @@ public class Helm {
   }
 
   private void AddDependencies(Artifact artifact, HelmChartData data) {
-    if (data?.dependencies == null) {
+    if (data.dependencies == null) {
       return;
     }
 
@@ -101,7 +108,7 @@ public class Helm {
     try {
       AddDependency(artifact, chart);
     } catch (Exception e) {
-      logger_.LogError(e.ToString());
+      logger_.LogError(e, "Error adding dependencies");
       return false;
     }
 
@@ -126,11 +133,11 @@ public class Helm {
     return true;
   }
 
-  private async Task<HelmChartMetadata> GetMetadata(string id, string version) {
-    return await GetMetadata($"{id}/{version}");
+  private async Task<HelmChartVersionMetadata?> GetVersionMetadata(string id, string version) {
+    return await client_.GetAsync<HelmChartVersionMetadata>($"/{id}/{version}");
   }
 
-  private async Task<HelmChartMetadata> GetMetadata(string id) {
-    return await client_.GetJsonAsync<HelmChartMetadata>($"/{id}");
+  private async Task<HelmChartMetadata?> GetMetadata(string id) {
+    return await client_.GetAsync<HelmChartMetadata>($"/{id}");
   }
 }

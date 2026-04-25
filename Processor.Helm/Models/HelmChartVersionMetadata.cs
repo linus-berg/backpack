@@ -6,19 +6,27 @@ namespace Processor.Helm.Models;
 /// <summary>
 ///   Represents metadata for a Helm chart.
 /// </summary>
-public class HelmChartMetadata {
+public class HelmChartVersionMetadata {
   /// <summary>
   ///   Initializes a new instance of the <see cref="HelmChartMetadata" /> class.
   /// </summary>
-  public HelmChartMetadata() {
-    available_versions = new HashSet<HelmChartVersion>();
+  public HelmChartVersionMetadata() {
     containers_images = new HashSet<HelmChartContainerImage>();
   }
+  /// <summary>
+  ///   Gets or sets the content URL.
+  /// </summary>
+  public required string content_url { get; set; }
 
   /// <summary>
-  ///   Gets or sets the available versions.
+  ///   Gets or sets the version string.
   /// </summary>
-  public required IEnumerable<HelmChartVersion> available_versions { get; set; }
+  public required string version { get; set; }
+
+  /// <summary>
+  ///   Gets or sets the chart data.
+  /// </summary>
+  public required HelmChartData data { get; set; }
 
   /// <summary>
   ///   Gets or sets the container images associated with the chart.

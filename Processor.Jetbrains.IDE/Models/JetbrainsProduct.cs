@@ -10,5 +10,5 @@ public class JetbrainsProduct {
   /// <summary>
   ///   Gets or sets the list of releases for the product.
   /// </summary>
-  public List<JetbrainsProductRelease> releases { get; set; }
+  public required List<JetbrainsProductRelease> releases { get; init; }
 }

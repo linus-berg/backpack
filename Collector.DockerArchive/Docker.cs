@@ -61,7 +61,7 @@ public class Docker {
 
     success = await fs_.CreateDeltaLink(
                 "docker-archive",
-                $"docker-archive://{archive.TarWithHost}"
+                $"docker-archive://{archive.tar_with_host}"
               );
     return success;
   }
@@ -75,18 +75,18 @@ public class Docker {
   ///   successfully pushed.
   /// </returns>
   private async Task<bool> PushToStorage(SkopeoArchive archive) {
-    if (!File.Exists(archive.TarPath)) {
-      throw new FileNotFoundException($"{archive.TarPath} not found on disk.");
+    if (!File.Exists(archive.tar_path)) {
+      throw new FileNotFoundException($"{archive.tar_path} not found on disk.");
     }
 
-    logger_.LogDebug("Opening: {BundleFilePath}", archive.TarPath);
-    await using Stream stream = File.OpenRead(archive.TarPath);
-    string storage_path = Path.Join("docker-archive", archive.TarWithHost);
+    logger_.LogDebug("Opening: {BundleFilePath}", archive.tar_path);
+    await using Stream stream = File.OpenRead(archive.tar_path);
+    string storage_path = Path.Join("docker-archive", archive.tar_with_host);
     bool success = await fs_.PutFile(storage_path, stream);
     stream.Close();
     /* If S3 upload failed */
     if (!success) {
-      throw new MinioException($"Failed to upload {archive.TarPath}");
+      throw new MinioException($"Failed to upload {archive.tar_path}");
     }
 
     return success;

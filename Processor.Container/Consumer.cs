@@ -65,8 +65,8 @@ public class Consumer : IProcessor {
 
   private async Task GetTags(Artifact artifact) {
     SkopeoListTagsOutput? list_tags = await skopeo_.GetTags(artifact.id);
-    if (list_tags?.Tags != null) {
-      foreach (string tag in list_tags.Tags) {
+    if (list_tags?.tags != null) {
+      foreach (string tag in list_tags.tags) {
         if (artifact.HasVersion(tag)) {
           continue;
         }
@@ -76,7 +76,7 @@ public class Consumer : IProcessor {
         };
         version.AddFile(
           $"{artifact.id}:{tag}",
-          $"docker://{list_tags.Repository}:{tag}"
+          $"docker://{list_tags.repository}:{tag}"
         );
         artifact.AddVersion(version);
       }

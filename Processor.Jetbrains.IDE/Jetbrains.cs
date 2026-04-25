@@ -48,7 +48,7 @@ public class Jetbrains : IJetbrains {
   private async Task<JetbrainsProduct> GetProduct(string id) {
     try {
       List<JetbrainsProduct>? products =
-        await client_.GetJsonAsync<List<JetbrainsProduct>>(
+        await client_.GetAsync<List<JetbrainsProduct>>(
           $"/products?code={id}&release.type=release"
         );
 
@@ -57,9 +57,9 @@ public class Jetbrains : IJetbrains {
       }
 
       return products[0];
-    } catch (TimeoutException ex) {
+    } catch (TimeoutException) {
       throw new ArtifactTimeoutException($"{id} timed out!");
-    } catch (Exception ex) {
+    } catch (Exception) {
       throw new ArtifactMetadataException($"{id} metadata error!");
     }
   }

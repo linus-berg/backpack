@@ -10,10 +10,10 @@ public class JetbrainsProductRelease {
   /// <summary>
   ///   Gets or sets the version string.
   /// </summary>
-  public string version { get; set; }
+  public required string version { get; set; }
 
   /// <summary>
   ///   Gets or sets the downloads available for this release, keyed by platform.
   /// </summary>
-  public Dictionary<string, JetbrainsProductDownload> downloads { get; set; }
+  public required Dictionary<string, JetbrainsProductDownload> downloads { get; init; }
 }

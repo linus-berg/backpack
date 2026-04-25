@@ -1,5 +1,5 @@
 namespace Processor.Terraform.Models;
 
 public class ProviderVersion {
-  public string version { get; set; }
+  public required string version { get; set; }
 }

@@ -10,5 +10,5 @@ public class JetbrainsProductDownload {
   /// <summary>
   ///   Gets or sets the download URL.
   /// </summary>
-  public string link { get; set; }
+  public required string link { get; set; }
 }

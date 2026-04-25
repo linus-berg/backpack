@@ -2,7 +2,6 @@
   <configuration default="false" name="API-PROC" type="CompoundRunConfigurationType">
     <toRun name="Core.Gateway" type="LaunchSettings" />
     <toRun name="Integration.API" type="LaunchSettings" />
-    <toRun name="Processor.Npm" type="LaunchSettings" />
     <toRun name="Processor.Nuget" type="LaunchSettings" />
     <method v="2" />
   </configuration>

@@ -30,32 +30,37 @@ public class Pypi : IPypi {
   /// <param name="artifact">The artifact to process.</param>
   /// <returns>A task that represents the process operation, containing the updated artifact.</returns>
   public async Task<Artifact> ProcessArtifact(Artifact artifact) {
-    PypiMetadata metadata = await GetMetadata(artifact.id);
+    PypiMetadata? metadata = await GetMetadata(artifact.id);
+
+    if (metadata == null) {
+      throw new ArtifactMetadataException($"Metadata is null {artifact.id}");
+    }
+    
     Dictionary<string, List<PypiRelease>> versions =
       metadata.GetAllValidReleases();
 
     foreach (KeyValuePair<string, List<PypiRelease>> kv in versions) {
-      string versionStr = kv.Key;
+      string version_str = kv.Key;
       List<PypiRelease> releases = kv.Value;
 
-      if (artifact.HasVersion(versionStr)) {
+      if (artifact.HasVersion(version_str)) {
         continue;
       }
 
-      ArtifactVersion aVersion = new() {
-        version = versionStr
+      ArtifactVersion a_version = new() {
+        version = version_str
       };
 
       foreach (PypiRelease release in releases) {
-        aVersion.AddFile(release.filename, release.url);
+        a_version.AddFile(release.filename, release.url);
       }
 
       // Fetch version-specific metadata for dependencies
       try {
-        PypiVersionMetadata? versionMetadata =
-          await GetVersionMetadata(artifact.id, versionStr);
-        if (versionMetadata?.info != null) {
-          List<string> dependencies = versionMetadata.info.GetDependencies();
+        PypiVersionMetadata? version_metadata =
+          await GetVersionMetadata(artifact.id, version_str);
+        if (version_metadata?.info != null) {
+          List<string> dependencies = version_metadata.info.GetDependencies();
           foreach (string dependency in dependencies) {
             artifact.AddDependency(dependency, artifact.processor);
           }
@@ -64,20 +69,20 @@ public class Pypi : IPypi {
         logger_.LogWarning(
           "Could not fetch version-specific metadata for {Id} {Version}: {Error}",
           artifact.id,
-          versionStr,
+          version_str,
           ex.Message
         );
       }
 
-      artifact.AddVersion(aVersion);
+      artifact.AddVersion(a_version);
     }
 
     return artifact;
   }
 
-  private async Task<PypiMetadata> GetMetadata(string id) {
+  private async Task<PypiMetadata?> GetMetadata(string id) {
     try {
-      return await client_.GetJsonAsync<PypiMetadata>($"pypi/{id}/json");
+      return await client_.GetAsync<PypiMetadata>($"pypi/{id}/json");
     } catch (TimeoutException ex) {
       logger_.LogError(
         "Timeout error fetching metadata for {Id}: {Exception}",
@@ -98,7 +103,7 @@ public class Pypi : IPypi {
   private async Task<PypiVersionMetadata?> GetVersionMetadata(
     string id, string version) {
     try {
-      return await client_.GetJsonAsync<PypiVersionMetadata>(
+      return await client_.GetAsync<PypiVersionMetadata>(
                $"pypi/{id}/{version}/json"
              );
     } catch (Exception ex) {

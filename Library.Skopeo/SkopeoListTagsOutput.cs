@@ -1,6 +1,10 @@
+using System.Text.Json.Serialization;
+
 namespace Library.Skopeo;
 
 public class SkopeoListTagsOutput {
-  public string Repository { get; set; }
-  public IEnumerable<string> Tags { get; set; }
+  [JsonPropertyName("Repository")]
+  public required string repository { get; set; }
+  [JsonPropertyName("Tags")]
+  public required IEnumerable<string> tags { get; set; }
 }

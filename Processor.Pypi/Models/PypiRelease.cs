@@ -10,17 +10,17 @@ public class PypiRelease {
   /// <summary>
   ///   Gets or sets the filename of the release.
   /// </summary>
-  public string filename { get; set; }
+  public required string filename { get; set; }
 
   /// <summary>
   ///   Gets or sets the URL for downloading the release.
   /// </summary>
-  public string url { get; set; }
+  public required string url { get; set; }
 
   /// <summary>
   ///   Gets or sets the type of the package (e.g., sdist, bdist_wheel).
   /// </summary>
-  public string packagetype { get; set; }
+  public required string packagetype { get; set; }
 
   /// <summary>
   ///   Gets or sets a value indicating whether the release has been yanked.

@@ -8,12 +8,7 @@ namespace Processor.Helm.Models;
 /// </summary>
 public class HelmChartContainerImage {
   /// <summary>
-  ///   Gets or sets the name of the container image.
-  /// </summary>
-  public string name { get; set; }
-
-  /// <summary>
   ///   Gets or sets the image identifier.
   /// </summary>
-  public string image { get; set; }
+  public required string image { get; set; }
 }

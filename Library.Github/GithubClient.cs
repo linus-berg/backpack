@@ -25,8 +25,8 @@ public class GithubClient : IGithubClient {
   public async Task<List<GithubRelease>> GetReleases(string repo) {
     List<GithubRelease> releases = new();
     for (int page = 1; releases.Count < C_MAX_RELEASES_; page++) {
-      List<GithubRelease> page_releases = await GetReleasePage(repo, page);
-      if (page_releases.Count == 0) {
+      List<GithubRelease>? page_releases = await GetReleasePage(repo, page);
+      if (page_releases == null || page_releases.Count == 0) {
         break;
       }
 
@@ -38,10 +38,10 @@ public class GithubClient : IGithubClient {
     return releases;
   }
 
-  private async Task<List<GithubRelease>>
+  private async Task<List<GithubRelease>?>
     GetReleasePage(string repo, int page, int page_size = 10) {
     try {
-      return await client_.GetJsonAsync<List<GithubRelease>>(
+      return await client_.GetAsync<List<GithubRelease>>(
                $"/repos/{repo}/releases?page={page}&per_page={page_size}",
                new {
                  page

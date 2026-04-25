@@ -26,14 +26,14 @@ public class Rancher : IRancher {
       }
 
       string url = release.GetReleaseFile(file);
-      if (url == null) {
+      if (string.IsNullOrEmpty(url)) {
         continue;
       }
 
       ArtifactVersion version = new() {
         version = release.tag_name
       };
-      logger_.LogInformation($"Release detected={url}");
+      logger_.LogInformation("Release detected={Url}", url);
       string? rancher_file = await GetRancherFile(url);
       if (rancher_file == null) {
         throw new ArtifactMetadataException($"Could not get {url}");

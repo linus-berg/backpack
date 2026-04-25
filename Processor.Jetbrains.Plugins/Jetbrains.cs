@@ -45,12 +45,12 @@ public class Jetbrains : IJetbrains {
 
   private async Task<List<JetbrainsPluginUpdate>?> GetUpdates(string id) {
     try {
-      return await client_.GetJsonAsync<List<JetbrainsPluginUpdate>>(
+      return await client_.GetAsync<List<JetbrainsPluginUpdate>>(
                $"/api/plugins/{id}/updates"
              );
-    } catch (TimeoutException ex) {
+    } catch (TimeoutException) {
       throw new ArtifactTimeoutException($"{id} timed out!");
-    } catch (Exception ex) {
+    } catch (Exception) {
       throw new ArtifactMetadataException($"{id} metadata error!");
     }
   }

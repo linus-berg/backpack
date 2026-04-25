@@ -40,12 +40,12 @@ public class SkopeoClient {
                      .WithStandardErrorPipe(
                        PipeTarget.ToStringBuilder(std_err)
                      );
-    logger_.LogInformation($"Pull> {image.Uri}=>{internal_image}");
+    logger_.LogInformation("Pull> {ImageUri}=>{InternalImage}", image.Uri, internal_image);
     try {
       CommandResult result =
         await cmd.ExecuteAsync();
-    } catch (Exception e) {
-      logger_.LogError(std_err.ToString());
+    } catch (Exception) {
+      logger_.LogError("{Error}", std_err.ToString());
       throw;
     }
 
@@ -79,20 +79,20 @@ public class SkopeoClient {
       throw new ApplicationException($"Manifest for {docker_str} not found");
     }
 
-    SkopeoArchive archive = new(manifest.Name, tag, target_dir);
-    if (File.Exists(archive.TarPath)) {
+    SkopeoArchive archive = new(manifest.name, tag, target_dir);
+    if (File.Exists(archive.tar_path)) {
       if (force) {
-        logger_.LogInformation("Force flag present, deleting existing archive: {Path}", archive.TarPath);
-        File.Delete(archive.TarPath);
+        logger_.LogInformation("Force flag present, deleting existing archive: {Path}", archive.tar_path);
+        File.Delete(archive.tar_path);
       } else {
         throw new SkopeoArchiveExistsException(
-          $"File {archive.TarPath} already exists"
+          $"File {archive.tar_path} already exists"
         );
       }
     }
 
     string internal_image =
-      $"docker-archive:{archive.TarPath}:{archive.Target}";
+      $"docker-archive:{archive.tar_path}:{archive.target}";
 
     StringBuilder std_out = new();
     StringBuilder std_err = new();
@@ -100,7 +100,7 @@ public class SkopeoClient {
                      .WithArguments(
                        args => {
                          args.Add("copy");
-                         args.Add($"docker://{archive.Target}:{archive.Tag}");
+                         args.Add($"docker://{archive.target}:{archive.tag}");
                          args.Add(internal_image);
                        }
                      )
@@ -110,7 +110,7 @@ public class SkopeoClient {
                      .WithStandardErrorPipe(
                        PipeTarget.ToStringBuilder(std_err)
                      );
-    logger_.LogInformation($"Pull> {remote_image}=>{internal_image}");
+    logger_.LogInformation("Pull> {RemoteImage}=>{InternalImage}", remote_image, internal_image);
     CommandResult? result = null;
     try {
       result = await cmd.ExecuteAsync();
@@ -122,7 +122,7 @@ public class SkopeoClient {
     logger_.LogInformation("{StdErr}", std_err.ToString());
 
     if (result is { IsSuccess: false }) {
-      throw new ExecutionEngineException("Skopeo exception");
+      throw new ApplicationException("Skopeo exception");
     }
 
     return archive;
@@ -136,11 +136,11 @@ public class SkopeoClient {
                          args.Add($"docker://{image}");
                        }
                      );
-    SkopeoListTagsOutput tags;
+    SkopeoListTagsOutput? tags;
     try {
       tags = await cmd.ExecuteWithResult<SkopeoListTagsOutput>();
     } catch (Exception e) {
-      logger_.LogError(e.ToString());
+      logger_.LogError(e, "Skopeo Error");
       return null;
     }
 
@@ -173,11 +173,11 @@ public class SkopeoClient {
                      .WithStandardErrorPipe(
                        PipeTarget.ToStringBuilder(std_err)
                      );
-    SkopeoManifest manifest;
+    SkopeoManifest? manifest;
     try {
       manifest = await cmd.ExecuteWithResult<SkopeoManifest>();
     } catch (Exception e) {
-      logger_.LogError(e.ToString());
+      logger_.LogError(e, "Skopeo exception");
       logger_.LogInformation("{StdOut}", std_out.ToString());
       logger_.LogInformation("{StdErr}", std_err.ToString());
       return null;
