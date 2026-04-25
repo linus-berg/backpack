@@ -72,8 +72,10 @@ SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
 
 SkopeoListTagsOutput? tags = await sk.GetTags("docker.io/amazon/aws-cli");
 
-foreach (string tag in tags.tags) {
-  Console.WriteLine(tag);
+if (tags != null) {
+  foreach (string tag in tags.tags) {
+    Console.WriteLine(tag);
+  }
 }
 await sk.CopyToTar("docker-archive://docker.io/amazon/aws-cli:2.31.12", "docker-archive");
 
