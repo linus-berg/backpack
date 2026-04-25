@@ -10,27 +10,27 @@ public class Processor {
   /// <summary>
   ///   Gets or sets the unique identifier for the processor.
   /// </summary>
-  public string id { get; set; }
+  public required string id { get; set; }
 
   /// <summary>
   ///   Gets or sets a value indicating whether this processor supports direct collection.
   /// </summary>
-  public bool direct_collect { get; set; } = false;
+  public bool direct_collect { get; set; }
 
   /// <summary>
   ///   Gets or sets a description of the processor.
   /// </summary>
-  public string description { get; set; }
+  public string description { get; set; } = string.Empty;
 
   /// <summary>
   ///   Gets or sets a value indicating whether this processor requires approval for new artifacts.
   /// </summary>
-  public bool requires_approval { get; set; } = false;
+  public bool requires_approval { get; set; }
 
   /// <summary>
   ///   Gets or sets a value indicating whether this processor supports multi-add.
   /// </summary>
-  public bool multi_add { get; set; } = false;
+  public bool multi_add { get; set; }
 
   /// <summary>
   ///   Gets or sets a value indicating whether this processor is handled externally.
@@ -45,5 +45,6 @@ public class Processor {
   /// <summary>
   ///   Gets or sets a dictionary of auxiliary configuration fields for the processor.
   /// </summary>
-  public Dictionary<string, ProcessorAuxiliaryField> config { get; set; }
+  public Dictionary<string, ProcessorAuxiliaryField> config { get; set; } =
+    new Dictionary<string, ProcessorAuxiliaryField>();
 }

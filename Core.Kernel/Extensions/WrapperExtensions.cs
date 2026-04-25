@@ -47,7 +47,7 @@ public static class WrapperExtensions {
     try {
       CommandResult result = await cmd.ExecuteAsync();
       return result.ExitCode == 0;
-    } catch (Exception e) {
+    } catch (Exception) {
       return false;
     }
   }

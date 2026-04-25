@@ -10,7 +10,7 @@ public class Endpoint {
   /// <summary>
   ///   Gets or sets the name of the endpoint.
   /// </summary>
-  public string name { get; set; }
+  public required string name { get; set; }
 
   /// <summary>
   ///   Gets or sets the maximum number of concurrent messages to process for this endpoint.

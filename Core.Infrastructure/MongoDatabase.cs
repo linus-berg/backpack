@@ -273,13 +273,6 @@ public class MongoDatabase : ICoreDatabase {
     return database_.GetCollection<T>(collection);
   }
 
-  public async Task AddProcessor(ArtifactProcessor processor) {
-    IMongoCollection<ArtifactProcessor> collection =
-      GetCollection<ArtifactProcessor>("processors");
-
-    await collection.InsertOneAsync(processor);
-  }
-
   public async Task<bool> ArtifactExists(string id, string processor) {
     return await GetArtifact(id, processor) != null;
   }

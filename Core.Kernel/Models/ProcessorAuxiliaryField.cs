@@ -10,20 +10,20 @@ public class ProcessorAuxiliaryField {
   /// <summary>
   ///   Gets or sets the configuration key.
   /// </summary>
-  public string key { get; set; }
+  public required string key { get; set; }
 
   /// <summary>
   ///   Gets or sets the data type of the configuration field.
   /// </summary>
-  public string type { get; set; }
+  public required string type { get; set; }
 
   /// <summary>
   ///   Gets or sets the display name of the configuration field.
   /// </summary>
-  public string name { get; set; }
+  public required string name { get; set; }
 
   /// <summary>
   ///   Gets or sets the placeholder text for the configuration field.
   /// </summary>
-  public string placeholder { get; set; }
+  public string placeholder { get; set; } = string.Empty;
 }
