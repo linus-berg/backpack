@@ -20,7 +20,7 @@ public static class Configuration {
       }, {
         CoreVariables.BP_REDIS_USER, "default"
       }, {
-        CoreVariables.BP_REDIS_PASS, "myverylogpassword"
+        CoreVariables.BP_REDIS_PASS, "myverylongpassword"
       }, {
         CoreVariables.BP_RABBIT_MQ_HOST, "localhost"
       }, {

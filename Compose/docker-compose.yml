@@ -114,7 +114,7 @@ services:
     image: redis/redis-stack:6.2.6-v9
     container_name: bp-ingest-redis
     environment:
-      REDIS_ARGS: "--requirepass myverylogpassword"
+      REDIS_ARGS: "--requirepass myverylongpassword"
     volumes:
       - "./volumes/redis_data:/data:Z"
     ports:
