@@ -50,6 +50,11 @@ public class GithubReleases : IGithubReleases {
             out string? include_source
           )) {
         if (bool.TryParse(include_source, out bool include) && include) {
+          /* Other option */
+          /*version.AddFile(
+            "source_tar",
+            $"https://github.com/{artifact.id}/archive/refs/tags/{release.tag_name}.tar.gz"
+          );*/
           version.AddFile("source_tar", release.tarball_url);
         }
       }

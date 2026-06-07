@@ -42,7 +42,8 @@ public class Consumer : ICollector {
     string fp = fs_.GetArtifactPath(module, location);
     bool exists = await fs_.Exists(fp);
     if (!exists || context.Message.force) {
-      using HttpClient client = http_client_factory_.CreateClient();
+      using HttpClient client =
+        http_client_factory_.CreateClient("fetch-client");
       RemoteFile rf = new(client, location, fs_);
       if (await rf.Get(fp, context.CancellationToken)) {
         if (delta_) {
