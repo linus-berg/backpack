@@ -88,9 +88,6 @@ jobs:
 
     # steps to perform in job
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -110,7 +107,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           # relative path to the place where source code with Dockerfile is located
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           context: .
           file: ./${{ matrix.services.directory }}/Dockerfile
           # Note: tags has to be all lower-case
