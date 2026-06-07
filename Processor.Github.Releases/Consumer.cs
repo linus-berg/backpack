@@ -44,6 +44,7 @@ public class Consumer : IProcessor {
       Artifact artifact = new() {
         id = context.Message.id,
         processor = context.Message.processor,
+        config = context.Message.config,
         filter = string.Empty
       };
       await gh_.ProcessArtifact(artifact);

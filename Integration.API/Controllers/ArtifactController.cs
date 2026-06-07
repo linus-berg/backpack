@@ -57,15 +57,15 @@ public class ArtifactController : ControllerBase {
     return Ok(artifact);
   }
 
-  [HttpGet("preview")]
-  public async Task<ActionResult<Artifact>> Preview(
-    [FromQuery] string id, [FromQuery] string processor) {
+  [HttpPost("preview")]
+  public async Task<ActionResult<Artifact>> Preview([FromBody] ArtifactPreviewInput input) {
     // Explicitly address the processor's preview queue
-    string routing_key = $"processor-{processor.ToLower()}-preview";
+    string routing_key = $"processor-{input.processor.ToLower()}-preview";
 
     ArtifactPreviewRequest req = new() {
-      id = id,
-      processor = processor
+      id = input.id,
+      processor = input.processor,
+      config = input.config
     };
 
     ArtifactPreviewResponse resp =
