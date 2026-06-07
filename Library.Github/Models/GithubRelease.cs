@@ -7,6 +7,7 @@ public class GithubRelease {
   public bool draft { get; set; }
   public bool prerelease { get; set; }
   public required List<GithubReleaseAsset> assets { get; set; }
+  public required string tarball_url { get; set; }
 
   public string GetReleaseFile(string name) {
     foreach (GithubReleaseAsset asset in assets) {

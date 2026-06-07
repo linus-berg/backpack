@@ -45,6 +45,15 @@ public class GithubReleases : IGithubReleases {
         }
       }
 
+      if (artifact.config.TryGetValue(
+            "include_source",
+            out string? include_source
+          )) {
+        if (bool.TryParse(include_source, out bool include) && include) {
+          version.AddFile("source_tar", release.tarball_url);
+        }
+      }
+
       artifact.AddVersion(version);
     }
 
