@@ -1,0 +1,17 @@
+﻿{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "Collector.Huggingface": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "BP_S3_ACCESS_KEY": "backpack-local",
+        "BP_S3_SECRET_KEY": "backpack-local",
+        "BP_S3_REGION": "not-used-for-dev",
+        "BP_S3_ENDPOINT": "localhost:9000",
+        "BP_S3_BUCKET": "backpack"
+      }
+    }
+  }
+}
