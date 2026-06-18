@@ -8,12 +8,14 @@ using Core.Kernel;
 using Core.Kernel.Models;
 using Library.Github;
 using Library.Skopeo;
+using MassTransit.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Timeout;
 using Processor.HuggingFace;
 using Processor.Pypi;
 using Processor.Terraform;
+using RemoteFile = Collector.Huggingface.RemoteFile;
 
 HttpClient hc = new(
   new HttpClientHandler {
@@ -52,6 +54,7 @@ services.AddSingleton<FileSystem>();
 services.AddSingleton<Git>();
 services.AddSingleton<IPypi, Pypi>();
 services.AddSingleton<ITerraform, Terraform>();
+services.AddSingleton<ITerraform, Terraform>();
 services.AddSingleton<IHuggingFace, HuggingFace>();
 services.AddSingleton<IGithubClient, GithubClient>();
 services.AddSingleton<SkopeoClient>();
@@ -64,20 +67,43 @@ IServiceProvider sp = services.BuildServiceProvider();
 IGithubClient gh = sp.GetRequiredService<IGithubClient>();
 ITerraform tf = sp.GetRequiredService<ITerraform>();
 IHuggingFace hf = sp.GetRequiredService<IHuggingFace>();
+FileSystem fs = sp.GetRequiredService<FileSystem>();
+
+
+// HF test
+Artifact artifact = await hf.ProcessArtifact(
+                      new Artifact() {
+                        id = "google/gemma-4-31B-it-assistant",
+                        processor = "huggingface",
+                        filter = string.Empty
+                      }
+                    );
+
+
+foreach (KeyValuePair<string, ArtifactVersion> version in artifact.versions) {
+  foreach (KeyValuePair<string, ArtifactFile> file in version.Value.files) {
+    
+    string location = file.Value.uri;
+    string fp = fs.GetArtifactPath("huggingface", location);
+    RemoteFile rf = new RemoteFile(hc, file.Value.uri, fs);
+    await rf.Get(fp);
+  }
+  Console.WriteLine(version.Key);
+}
+
 
 IPypi py = sp.GetRequiredService<IPypi>();
 
-FileSystem fs = sp.GetRequiredService<FileSystem>();
 SkopeoClient sk = sp.GetRequiredService<SkopeoClient>();
 
-SkopeoListTagsOutput? tags = await sk.GetTags("docker.io/amazon/aws-cli");
+/*SkopeoListTagsOutput? tags = await sk.GetTags("docker.io/amazon/aws-cli");
 
 if (tags != null) {
   foreach (string tag in tags.tags) {
     Console.WriteLine(tag);
   }
 }
-await sk.CopyToTar("docker-archive://docker.io/amazon/aws-cli:2.31.12", "docker-archive");
+await sk.CopyToTar("docker-archive://docker.io/amazon/aws-cli:2.31.12", "docker-archive");*/
 
 Artifact php_artifact = new() {
   id = "shardj/zf1-future",
@@ -102,8 +128,6 @@ string ind = "/storage/artifacts/mirrors/git/input";
 string path =
   $"{ind}/github.com/linus-berg/test@101001-201023.bundle";
 
-//await fs.PutString("debug", "");
-//await file.Get("debug");
 // DEBUG MINIO
 MinioConnectionBuilder connection = new();
 

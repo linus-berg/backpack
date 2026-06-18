@@ -35,17 +35,56 @@ public class Consumer : ICollector {
   public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
     string location = context.Message.location;
     string module = context.Message.module;
-    string fp = fs_.GetArtifactPath(module, location);
-    bool exists = await fs_.Exists(fp);
-    if (!exists || context.Message.force) {
-      using HttpClient client =
-        http_client_factory_.CreateClient("fetch-client");
-      RemoteFile rf = new(client, location, fs_);
-      if (await rf.Get(fp, context.CancellationToken)) {
-        if (delta_) {
-          await fs_.CreateDeltaLink(module, location);
-        }
+    
+    // We parse the URI to build the correct S3 path: <org>/<model>/<filepath>
+    // Example: hf://moonshotai/Kimi-K2.7-Code/figures/kimi-logo.png?modelId=moonshotai/Kimi-K2.7-Code
+    // Should result in: moonshotai/Kimi-K2.7-Code/figures/kimi-logo.png
+    
+    Uri uri = new(location);
+    string? model_id = GetQueryParam(uri, "modelId");
+    string filename = GetFilename(uri, model_id ?? "");
+    
+    // The final S3 path: <module>/<modelId>/<filename>
+    string fp = Path.Join(module, model_id ?? "", filename);
+
+    // The HuggingFace collector always performs an ETAG check via RemoteFile.Get.
+    // It only downloads the file if the remote ETAG differs from the local one.
+    using HttpClient client =
+      http_client_factory_.CreateClient("fetch-client");
+    RemoteFile rf = new(client, location, fs_);
+    if (await rf.Get(fp, context.CancellationToken)) {
+      if (delta_) {
+        await fs_.CreateDeltaLink(module, location);
       }
     }
+  }
+
+  private string? GetQueryParam(Uri uri, string name) {
+    string query = uri.Query;
+    if (string.IsNullOrEmpty(query)) return null;
+
+    string pattern = $"{name}=";
+    int index = query.IndexOf(pattern, StringComparison.Ordinal);
+    if (index < 0) return null;
+
+    string value = query.Substring(index + pattern.Length);
+    int ampersand_index = value.IndexOf('&');
+    if (ampersand_index >= 0) {
+      value = value.Substring(0, ampersand_index);
+    }
+
+    return Uri.UnescapeDataString(value);
+  }
+
+  private string GetFilename(Uri uri, string modelId) {
+    string combined = $"{uri.Host}{uri.LocalPath}";
+    if (string.IsNullOrEmpty(modelId)) return Path.GetFileName(uri.LocalPath);
+    
+    if (combined.StartsWith(modelId, StringComparison.Ordinal)) {
+      string filename = combined.Substring(modelId.Length);
+      return filename.TrimStart('/');
+    }
+
+    return Path.GetFileName(uri.LocalPath);
   }
 }

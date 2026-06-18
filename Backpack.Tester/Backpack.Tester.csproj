@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Collector.Git\Collector.Git.csproj"/>
+        <ProjectReference Include="..\Collector.Huggingface\Collector.Huggingface.csproj" />
         <ProjectReference Include="..\Core.Infrastructure\Core.Infrastructure.csproj"/>
         <ProjectReference Include="..\Library.Skopeo\Library.Skopeo.csproj"/>
         <ProjectReference Include="..\Processor.Github.Releases\Processor.Github.Releases.csproj"/>

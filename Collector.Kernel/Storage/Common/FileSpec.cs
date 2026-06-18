@@ -24,4 +24,15 @@ public class FileSpec {
   ///   Gets or sets the size of the file in bytes.
   /// </summary>
   public long size { get; set; }
+
+  /// <summary>
+  ///   Gets or sets the ETag of the file.
+  /// </summary>
+  public string etag { get; set; }
+
+  /// <summary>
+  ///   Gets or sets the metadata associated with the file.
+  /// </summary>
+  public IDictionary<string, string> metadata { get; set; } =
+    new Dictionary<string, string>();
 }

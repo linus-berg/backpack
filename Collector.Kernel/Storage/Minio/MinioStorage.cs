@@ -174,11 +174,15 @@ public class MinioStorage : IDisposable {
         return null;
       }
 
+      string? etag = metadata.ETag?.Trim('"');
+
       return new FileSpec {
         path = normalized_path,
         size = metadata.Size,
         created = metadata.LastModified.ToUniversalTime(),
-        modified = metadata.LastModified.ToUniversalTime()
+        modified = metadata.LastModified.ToUniversalTime(),
+        etag = etag,
+        metadata = metadata.MetaData
       };
     } catch (Exception ex) {
       logger_.LogError(
@@ -245,6 +249,8 @@ public class MinioStorage : IDisposable {
   ///   saved.
   /// </returns>
   public async Task<bool> SaveFileAsync(string path, Stream stream,
+                                        IDictionary<string, string>? metadata =
+                                          null,
                                         CancellationToken cancellation_token =
                                           default) {
     if (string.IsNullOrEmpty(path)) {
@@ -269,6 +275,10 @@ public class MinioStorage : IDisposable {
                             .WithBucket(bucket_)
                             .WithObject(normalized_path)
                             .WithObjectSize(seekable_stream.Length);
+
+      if (metadata != null) {
+        args.WithHeaders(metadata);
+      }
 
       // Minio does not allow uploading empty streams: https://github.com/minio/minio-dotnet/issues/801
       if (seekable_stream.Length > 0) {
@@ -386,14 +396,16 @@ public class MinioStorage : IDisposable {
   ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
   ///   saved.
   /// </returns>
-  public Task<bool> SaveFileAsync(string path, string contents) {
+  public Task<bool> SaveFileAsync(string path, string contents,
+                                  IDictionary<string, string>? metadata = null) {
     if (string.IsNullOrEmpty(path)) {
       throw new ArgumentNullException(nameof(path));
     }
 
     return SaveFileAsync(
       path,
-      new MemoryStream(Encoding.UTF8.GetBytes(contents ?? string.Empty))
+      new MemoryStream(Encoding.UTF8.GetBytes(contents ?? string.Empty)),
+      metadata
     );
   }
 
@@ -697,7 +709,8 @@ public class MinioStorage : IDisposable {
                    path = blob.Key,
                    size = (long)blob.Size,
                    modified = DateTime.Parse(blob.LastModified),
-                   created = DateTime.Parse(blob.LastModified)
+                   created = DateTime.Parse(blob.LastModified),
+                   etag = blob.ETag
                  }
                )
                .ToList();

@@ -47,13 +47,8 @@ public class HuggingFace : IHuggingFace {
       return;
     }
 
-    /* This ensures no new versions are downloaded.
-       It's an ugly hack to not mass-download models
-       TODO: Develop a new way to only collect certain files in new releases.
-    */
-    if (artifact.versions.Count > 0) {
-      return;
-    }
+    /* HuggingFace models always replace the previous version. */
+    artifact.versions.Clear();
 
     ArtifactVersion version = new() {
       version = metadata.sha
@@ -61,12 +56,11 @@ public class HuggingFace : IHuggingFace {
 
     if (metadata.siblings != null) {
       foreach (HuggingFaceSibling sibling in metadata.siblings) {
-        string url = string.Format(
-          C_RESOLVE_URL_,
-          metadata.id,
-          metadata.sha,
-          sibling.rfilename
-        );
+        // Use the custom hf:// protocol to trigger the HuggingFace collector.
+        // Format: hf://{modelId}/{filename}?revision={sha}&modelId={modelId}
+        // We include modelId in query because the URI Host/Path split is ambiguous for nested files.
+        string url =
+          $"hf://{metadata.id}/{sibling.rfilename}?revision={metadata.sha}&modelId={metadata.id}";
         version.AddFile(sibling.rfilename, url);
       }
     }

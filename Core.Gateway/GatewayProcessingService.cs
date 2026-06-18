@@ -78,13 +78,17 @@ public class GatewayProcessingService : IGatewayProcessingService {
     if (a.versions.Count != b.versions.Count) {
       return false;
     }
+    
+    // Dependencies comparison
+    if (a.dependencies.Count != b.dependencies.Count) {
+      return false;
+    }
 
     foreach (KeyValuePair<string, ArtifactVersion> kv in a.versions) {
       if (!b.versions.TryGetValue(kv.Key, out ArtifactVersion? b_val)) {
         return false;
       }
 
-      // We could do deeper here if ArtifactVersion has complex nested data
       if (kv.Value.status != b_val.status) {
         return false;
       }
@@ -92,11 +96,14 @@ public class GatewayProcessingService : IGatewayProcessingService {
       if (kv.Value.files.Count != b_val.files.Count) {
         return false;
       }
-    }
 
-    // Dependencies comparison
-    if (a.dependencies.Count != b.dependencies.Count) {
-      return false;
+      foreach (KeyValuePair<string, ArtifactFile> file_kv in kv.Value.files) {
+        if (!b_val.files.TryGetValue(file_kv.Key, out ArtifactFile? b_file) ||
+            file_kv.Value.uri != b_file.uri ||
+            file_kv.Value.folder != b_file.folder) {
+          return false;
+        }
+      }
     }
 
     foreach (ArtifactDependency dep in a.dependencies) {

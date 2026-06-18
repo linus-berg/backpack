@@ -106,15 +106,19 @@ public class FileSystem {
   /// </summary>
   /// <param name="path">The path where the string will be written.</param>
   /// <param name="content">The string content to write.</param>
+  /// <param name="metadata">Optional metadata to store with the file.</param>
   /// <returns>True if the operation was successful; otherwise, false.</returns>
-  public async Task<bool> PutString(string path, string content) {
+  public async Task<bool> PutString(string path, string content,
+                                   IDictionary<string, string>? metadata =
+                                     null) {
     return await storage_pipeline_.ExecuteAsync(
              static async (state, _) =>
                await state.storage_backend_.SaveFileAsync(
                  state.path,
-                 state.content
+                 state.content,
+                 state.metadata
                ),
-             (storage_backend_, path, content)
+             (storage_backend_, path, content, metadata)
            );
   }
 
@@ -123,16 +127,19 @@ public class FileSystem {
   /// </summary>
   /// <param name="path">The path where the stream will be written.</param>
   /// <param name="stream">The stream content to write.</param>
+  /// <param name="metadata">Optional metadata to store with the file.</param>
   /// <returns>True if the operation was successful; otherwise, false.</returns>
-  public async Task<bool> PutFile(string path, Stream stream) {
+  public async Task<bool> PutFile(string path, Stream stream,
+                                 IDictionary<string, string>? metadata = null) {
     return await storage_pipeline_.ExecuteAsync(
              static async (state, token) =>
                await state.storage_backend_.SaveFileAsync(
                  state.path,
                  state.stream,
+                 state.metadata,
                  token
                ),
-             (storage_backend_, path, stream)
+             (storage_backend_, path, stream, metadata)
            );
   }
 
@@ -194,6 +201,15 @@ public class FileSystem {
     FileSpec spec = await storage_backend_.GetFileInfoAsync(filepath) ??
                     throw new InvalidOperationException();
     return spec.size;
+  }
+
+  /// <summary>
+  ///   Retrieves information about a file.
+  /// </summary>
+  /// <param name="filepath">The path of the file.</param>
+  /// <returns>The file specification, or null if it doesn't exist.</returns>
+  public async Task<FileSpec?> GetFileInfo(string filepath) {
+    return await storage_backend_.GetFileInfoAsync(filepath);
   }
 
   /// <summary>
