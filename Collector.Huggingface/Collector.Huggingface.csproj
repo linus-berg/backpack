@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-Collector.Huggingface-7d0110ed-6756-4ec2-a07f-5a44632b91ae</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,5 +17,11 @@
     <ItemGroup>
       <ProjectReference Include="..\Collector.Kernel\Collector.Kernel.csproj" />
       <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 </Project>
