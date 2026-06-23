@@ -66,6 +66,9 @@ jobs:
 
           - name: collector/http
             directory: Collector.Http
+          
+          - name: collector/huggingface
+            directory: Collector.Huggingface
             
           - name: collector/docker-archive
             directory: Collector.DockerArchive
