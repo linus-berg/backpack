@@ -12,7 +12,7 @@ using Wolverine.ErrorHandling;
 namespace Core.Kernel;
 
 public static class RegistrationUtils {
-  public static IHostBuilder UseBackpackWolverine(this IHostBuilder builder, ModuleRegistration registration, Action<WolverineOptions> configureWolverine = null) {
+  public static IHostBuilder UseBackpackWolverine(this IHostBuilder builder, ModuleRegistration registration, Action<WolverineOptions> configure_wolverine = null) {
     return builder.UseWolverine(
       opts => {
         opts.UseRabbitMq(
@@ -40,7 +40,7 @@ public static class RegistrationUtils {
 
         opts.Services.AddScoped<IEventService, EventService>();
         
-        configureWolverine?.Invoke(opts);
+        configure_wolverine?.Invoke(opts);
       }
     );
   }
