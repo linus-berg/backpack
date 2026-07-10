@@ -11,11 +11,11 @@ public static class ProcessorHost {
                              Action<IServiceCollection> configure_services) {
     return Host.CreateDefaultBuilder(args)
                .AddLogging(registration)
+               .UseBackpackWolverine(registration)
                .ConfigureServices(
                  services => {
                    services.AddTelemetry(registration);
                    configure_services(services);
-                   services.Register(registration);
                    services.AddHostedService<HeartbeatWorker>();
                  }
                )

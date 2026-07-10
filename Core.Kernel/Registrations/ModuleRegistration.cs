@@ -36,7 +36,7 @@ public class ModuleRegistration {
   /// <summary>
   ///   Gets the list of endpoints registered for this module.
   /// </summary>
-  public List<Endpoint> endpoints { get; } = new();
+  public List<Endpoint> endpoints { get; set; } = new();
 
   /// <summary>
   ///   Adds a new endpoint to the module registration.
@@ -45,10 +45,7 @@ public class ModuleRegistration {
   /// <param name="concurrency">The concurrency limit for the endpoint.</param>
   public void AddEndpoint(string endpoint_name, int concurrency = 10) {
     endpoints.Add(
-      new Endpoint {
-        name = $"{prefix_}-{endpoint_name}",
-        concurrency = concurrency
-      }
+      new Endpoint($"{prefix_}-{endpoint_name}", concurrency)
     );
   }
 }

@@ -9,8 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MassTransit" Version="8.1.3"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0"/>
+        <PackageReference Include="WolverineFx" Version="5.14.0" />
+        <PackageReference Include="WolverineFx.RabbitMQ" Version="5.14.0" />
+
+                <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
     </ItemGroup>
 
     <ItemGroup>

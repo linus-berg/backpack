@@ -1,11 +1,11 @@
 using Core.Kernel.Messages;
 using Core.Services;
-using MassTransit;
+using Wolverine;
 using Event = Core.Kernel.Models.Event;
 
 namespace Core.Gateway.Consumers;
 
-public class SystemEventConsumer : IConsumer<SystemEventMessage> {
+public class SystemEventConsumer {
   private readonly ICoreDatabase database_;
   private readonly ILogger<SystemEventConsumer> logger_;
 
@@ -15,8 +15,8 @@ public class SystemEventConsumer : IConsumer<SystemEventMessage> {
     database_ = database;
   }
 
-  public async Task Consume(ConsumeContext<SystemEventMessage> context) {
-    SystemEventMessage message = context.Message;
+  public async Task Handle(SystemEventMessage request, IMessageContext context) {
+    SystemEventMessage message = request;
 
     await database_.AddEvent(
       new Event {

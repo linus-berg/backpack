@@ -13,11 +13,12 @@ registration.AddEndpoint("docker", 5);
 registration.AddEndpoint("oci", 5);
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<SkopeoClient>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

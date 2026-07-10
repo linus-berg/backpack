@@ -1,16 +1,15 @@
 using Core.Kernel.Messages;
-using MassTransit;
 
 namespace Tracker.Scheduler;
 
-public class ReloadSchedulesConsumer : IConsumer<ReloadSchedulesRequest> {
+public class ReloadSchedulesConsumer {
   private readonly ScheduleManager schedule_manager_;
 
   public ReloadSchedulesConsumer(ScheduleManager schedule_manager) {
     schedule_manager_ = schedule_manager;
   }
 
-  public async Task Consume(ConsumeContext<ReloadSchedulesRequest> context) {
+  public async Task Handle(ReloadSchedulesRequest request) {
     await schedule_manager_.ReloadSchedules();
   }
 }

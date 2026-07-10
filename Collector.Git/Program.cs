@@ -15,6 +15,7 @@ registration.AddEndpoint("git");
 
 IHost host = Host.CreateDefaultBuilder(args)
                  .AddLogging(registration)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
@@ -33,7 +34,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                      );
                      services.AddSingleton<FileSystem>();
                      services.AddSingleton<Git>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

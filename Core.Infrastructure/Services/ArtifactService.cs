@@ -2,19 +2,19 @@ using Core.Kernel;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
-using MassTransit;
+using Wolverine;
 using Microsoft.Extensions.Logging;
 
 namespace Core.Infrastructure.Services;
 
 public class ArtifactService : IArtifactService {
-  private readonly ISendEndpointProvider bus_;
+  private readonly IMessageBus bus_;
   private readonly ICoreCache cache_;
   private readonly ICoreDatabase db_;
   private readonly ILogger<ArtifactService> logger_;
 
   public ArtifactService(ICoreCache cache, ICoreDatabase db,
-                         ISendEndpointProvider bus,
+                         IMessageBus bus,
                          ILogger<ArtifactService> logger) {
     cache_ = cache;
     bus_ = bus;
@@ -64,7 +64,7 @@ public class ArtifactService : IArtifactService {
 
   public async Task Collect(ArtifactCollectRequest request) {
     await SendRequest(
-      new Uri($"queue:{request.GetCollectorModule()}"),
+      new Uri($"rabbitmq://queue/{request.GetCollectorModule()}"),
       request
     );
   }
@@ -85,7 +85,7 @@ public class ArtifactService : IArtifactService {
     }
 
     await SendRequest(
-      new Uri($"queue:processor-{artifact.processor}"),
+      new Uri($"rabbitmq://queue/processor-{artifact.processor}"),
       new ArtifactProcessRequest {
         ctx = ctx,
         artifact = artifact
@@ -196,9 +196,8 @@ public class ArtifactService : IArtifactService {
   }
 
   private async Task SendRequest<T>(Uri uri, T request) {
-    ISendEndpoint endpoint = await bus_.GetSendEndpoint(uri);
     if (request != null) {
-      await endpoint.Send(request);
+      await bus_.EndpointFor(uri).SendAsync(request);
     }
   }
 }

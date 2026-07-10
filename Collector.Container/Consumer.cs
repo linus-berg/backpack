@@ -4,14 +4,14 @@
 using Core.Kernel;
 using Core.Kernel.Messages;
 using Library.Skopeo;
-using MassTransit;
+using Wolverine;
 
 namespace Collector.Container;
 
 /// <summary>
 ///   Consumer for artifact collection requests.
 /// </summary>
-public class Consumer : ICollector {
+public class Consumer {
   private readonly SkopeoClient skopeo_;
 
   /// <summary>
@@ -23,8 +23,8 @@ public class Consumer : ICollector {
   }
 
   /// <inheritdoc />
-  public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
-    ArtifactCollectRequest request = context.Message;
+  public async Task Handle(ArtifactCollectRequest request, IMessageContext context, CancellationToken cancellationToken) {
+    
     /* Collect if missing manifest or layers */
 
     SkopeoManifest? manifest = await skopeo_.ImageExists(request.location);

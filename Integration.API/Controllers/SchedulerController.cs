@@ -3,7 +3,7 @@ using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Cronos;
-using MassTransit;
+using Wolverine;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +16,11 @@ public class SchedulerController : ControllerBase {
   private readonly IArtifactService aps_;
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
-  private readonly IPublishEndpoint publish_endpoint_;
+  private readonly IMessageBus publish_endpoint_;
 
   public SchedulerController(ICoreDatabase database, IArtifactService aps,
                              IEventService event_service,
-                             IPublishEndpoint publish_endpoint) {
+                             IMessageBus publish_endpoint) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;
@@ -80,7 +80,7 @@ public class SchedulerController : ControllerBase {
       EventSeverity.INFO,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
-    await publish_endpoint_.Publish(new ReloadSchedulesRequest());
+    await publish_endpoint_.PublishAsync(new ReloadSchedulesRequest());
     return Ok(schedule);
   }
 
@@ -100,7 +100,7 @@ public class SchedulerController : ControllerBase {
       EventSeverity.INFO,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
-    await publish_endpoint_.Publish(new ReloadSchedulesRequest());
+    await publish_endpoint_.PublishAsync(new ReloadSchedulesRequest());
     return Ok(schedule);
   }
 
@@ -118,7 +118,7 @@ public class SchedulerController : ControllerBase {
       EventSeverity.INFO,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
-    await publish_endpoint_.Publish(new ReloadSchedulesRequest());
+    await publish_endpoint_.PublishAsync(new ReloadSchedulesRequest());
     return NoContent();
   }
 

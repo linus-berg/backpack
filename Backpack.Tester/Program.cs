@@ -8,7 +8,6 @@ using Core.Kernel;
 using Core.Kernel.Models;
 using Library.Github;
 using Library.Skopeo;
-using MassTransit.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Timeout;

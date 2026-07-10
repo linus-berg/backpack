@@ -12,11 +12,12 @@ registration.AddEndpoint("nuget");
 registration.AddEndpoint("nuget-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<INuget, Nuget>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

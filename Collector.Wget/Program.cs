@@ -11,6 +11,7 @@ using Foundatio.Storage;
 ModuleRegistration registration = new(ModuleType.COLLECTOR, typeof(Consumer));
 registration.AddEndpoint("wget");
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddSingleton<IFileStorage>(
@@ -27,7 +28,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                      );
                      services.AddSingleton<FileSystem>();
                      services.AddSingleton<Wget>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

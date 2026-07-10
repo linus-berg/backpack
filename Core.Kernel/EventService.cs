@@ -1,22 +1,20 @@
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
-using MassTransit;
+using Wolverine;
 
 namespace Core.Kernel;
 
 public class EventService : IEventService {
-  private readonly ISendEndpointProvider bus_;
+  private readonly IMessageBus bus_;
 
-  public EventService(ISendEndpointProvider bus) {
+  public EventService(IMessageBus bus) {
     bus_ = bus;
   }
 
   public async Task LogEvent(string source, string message,
                              EventSeverity severity = EventSeverity.INFO,
                              string user = "System") {
-    ISendEndpoint endpoint =
-      await bus_.GetSendEndpoint(Endpoints.S_SYSTEM_EVENT);
-    await endpoint.Send(
+    await bus_.EndpointFor(Endpoints.S_SYSTEM_EVENT).SendAsync(
       new SystemEventMessage {
         source = source,
         message = message,

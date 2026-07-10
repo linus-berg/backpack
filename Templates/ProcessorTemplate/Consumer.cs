@@ -2,11 +2,11 @@ using Core.Kernel;
 using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
-using MassTransit;
+using Wolverine;
 
 namespace Processor._NAME_;
 
-public class Consumer : IProcessor {
+public class Consumer {
   private readonly I_NAME_ logic_;
   private readonly IEventService events_;
 
@@ -15,9 +15,9 @@ public class Consumer : IProcessor {
     events_ = events;
   }
 
-  public async Task Consume(ConsumeContext<ArtifactProcessRequest> context) {
-    Artifact artifact = context.Message.artifact;
+  public async Task Handle(ArtifactProcessRequest request, IMessageContext context) {
+    Artifact artifact = request.artifact;
     await logic_.ProcessArtifact(artifact);
-    await context.ProcessorReply(artifact);
+    await context.ProcessorReply(request, artifact);
   }
 }

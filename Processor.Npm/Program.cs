@@ -12,11 +12,12 @@ registration.AddEndpoint("npm");
 registration.AddEndpoint("npm-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<INpm, Npm>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

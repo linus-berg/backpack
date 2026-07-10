@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
-using MassTransit;
+using Wolverine;
 using Semver;
 
 namespace Collector.Router;
@@ -13,12 +13,12 @@ namespace Collector.Router;
 /// <summary>
 ///   Consumer for artifact routing requests.
 /// </summary>
-public class Router : IConsumer<ArtifactRouteRequest> {
+public class RouterConsumer {
   private static readonly Predicate<string> S_NO_FILTER_ = s => true;
 
   /// <inheritdoc />
-  public async Task Consume(ConsumeContext<ArtifactRouteRequest> context) {
-    Artifact artifact = context.Message.artifact;
+  public async Task Handle(ArtifactRouteRequest request, IMessageContext context) {
+    Artifact artifact = request.artifact;
 
     Predicate<string> artifact_filter = CreateFilterFunction(artifact);
 

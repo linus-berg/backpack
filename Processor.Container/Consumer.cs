@@ -6,14 +6,14 @@ using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Library.Skopeo;
-using MassTransit;
+using Wolverine;
 
 namespace Processor.Container;
 
 /// <summary>
 ///   Consumer for container artifact processing requests.
 /// </summary>
-public class Consumer : IProcessor {
+public class Consumer {
   private readonly SkopeoClient skopeo_;
 
   /// <summary>
@@ -29,11 +29,11 @@ public class Consumer : IProcessor {
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
-  public async Task Consume(ConsumeContext<ArtifactProcessRequest> context) {
-    ArtifactProcessRequest request = context.Message;
+  public async Task Handle(ArtifactProcessRequest request, IMessageContext context) {
+    
     Artifact artifact = request.artifact;
     await GetTags(artifact);
-    await context.ProcessorReply(artifact);
+    await context.ProcessorReply(request, artifact);
   }
 
   /// <summary>
@@ -41,25 +41,21 @@ public class Consumer : IProcessor {
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
-  public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
+  public async Task<ArtifactPreviewResponse> Handle(ArtifactPreviewRequest request) {
     try {
       Artifact artifact = new() {
-        id = context.Message.id,
-        processor = context.Message.processor,
+        id = request.id,
+        processor = request.processor,
         filter = string.Empty
       };
       await GetTags(artifact);
-      await context.RespondAsync(
-        new ArtifactPreviewResponse {
+      return new ArtifactPreviewResponse {
           artifact = artifact
-        }
-      );
+        };
     } catch (Exception e) {
-      await context.RespondAsync(
-        new ArtifactPreviewResponse {
+      return new ArtifactPreviewResponse {
           error = e.Message
-        }
-      );
+        };
     }
   }
 

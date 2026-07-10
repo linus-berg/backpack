@@ -7,14 +7,15 @@ using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 
-ModuleRegistration registration = new(ModuleType.COLLECTOR, typeof(Router));
+ModuleRegistration registration = new(ModuleType.COLLECTOR, typeof(RouterConsumer));
 registration.AddEndpoint("router");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

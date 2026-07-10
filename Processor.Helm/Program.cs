@@ -12,11 +12,12 @@ registration.AddEndpoint("helm");
 registration.AddEndpoint("helm-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<Helm>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

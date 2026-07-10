@@ -12,11 +12,12 @@ registration.AddEndpoint("huggingface");
 registration.AddEndpoint("huggingface-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<IHuggingFace, HuggingFace>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

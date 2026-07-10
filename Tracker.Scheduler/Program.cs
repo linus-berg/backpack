@@ -5,30 +5,25 @@ using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using Core.Services;
-using MassTransit;
+using Wolverine;
+using Wolverine.RabbitMQ;
 using Quartz;
 using StackExchange.Redis;
 using Tracker.Scheduler;
 
 ModuleRegistration registration = new(ModuleType.CORE, typeof(IHost));
+// We can just add the endpoint to the registration so Wolverine sets up the queue
+registration.endpoints = new List<Endpoint> {
+  new Endpoint("scheduler")
+};
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    (hostContext, services) => {
                      services.AddTelemetry(registration);
                      services.AddHostedService<Worker>();
                      services.AddSingleton<ScheduleManager>();
-                     services.AddMassTransit(
-                       mt => {
-                         mt.AddConsumer<ReloadSchedulesConsumer>();
-                         mt.UsingRabbitMq(
-                           (ctx, cfg) => {
-                             cfg.SetupRabbitMq();
-                             cfg.ConfigureEndpoints(ctx);
-                           }
-                         );
-                       }
-                     );
                      services.AddSingleton<IConnectionMultiplexer>(
                        ConnectionMultiplexer.Connect(
                          new ConfigurationOptions {

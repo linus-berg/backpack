@@ -3,7 +3,7 @@
 
 using Core.Kernel;
 using Core.Kernel.Messages;
-using MassTransit;
+using Wolverine;
 using Polly;
 using Polly.Registry;
 
@@ -12,7 +12,7 @@ namespace Collector.DockerArchive;
 /// <summary>
 ///   Consumer for docker archive collection requests.
 /// </summary>
-public class Consumer : ICollector {
+public class Consumer {
   private readonly Docker docker_;
   private readonly ResiliencePipeline<bool> pipeline_;
 
@@ -27,14 +27,14 @@ public class Consumer : ICollector {
   }
 
   /// <inheritdoc />
-  public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
-    ArtifactCollectRequest request = context.Message;
+  public async Task Handle(ArtifactCollectRequest request, IMessageContext context, CancellationToken cancellationToken) {
+    
     /* Collect if missing manifest or layers */
     await pipeline_.ExecuteAsync(
       async (state, token) =>
         await docker_.GetTarArchive(state.location, state.force),
       request,
-      context.CancellationToken
+      cancellationToken
     );
   }
 }

@@ -2,8 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Core.Kernel.Registrations;
-using MassTransit.Logging;
-using MassTransit.Monitoring;
+
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
@@ -42,7 +41,7 @@ public static class ServiceExtensions {
      .ConfigureResource(ConfigureRsc)
      .WithTracing(
        builder => {
-         builder.AddSource(DiagnosticHeaders.DefaultListenerName);
+         builder.AddSource("Wolverine");
          builder.AddHttpClientInstrumentation();
          builder.AddRedisInstrumentation();
          builder.AddOtlpExporter(
@@ -60,7 +59,7 @@ public static class ServiceExtensions {
        builder => {
          builder.AddHttpClientInstrumentation();
          builder.AddRuntimeInstrumentation();
-         builder.AddMeter(InstrumentationOptions.MeterName);
+         builder.AddMeter("Wolverine");
          builder.AddOtlpExporter(
            cfg => {
              cfg.Endpoint =

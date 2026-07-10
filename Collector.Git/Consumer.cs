@@ -3,14 +3,14 @@
 
 using Core.Kernel;
 using Core.Kernel.Messages;
-using MassTransit;
+using Wolverine;
 
 namespace Collector.Git;
 
 /// <summary>
 ///   Consumer for git artifact collection requests.
 /// </summary>
-public class Consumer : ICollector {
+public class Consumer {
   private readonly Git git_;
   private readonly ILogger<Consumer> logger_;
 
@@ -25,11 +25,11 @@ public class Consumer : ICollector {
   }
 
   /// <inheritdoc />
-  public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
-    string location = context.Message.location;
-    string module = context.Message.module;
+  public async Task Handle(ArtifactCollectRequest request, IMessageContext context, CancellationToken cancellationToken) {
+    string location = request.location;
+    string module = request.module;
     try {
-      await git_.Mirror(location, context.CancellationToken);
+      await git_.Mirror(location, cancellationToken);
     } catch (Exception e) {
       logger_.LogError(
         "{Location} failed with error {Error}",

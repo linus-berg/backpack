@@ -12,12 +12,13 @@ ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("github-releases");
 registration.AddEndpoint("github-releases-preview");
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<IGithubClient, GithubClient>();
                      services.AddSingleton<IGithubReleases, GithubReleases>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

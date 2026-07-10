@@ -9,11 +9,12 @@ registration.AddEndpoint("terraform");
 registration.AddEndpoint("terraform-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<ITerraform, Terraform>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

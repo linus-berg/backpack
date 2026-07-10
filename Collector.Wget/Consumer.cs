@@ -3,14 +3,14 @@
 
 using Core.Kernel;
 using Core.Kernel.Messages;
-using MassTransit;
+using Wolverine;
 
 namespace Collector.Wget;
 
 /// <summary>
 ///   Consumer for wget artifact collection requests.
 /// </summary>
-public class Consumer : ICollector {
+public class Consumer {
   private readonly Wget wget_;
 
   /// <summary>
@@ -22,9 +22,9 @@ public class Consumer : ICollector {
   }
 
   /// <inheritdoc />
-  public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
-    string location = context.Message.location;
-    string module = context.Message.module;
+  public async Task Handle(ArtifactCollectRequest request, IMessageContext context, CancellationToken cancellationToken) {
+    string location = request.location;
+    string module = request.module;
     await wget_.Mirror(location);
   }
 }

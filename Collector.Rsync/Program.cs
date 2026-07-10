@@ -10,10 +10,11 @@ using Core.Kernel.Registrations;
 ModuleRegistration registration = new(ModuleType.COLLECTOR, typeof(Consumer));
 registration.AddEndpoint("rsync");
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
-                     services.Register(registration);
+                     
                      services.AddSingleton<RSync>();
                      services.AddHostedService<Worker>();
                    }

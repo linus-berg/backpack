@@ -12,6 +12,7 @@ registration.AddEndpoint("http");
 registration.AddEndpoint("https");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
@@ -24,7 +25,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                              );
                      services.AddStorage();
                      services.AddSingleton<FileSystem>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

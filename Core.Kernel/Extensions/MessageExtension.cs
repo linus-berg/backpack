@@ -3,48 +3,46 @@
 
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
-using MassTransit;
+using Wolverine;
 
 namespace Core.Kernel.Extensions;
 
 /// <summary>
-///   Provides extension methods for <see cref="ConsumeContext" /> to simplify message sending and processing.
+///   Provides extension methods for <see cref="IMessageContext" /> to simplify message sending and processing.
 /// </summary>
 public static class MessageExtension {
   /// <summary>
   ///   Sends a collection request for an artifact at a specific location.
   /// </summary>
-  /// <param name="ctx">The consume context.</param>
+  /// <param name="ctx">The message context.</param>
   /// <param name="location">The location of the artifact.</param>
   /// <param name="processor">The name of the processor module.</param>
   /// <returns>A task representing the asynchronous operation.</returns>
-  public static async Task Collect(this ConsumeContext ctx, string location,
+  public static async Task Collect(this IMessageContext ctx, string location,
                                    string processor) {
     ArtifactCollectRequest request = new() {
       location = location,
       module = processor
     };
-    await ctx.Send(
-      new Uri($"queue:{request.GetCollectorModule()}"),
-      request
-    );
+    await ctx.EndpointFor(new Uri($"rabbitmq://queue/{request.GetCollectorModule()}"))
+             .SendAsync(request);
   }
 
   /// <summary>
   ///   Sends a reply to the gateway indicating that an artifact has been processed.
   /// </summary>
-  /// <param name="context">The consume context for the process request.</param>
+  /// <param name="context">The message context for the process request.</param>
+  /// <param name="request">The original request containing the context ID.</param>
   /// <param name="artifact">The processed artifact.</param>
   /// <returns>A task representing the asynchronous operation.</returns>
   public static async Task ProcessorReply(
-    this ConsumeContext<ArtifactProcessRequest> context,
+    this IMessageContext context,
+    ArtifactProcessRequest request,
     Artifact artifact) {
-    await context.Send(
-      Endpoints.S_GATEWAY_INGEST_PROCESSED,
-      new ArtifactProcessedRequest {
-        context = context.Message.ctx,
-        artifact = artifact
-      }
-    );
+    await context.EndpointFor(Endpoints.S_GATEWAY_INGEST_PROCESSED)
+                 .SendAsync(new ArtifactProcessedRequest {
+                   context = request.ctx,
+                   artifact = artifact
+                 });
   }
 }

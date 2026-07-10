@@ -10,10 +10,11 @@ ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("pypi");
 registration.AddEndpoint("pypi-preview");
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddSingleton<IPypi, Pypi>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

@@ -9,11 +9,12 @@ registration.AddEndpoint("php", 4);
 registration.AddEndpoint("php-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<IPhp, Php>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

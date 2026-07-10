@@ -11,11 +11,12 @@ ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("jetbrains-ide");
 registration.AddEndpoint("jetbrains-ide-preview");
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<IJetbrains, Jetbrains>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

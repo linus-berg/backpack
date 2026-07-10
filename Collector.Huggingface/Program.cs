@@ -11,6 +11,7 @@ ModuleRegistration registration = new(ModuleType.COLLECTOR, typeof(Consumer));
 registration.AddEndpoint("hf");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
@@ -40,7 +41,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                              );
                      services.AddStorage();
                      services.AddSingleton<FileSystem>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

@@ -1,7 +1,7 @@
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
-using MassTransit;
+
 
 namespace Core.Gateway;
 
@@ -21,8 +21,7 @@ public class GatewayProcessingService : IGatewayProcessingService {
   }
 
   public async Task ProcessArtifact(
-    ConsumeContext<ArtifactProcessedRequest> context) {
-    ArtifactProcessedRequest request = context.Message;
+    ArtifactProcessedRequest request) {
     Artifact artifact = request.artifact;
     Artifact? stored = await db_.GetArtifact(artifact.id, artifact.processor);
 

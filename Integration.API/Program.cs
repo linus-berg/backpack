@@ -10,7 +10,7 @@ using Core.Kernel.Registrations;
 using Core.Services;
 using Integration.API;
 using Integration.API.Services;
-using MassTransit;
+using Wolverine;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -39,27 +39,7 @@ builder.Host.UseSerilog(
 );
 
 // Add services to the container.
-builder.Services.AddMassTransit(
-  b => {
-    b.UsingRabbitMq(
-      (ctx, cfg) => {
-        cfg.Host(
-          Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_HOST),
-          "/",
-          h => {
-            h.Username(
-              Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_USER)
-            );
-            h.Password(
-              Configuration.GetBackpackVariable(CoreVariables.BP_RABBIT_MQ_PASS)
-            );
-          }
-        );
-        cfg.ConfigureEndpoints(ctx);
-      }
-    );
-  }
-);
+builder.Host.UseBackpackWolverine(new ModuleRegistration(ModuleType.CORE, typeof(IHost)));
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(
   ConnectionMultiplexer.Connect(
@@ -73,7 +53,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
   )
 );
 
-builder.Services.AddSingleton<PreviewRoutingService>();
+builder.Services.AddScoped<PreviewRoutingService>();
 builder.Services.AddScoped<ICoreDatabase, MongoDatabase>();
 builder.Services.AddSingleton<ICoreCache, CoreCache>();
 builder.Services.AddScoped<IArtifactService, ArtifactService>();

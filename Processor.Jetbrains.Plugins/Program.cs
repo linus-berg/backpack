@@ -12,11 +12,12 @@ registration.AddEndpoint("jetbrains-plugins");
 registration.AddEndpoint("jetbrains-plugins-preview");
 
 IHost host = Host.CreateDefaultBuilder(args)
+                 .UseBackpackWolverine(registration)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
                      services.AddSingleton<IJetbrains, Jetbrains>();
-                     services.Register(registration);
+                     
                      services.AddHostedService<Worker>();
                    }
                  )

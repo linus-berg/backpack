@@ -4,14 +4,14 @@
 using Collector.Kernel;
 using Core.Kernel;
 using Core.Kernel.Messages;
-using MassTransit;
+using Wolverine;
 
 namespace Collector.Huggingface;
 
 /// <summary>
 ///   Consumer for HTTP artifact collection requests.
 /// </summary>
-public class Consumer : ICollector {
+public class Consumer {
   private readonly bool delta_;
   private readonly FileSystem fs_;
   private readonly IHttpClientFactory http_client_factory_;
@@ -32,9 +32,9 @@ public class Consumer : ICollector {
   }
 
   /// <inheritdoc />
-  public async Task Consume(ConsumeContext<ArtifactCollectRequest> context) {
-    string location = context.Message.location;
-    string module = context.Message.module;
+  public async Task Handle(ArtifactCollectRequest request, IMessageContext context, CancellationToken cancellationToken) {
+    string location = request.location;
+    string module = request.module;
     
     // We parse the URI to build the correct S3 path: <org>/<model>/<filepath>
     // Example: hf://moonshotai/Kimi-K2.7-Code/figures/kimi-logo.png?modelId=moonshotai/Kimi-K2.7-Code
@@ -52,7 +52,7 @@ public class Consumer : ICollector {
     using HttpClient client =
       http_client_factory_.CreateClient("fetch-client");
     RemoteFile rf = new(client, location, fs_);
-    if (await rf.Get(fp, context.CancellationToken)) {
+    if (await rf.Get(fp, cancellationToken)) {
       if (delta_) {
         await fs_.CreateDeltaLink(module, location);
       }

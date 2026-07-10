@@ -1,6 +1,3 @@
-using Core.Gateway;
-using Core.Gateway.Consumers;
-using Core.Gateway.Definitions;
 using Core.Infrastructure;
 using Core.Infrastructure.Services;
 using Core.Kernel;
@@ -8,38 +5,30 @@ using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using Core.Services;
-using MassTransit;
+using Core.Gateway;
+using Wolverine;
+using Wolverine.RabbitMQ;
 using StackExchange.Redis;
 
 ModuleRegistration registration = new(ModuleType.CORE, typeof(IHost));
+registration.endpoints = new List<Endpoint> {
+  new Endpoint("gateway-ingest-processed"),
+  new Endpoint("gateway-ingest-processed-raw"),
+  new Endpoint("gateway-ingest-unprocessed"),
+  new Endpoint("system-event")
+};
+
 IHost host = Host.CreateDefaultBuilder(args)
                  .AddLogging(registration)
+                 .UseBackpackWolverine(registration, opts => {
+                     opts.ListenToRabbitQueue("gateway-ingest-processed-raw")
+                         .DefaultIncomingMessage<Core.Kernel.Messages.ArtifactProcessedRequest>()
+                         ;
+                 })
+
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
-                     services.AddMassTransit(
-                       b => {
-                         b.AddConsumer<ProcessedConsumer>(
-                           typeof(ProcessedDefinition)
-                         );
-                         b.AddConsumer<ProcessedRawConsumer>(
-                           typeof(ProcessedRawDefinition)
-                         );
-                         b.AddConsumer<IngestConsumer>(
-                           typeof(IngestDefinition)
-                         );
-                         b.AddConsumer<SystemEventConsumer>(
-                           typeof(SystemEventDefinition)
-                         );
-
-                         b.UsingRabbitMq(
-                           (ctx, cfg) => {
-                             cfg.SetupRabbitMq();
-                             cfg.ConfigureEndpoints(ctx);
-                           }
-                         );
-                       }
-                     );
 
                      services.AddSingleton<IConnectionMultiplexer>(
                        ConnectionMultiplexer.Connect(
@@ -66,7 +55,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                        .AddScoped<IGatewayProcessingService,
                          GatewayProcessingService>();
                      services.AddScoped<IEventService, EventService>();
-                     services.AddHostedService<Worker>();
+
                    }
                  )
                  .Build();

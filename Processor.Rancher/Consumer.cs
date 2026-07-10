@@ -2,42 +2,38 @@ using Core.Kernel;
 using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
-using MassTransit;
+using Wolverine;
 
 namespace Processor.Rancher;
 
-public class Consumer : IProcessor {
+public class Consumer {
   private readonly IRancher rancher_;
 
   public Consumer(IRancher rancher) {
     rancher_ = rancher;
   }
 
-  public async Task Consume(ConsumeContext<ArtifactProcessRequest> context) {
-    Artifact artifact = context.Message.artifact;
+  public async Task Handle(ArtifactProcessRequest request, IMessageContext context) {
+    Artifact artifact = request.artifact;
     await rancher_.ProcessArtifact(artifact);
-    await context.ProcessorReply(artifact);
+    await context.ProcessorReply(request, artifact);
   }
 
-  public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
+  public async Task<ArtifactPreviewResponse> Handle(ArtifactPreviewRequest request) {
     Artifact artifact = new() {
-      id = context.Message.id,
-      processor = context.Message.processor,
+      id = request.id,
+      processor = request.processor,
       filter = string.Empty
     };
     try {
       await rancher_.ProcessArtifact(artifact);
-      await context.RespondAsync(
-        new ArtifactPreviewResponse {
+      return new ArtifactPreviewResponse {
           artifact = artifact
-        }
-      );
+        };
     } catch (Exception e) {
-      await context.RespondAsync(
-        new ArtifactPreviewResponse {
+      return new ArtifactPreviewResponse {
           error = e.Message
-        }
-      );
+        };
     }
   }
 }

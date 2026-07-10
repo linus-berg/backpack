@@ -5,14 +5,14 @@ using Core.Kernel;
 using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
-using MassTransit;
+using Wolverine;
 
 namespace Processor.Jetbrains.Plugins;
 
 /// <summary>
 ///   Consumer for JetBrains plugin artifact processing requests.
 /// </summary>
-public class Consumer : IProcessor {
+public class Consumer {
   private readonly IJetbrains jetbrains_;
 
   /// <summary>
@@ -28,10 +28,10 @@ public class Consumer : IProcessor {
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
-  public async Task Consume(ConsumeContext<ArtifactProcessRequest> context) {
-    Artifact artifact = context.Message.artifact;
+  public async Task Handle(ArtifactProcessRequest request, IMessageContext context) {
+    Artifact artifact = request.artifact;
     await jetbrains_.ProcessArtifact(artifact);
-    await context.ProcessorReply(artifact);
+    await context.ProcessorReply(request, artifact);
   }
 
   /// <summary>
@@ -39,25 +39,21 @@ public class Consumer : IProcessor {
   /// </summary>
   /// <param name="context">The consume context.</param>
   /// <returns>A task that represents the consume operation.</returns>
-  public async Task Consume(ConsumeContext<ArtifactPreviewRequest> context) {
+  public async Task<ArtifactPreviewResponse> Handle(ArtifactPreviewRequest request) {
     try {
       Artifact artifact = new() {
-        id = context.Message.id,
-        processor = context.Message.processor,
+        id = request.id,
+        processor = request.processor,
         filter = string.Empty
       };
       await jetbrains_.ProcessArtifact(artifact);
-      await context.RespondAsync(
-        new ArtifactPreviewResponse {
+      return new ArtifactPreviewResponse {
           artifact = artifact
-        }
-      );
+        };
     } catch (Exception e) {
-      await context.RespondAsync(
-        new ArtifactPreviewResponse {
+      return new ArtifactPreviewResponse {
           error = e.Message
-        }
-      );
+        };
     }
   }
 }
