@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  bp-test-db:
+    image: postgres:16
+    ports:
+      - 5555:5432
+    volumes:
+      - "./volumes/bp_db:/var/lib/postgresql/data:Z"
+    environment:
+      POSTGRES_DB: backpack
+      POSTGRES_USER: pg
+      POSTGRES_PASSWORD: pg123

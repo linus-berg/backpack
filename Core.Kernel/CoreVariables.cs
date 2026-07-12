@@ -63,6 +63,11 @@ public enum CoreVariables {
   BP_MONGO_STR,
 
   /// <summary>
+  ///   PostgreSQL connection string.
+  /// </summary>
+  BP_PG_STR,
+
+  /// <summary>
   ///   S3 access key.
   /// </summary>
   BP_S3_ACCESS_KEY,
