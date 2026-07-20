@@ -29,7 +29,7 @@ public class Artifact {
   /// <summary>
   ///   Gets or sets the filter used for selecting artifact versions.
   /// </summary>
-  public required string filter { get; set; }
+  public string filter { get; set; }
 
   /// <summary>
   ///   Gets or sets the type of filter applied to the artifact.
