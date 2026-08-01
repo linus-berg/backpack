@@ -20,6 +20,7 @@
         <ProjectReference Include="..\Processor.Jetbrains.Plugins\Processor.Jetbrains.Plugins.csproj"/>
         <ProjectReference Include="..\Collector.Git\Collector.Git.csproj"/>
         <ProjectReference Include="..\Collector.Http\Collector.Http.csproj"/>
+        <ProjectReference Include="..\Collector.Wget\Collector.Wget.csproj"/>
         <ProjectReference Include="..\Processor.Pypi\Processor.Pypi.csproj"/>
         <ProjectReference Include="..\Processor.Terraform\Processor.Terraform.csproj"/>
     </ItemGroup>

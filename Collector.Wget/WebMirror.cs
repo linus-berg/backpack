@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom;
-using AngleSharp.Html;
 using AngleSharp.Html.Parser;
 using Collector.Kernel;
 
@@ -16,6 +15,10 @@ namespace Collector.Wget;
 ///   Provides native C# website mirroring functionality, replacing the external wget binary.
 ///   Implements recursive crawling with link conversion, page requisite downloading,
 ///   and extension adjustment — equivalent to: wget --mirror -k -p -E --no-parent.
+///
+///   Binary resources (images, videos, fonts, etc.) are streamed directly to S3
+///   without being held in memory. Only HTML and CSS files are buffered for link
+///   extraction and rewriting.
 /// </summary>
 public class WebMirror {
   /// <summary>
@@ -29,10 +32,22 @@ public class WebMirror {
   private const int MAX_DEPTH = 50;
 
   /// <summary>
+  ///   Maximum size in bytes for text resources (HTML/CSS) to buffer in memory.
+  ///   Anything larger than this is treated as a binary and streamed to S3.
+  /// </summary>
+  private const long MAX_TEXT_BUFFER_SIZE = 10 * 1024 * 1024; // 10 MB
+
+  /// <summary>
   ///   Default timeout per individual HTTP request.
   /// </summary>
   private static readonly TimeSpan S_REQUEST_TIMEOUT =
     TimeSpan.FromSeconds(60);
+
+  /// <summary>
+  ///   Extended timeout for large binary file downloads streamed to S3.
+  /// </summary>
+  private static readonly TimeSpan S_STREAM_TIMEOUT =
+    TimeSpan.FromMinutes(30);
 
   /// <summary>
   ///   Content types recognized as HTML documents eligible for link extraction.
@@ -90,6 +105,10 @@ public class WebMirror {
   ///   Mirrors a remote website starting from the given URL. Downloads all pages
   ///   and their requisites (CSS, JS, images) recursively, converts links to
   ///   local paths, and stores everything in S3 via the FileSystem abstraction.
+  ///
+  ///   Binary resources are streamed directly to S3 during the crawl phase
+  ///   to avoid holding large files in memory. HTML and CSS files are buffered
+  ///   for link extraction, then rewritten and uploaded in a second pass.
   /// </summary>
   /// <param name="remote">The root URL to mirror.</param>
   /// <param name="token">Cancellation token.</param>
@@ -110,16 +129,21 @@ public class WebMirror {
     SemaphoreSlim throttle = new(MAX_CONCURRENCY, MAX_CONCURRENCY);
 
     try {
-      // Phase 1: Crawl and download all resources
+      // Phase 1: Crawl all resources. Binary files stream directly to S3.
+      //          HTML/CSS are buffered in memory for link rewriting.
       await CrawlAsync(ctx, base_uri, 0, true, throttle, token);
 
-      // Phase 2: Rewrite links in HTML/CSS files and upload to S3
-      await RewriteAndUploadAsync(ctx, token);
+      // Phase 2: Rewrite links in buffered HTML/CSS files and upload to S3.
+      await RewriteAndUploadTextResourcesAsync(ctx, token);
 
+      int total = ctx.text_resources.Count + ctx.streamed_count;
       logger_.LogInformation(
-        "Mirror complete: {Count} resources collected from {Url}",
-        ctx.downloaded_resources.Count,
-        remote
+        "Mirror complete: {Total} resources collected from {Url} " +
+        "({TextCount} text buffered, {BinaryCount} binary streamed)",
+        total,
+        remote,
+        ctx.text_resources.Count,
+        ctx.streamed_count
       );
       return true;
     } catch (OperationCanceledException) {
@@ -133,6 +157,8 @@ public class WebMirror {
 
   /// <summary>
   ///   Recursively crawls a URL, downloading the resource and discovering linked resources.
+  ///   Binary resources are streamed directly to S3. Text resources (HTML/CSS) are
+  ///   buffered in memory for later link rewriting.
   /// </summary>
   /// <param name="ctx">The mirror context tracking visited URLs and downloaded content.</param>
   /// <param name="url">The URL to crawl.</param>
@@ -169,71 +195,148 @@ public class WebMirror {
     await throttle.WaitAsync(token);
     try {
       HttpResponseMessage? response =
-        await FetchAsync(normalized, token);
+        await FetchHeadersAsync(normalized, token);
       if (response == null) {
         return;
       }
 
-      string? content_type =
-        response.Content.Headers.ContentType?.MediaType;
-      byte[] body = await response.Content.ReadAsByteArrayAsync(token);
-      string local_path = UriToLocalPath(ctx.base_uri, normalized,
-        content_type);
+      using (response) {
+        string? content_type =
+          response.Content.Headers.ContentType?.MediaType;
+        long? content_length = response.Content.Headers.ContentLength;
+        string local_path = UriToLocalPath(ctx.base_uri, normalized,
+          content_type);
+        string storage_path = GetStoragePath(ctx.base_uri, local_path);
+        bool is_html = IsHtmlContent(content_type, normalized);
+        bool is_css = IsCssContent(content_type, normalized);
+        bool needs_parsing = is_html || is_css;
 
-      DownloadedResource resource = new() {
-        uri = normalized,
-        local_path = local_path,
-        content_type = content_type ?? "application/octet-stream",
-        body = body,
-        is_html = IsHtmlContent(content_type, normalized),
-        is_css = IsCssContent(content_type, normalized)
-      };
+        // Register the URL-to-local-path mapping regardless of strategy.
+        // This is needed for link rewriting even for streamed binaries.
+        ctx.url_to_local.TryAdd(url_key, local_path);
 
-      ctx.downloaded_resources.TryAdd(url_key, resource);
+        if (needs_parsing && (content_length == null ||
+                              content_length <= MAX_TEXT_BUFFER_SIZE)) {
+          // --- TEXT PATH: buffer in memory for link extraction & rewriting ---
+          byte[] body = await response.Content.ReadAsByteArrayAsync(token);
 
-      logger_.LogDebug(
-        "Downloaded [{Depth}] {Url} -> {Path} ({Size} bytes)",
-        depth,
-        normalized.AbsoluteUri,
-        local_path,
-        body.Length
-      );
+          TextResource resource = new() {
+            uri = normalized,
+            local_path = local_path,
+            content_type = content_type ?? "text/html",
+            body = body,
+            is_html = is_html,
+            is_css = is_css
+          };
 
-      // Extract and recursively crawl linked resources
-      List<Uri> discovered_links = new();
+          ctx.text_resources.TryAdd(url_key, resource);
 
-      if (resource.is_html) {
-        discovered_links.AddRange(
-          await ExtractHtmlLinksAsync(body, normalized, token)
-        );
-      } else if (resource.is_css) {
-        discovered_links.AddRange(
-          ExtractCssLinks(body, normalized)
-        );
+          logger_.LogDebug(
+            "Buffered [{Depth}] {Url} -> {Path} ({Size} bytes)",
+            depth,
+            normalized.AbsoluteUri,
+            local_path,
+            body.Length
+          );
+
+          // Extract links for recursive crawling
+          List<Uri> discovered_links = new();
+
+          if (is_html) {
+            discovered_links.AddRange(
+              await ExtractHtmlLinksAsync(body, normalized, token)
+            );
+          } else if (is_css) {
+            discovered_links.AddRange(
+              ExtractCssLinks(body, normalized)
+            );
+          }
+
+          // Crawl discovered links in parallel
+          List<Task> child_tasks = new();
+          foreach (Uri link in discovered_links) {
+            bool link_is_page = IsLikelyHtmlUrl(link);
+            child_tasks.Add(
+              CrawlAsync(ctx, link, depth + 1, link_is_page, throttle,
+                token)
+            );
+          }
+
+          await Task.WhenAll(child_tasks);
+        } else {
+          // --- BINARY PATH: stream directly to S3, never hold in memory ---
+          await StreamToStorageAsync(response, storage_path, normalized,
+            depth, content_length, token);
+          Interlocked.Increment(ref ctx.streamed_count);
+        }
       }
-
-      // Crawl discovered links in parallel
-      List<Task> child_tasks = new();
-      foreach (Uri link in discovered_links) {
-        bool link_is_page = IsLikelyHtmlUrl(link);
-        child_tasks.Add(
-          CrawlAsync(ctx, link, depth + 1, link_is_page, throttle, token)
-        );
-      }
-
-      await Task.WhenAll(child_tasks);
     } finally {
       throttle.Release();
     }
   }
 
   /// <summary>
-  ///   Fetches a URL, returning the response or null on failure.
+  ///   Streams the HTTP response body directly to S3 storage without buffering
+  ///   the entire content in memory. Used for binary resources (images, videos,
+  ///   fonts, archives, etc.).
+  /// </summary>
+  /// <param name="response">The HTTP response with the body to stream.</param>
+  /// <param name="storage_path">The S3 storage path to write to.</param>
+  /// <param name="url">The URL being downloaded (for logging).</param>
+  /// <param name="depth">The crawl depth (for logging).</param>
+  /// <param name="content_length">The expected content length, if known.</param>
+  /// <param name="token">Cancellation token.</param>
+  private async Task StreamToStorageAsync(HttpResponseMessage response,
+                                          string storage_path, Uri url,
+                                          int depth, long? content_length,
+                                          CancellationToken token) {
+    try {
+      using CancellationTokenSource stream_cts =
+        CancellationTokenSource.CreateLinkedTokenSource(token);
+      stream_cts.CancelAfter(S_STREAM_TIMEOUT);
+
+      Stream body_stream =
+        await response.Content.ReadAsStreamAsync(stream_cts.Token);
+      await using (body_stream) {
+        bool success = await fs_.PutFile(storage_path, body_stream);
+
+        string size_label = content_length.HasValue
+          ? $"{content_length.Value} bytes"
+          : "unknown size";
+
+        if (success) {
+          logger_.LogDebug(
+            "Streamed [{Depth}] {Url} -> s3://{Path} ({Size})",
+            depth,
+            url.AbsoluteUri,
+            storage_path,
+            size_label
+          );
+        } else {
+          logger_.LogWarning(
+            "Failed to stream {Url} to S3 at {Path}",
+            url.AbsoluteUri,
+            storage_path
+          );
+        }
+      }
+    } catch (Exception ex) when (ex is not OperationCanceledException) {
+      logger_.LogWarning(
+        "Error streaming {Url} to S3: {Error}",
+        url.AbsoluteUri,
+        ex.Message
+      );
+    }
+  }
+
+  /// <summary>
+  ///   Fetches only the response headers for a URL, allowing the caller to decide
+  ///   whether to buffer or stream the body. Returns null on failure.
   /// </summary>
   /// <param name="url">The URL to fetch.</param>
   /// <param name="token">Cancellation token.</param>
-  /// <returns>The HTTP response, or null if the request failed.</returns>
-  private async Task<HttpResponseMessage?> FetchAsync(Uri url,
+  /// <returns>The HTTP response with headers read (body not yet consumed), or null.</returns>
+  private async Task<HttpResponseMessage?> FetchHeadersAsync(Uri url,
     CancellationToken token) {
     try {
       using CancellationTokenSource timeout_cts =
@@ -252,6 +355,7 @@ public class WebMirror {
           (int)response.StatusCode,
           url.AbsoluteUri
         );
+        response.Dispose();
         return null;
       }
 
@@ -284,9 +388,6 @@ public class WebMirror {
 
     try {
       string html = Encoding.UTF8.GetString(html_bytes);
-      IBrowsingContext browser_context = BrowsingContext.New(
-        AngleSharp.Configuration.Default
-      );
       HtmlParser parser = new();
       IDocument document = await parser.ParseDocumentAsync(html, token);
 
@@ -420,27 +521,24 @@ public class WebMirror {
   }
 
   /// <summary>
-  ///   After all resources are downloaded, rewrites links in HTML and CSS content
-  ///   to point to local paths, then uploads everything to S3 storage.
+  ///   After all resources are crawled, rewrites links in the buffered HTML and CSS
+  ///   content to point to local paths, then uploads them to S3 storage.
+  ///   Binary resources were already streamed to S3 during the crawl phase.
   /// </summary>
-  /// <param name="ctx">The mirror context containing all downloaded resources.</param>
+  /// <param name="ctx">The mirror context containing buffered text resources.</param>
   /// <param name="token">Cancellation token.</param>
-  private async Task RewriteAndUploadAsync(MirrorContext ctx,
-                                           CancellationToken token) {
-    // Build a URL-to-local-path mapping for link rewriting
+  private async Task RewriteAndUploadTextResourcesAsync(MirrorContext ctx,
+    CancellationToken token) {
+    // The url_to_local mapping covers BOTH text and binary resources,
+    // so link rewriting can point to files that were already streamed.
     Dictionary<string, string> url_to_local = new(
-      StringComparer.OrdinalIgnoreCase
+      ctx.url_to_local, StringComparer.OrdinalIgnoreCase
     );
-    foreach (KeyValuePair<string, DownloadedResource> kvp in
-             ctx.downloaded_resources) {
-      url_to_local[kvp.Key] = kvp.Value.local_path;
-    }
 
-    foreach (KeyValuePair<string, DownloadedResource> kvp in
-             ctx.downloaded_resources) {
+    foreach (KeyValuePair<string, TextResource> kvp in ctx.text_resources) {
       token.ThrowIfCancellationRequested();
 
-      DownloadedResource resource = kvp.Value;
+      TextResource resource = kvp.Value;
       byte[] final_bytes;
 
       if (resource.is_html) {
@@ -877,8 +975,9 @@ public class WebMirror {
   }
 
   /// <summary>
-  ///   Holds the state for a single mirroring operation including visited URLs
-  ///   and downloaded resources.
+  ///   Holds the state for a single mirroring operation. Tracks visited URLs,
+  ///   buffered text resources (HTML/CSS), and the URL-to-local-path mapping
+  ///   for all resources (including those already streamed to S3).
   /// </summary>
   private class MirrorContext {
     /// <summary>
@@ -887,16 +986,30 @@ public class WebMirror {
     public readonly Uri base_uri;
 
     /// <summary>
-    ///   Thread-safe dictionary of all downloaded resources keyed by their absolute URL.
+    ///   Thread-safe dictionary of buffered text resources (HTML/CSS) keyed by
+    ///   their absolute URL. Only resources that need link rewriting are kept here.
     /// </summary>
-    public readonly ConcurrentDictionary<string, DownloadedResource>
-      downloaded_resources = new(StringComparer.OrdinalIgnoreCase);
+    public readonly ConcurrentDictionary<string, TextResource>
+      text_resources = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///   Thread-safe mapping of absolute URL to local file path for ALL resources
+    ///   (both buffered text and streamed binary). Used by link rewriting to
+    ///   resolve references to resources that were already uploaded to S3.
+    /// </summary>
+    public readonly ConcurrentDictionary<string, string> url_to_local =
+      new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     ///   Thread-safe set of visited URLs to prevent revisiting.
     /// </summary>
     public readonly ConcurrentDictionary<string, bool> visited =
       new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///   Count of binary resources that were streamed directly to S3.
+    /// </summary>
+    public int streamed_count;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="MirrorContext" /> class.
@@ -908,11 +1021,14 @@ public class WebMirror {
   }
 
   /// <summary>
-  ///   Represents a single downloaded resource with its metadata and content.
+  ///   Represents a text resource (HTML or CSS) that has been buffered in memory
+  ///   for link extraction and rewriting. Binary resources are never stored here;
+  ///   they are streamed directly to S3.
   /// </summary>
-  private class DownloadedResource {
+  private class TextResource {
     /// <summary>
-    ///   The raw bytes of the downloaded content.
+    ///   The raw bytes of the downloaded content. Only populated for text
+    ///   resources that need link parsing/rewriting.
     /// </summary>
     public required byte[] body;
 
