@@ -12,7 +12,7 @@
 
     <ItemGroup>
         <PackageReference Include="Foundatio.Minio" Version="10.7.0"/>
-        <PackageReference Include="Minio" Version="6.0.3"/>
+        <PackageReference Include="Minio" Version="6.0.5"/>
         <PackageReference Include="Polly" Version="8.3.0"/>
         <PackageReference Include="Polly.Extensions" Version="8.3.0"/>
     </ItemGroup>
