@@ -45,9 +45,13 @@ public static class StorageExtensions {
     connection.bucket =
       Configuration.GetBackpackVariable(CoreVariables.BP_S3_BUCKET);
 
+    bool tracing = bool.Parse(
+      Configuration.GetBackpackVariable(CoreVariables.BP_S3_TRACING)
+    );
     MinioStorageOptions minio_options = new() {
       auto_create_bucket = true,
-      connection_string = connection.ToString()
+      connection_string = connection.ToString(),
+      tracing = tracing
     };
     services.AddSingleton(minio_options);
     services.AddSingleton<MinioStorage>();

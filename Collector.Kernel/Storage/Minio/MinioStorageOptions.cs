@@ -13,4 +13,6 @@ public class MinioStorageOptions {
   ///   Gets or sets a value indicating whether to automatically create the bucket.
   /// </summary>
   public bool auto_create_bucket { get; set; }
+
+  public bool tracing { get; set; } = false;
 }

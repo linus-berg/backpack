@@ -86,6 +86,11 @@ public enum CoreVariables {
   ///   S3 bucket name.
   /// </summary>
   BP_S3_BUCKET,
+  
+  /// <summary>
+  ///   S3 debug tracing enabled.
+  /// </summary>
+  BP_S3_TRACING,
 
   /// <summary>
   ///   Flag for daily delta collection in HTTP collector.

@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using Collector.Kernel.Logging;
 using Collector.Kernel.Storage.Common;
 using Microsoft.Extensions.Logging;
 using Minio;
@@ -34,7 +35,6 @@ public class MinioStorage : IDisposable {
     }
 
     logger_ = logger;
-
     (IMinioClient client, string bucket) = CreateClient(options);
     this.client = client;
     bucket_ = bucket;
@@ -798,6 +798,9 @@ public class MinioStorage : IDisposable {
                              connection.access_key,
                              connection.secret_key
                            );
+    if (options.tracing) {
+      client.SetTraceOn(new MinioTraceLogger());
+    }
 
     if (!string.IsNullOrEmpty(connection.region)) {
       client.WithRegion(connection.region ?? string.Empty);
