@@ -49,8 +49,18 @@ public class Consumer : ICollector {
       using HttpClient client =
         http_client_factory_.CreateClient("fetch-client");
       RemoteFile rf = new(client, location, fs_);
-      if (await rf.Get(fp, context.CancellationToken)) {
-        if (delta_ && !await fs_.CreateDeltaLink(module, location, fp)) {
+      if (await rf.Get(fp, context.CancellationToken) && delta_) {
+        /* The storage pipeline retries the upload, so the artifact should be in
+           place by now. It is confirmed anyway, because a link to a key that is
+           not in the bucket is worse than no link at all: a concurrent collect
+           of the same key can still have cleared it on its way out. */
+        if (!await fs_.Exists(fp)) {
+          logger_.LogError(
+            "Collected {Location} but {Path} is not in the bucket; not linking",
+            location,
+            fp
+          );
+        } else if (!await fs_.CreateDeltaLink(module, location, fp)) {
           logger_.LogError(
             "Collected {Location} but failed to record the delta link for {Path}",
             location,
