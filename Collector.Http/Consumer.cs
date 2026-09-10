@@ -16,15 +16,19 @@ public class Consumer : ICollector {
   private readonly bool forward_;
   private readonly FileSystem fs_;
   private readonly IHttpClientFactory http_client_factory_;
+  private readonly ILogger<Consumer> logger_;
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="Consumer" /> class.
   /// </summary>
   /// <param name="fs">The file system.</param>
   /// <param name="http_client_factory">The HTTP client factory.</param>
-  public Consumer(FileSystem fs, IHttpClientFactory http_client_factory) {
+  /// <param name="logger">The logger.</param>
+  public Consumer(FileSystem fs, IHttpClientFactory http_client_factory,
+                  ILogger<Consumer> logger) {
     fs_ = fs;
     http_client_factory_ = http_client_factory;
+    logger_ = logger;
     delta_ =
       Configuration.GetBackpackVariable(
         CoreVariables.BP_COLLECTOR_HTTP_DELTA
@@ -46,8 +50,12 @@ public class Consumer : ICollector {
         http_client_factory_.CreateClient("fetch-client");
       RemoteFile rf = new(client, location, fs_);
       if (await rf.Get(fp, context.CancellationToken)) {
-        if (delta_) {
-          await fs_.CreateDeltaLink(module, location);
+        if (delta_ && !await fs_.CreateDeltaLink(module, location, fp)) {
+          logger_.LogError(
+            "Collected {Location} but failed to record the delta link for {Path}",
+            location,
+            fp
+          );
         }
       }
     }

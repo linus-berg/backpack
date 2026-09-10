@@ -267,9 +267,20 @@ public class MinioStorage : IDisposable {
     logger_.LogTrace("Saving {Path}", normalized_path);
 
     string? tempfile = null;
+    Stream? spooled_stream = null;
 
     try {
-      using Stream? seekable_stream = await GetSeekableStream(stream);
+      /* Only a stream created here may be disposed here: the caller owns
+         whatever it passed in, and the storage pipeline may retry this call. */
+      Stream seekable_stream = stream;
+      if (stream.CanSeek) {
+        /* Rewind, so that a retried attempt re-sends the whole content instead
+           of the empty tail left behind by the previous one. */
+        stream.Seek(0, SeekOrigin.Begin);
+      } else {
+        spooled_stream = await GetSeekableStream(stream);
+        seekable_stream = spooled_stream;
+      }
 
       PutObjectArgs? args = new PutObjectArgs()
                             .WithBucket(bucket_)
@@ -301,6 +312,10 @@ public class MinioStorage : IDisposable {
       );
       throw;
     } finally {
+      if (spooled_stream != null) {
+        await spooled_stream.DisposeAsync();
+      }
+
       if (tempfile != null) {
         File.Delete(tempfile);
       }
@@ -322,8 +337,15 @@ public class MinioStorage : IDisposable {
       8192,
       FileOptions.DeleteOnClose
     );
-    await stream.CopyToAsync(temp_file_stream);
-    temp_file_stream.Seek(0, SeekOrigin.Begin);
+    try {
+      await stream.CopyToAsync(temp_file_stream);
+      temp_file_stream.Seek(0, SeekOrigin.Begin);
+    } catch (Exception) {
+      /* DeleteOnClose only fires on dispose, so a failed copy would otherwise
+         leave the temporary file behind on every retried attempt. */
+      await temp_file_stream.DisposeAsync();
+      throw;
+    }
 
     return temp_file_stream;
   }
@@ -718,10 +740,12 @@ public class MinioStorage : IDisposable {
 
   /// <summary>
   ///   Normalizes the path by replacing backslashes with forward slashes.
+  ///   Every key written to or read from the bucket passes through here, so
+  ///   callers that need to record a key have to normalize it the same way.
   /// </summary>
   /// <param name="path">The path to normalize.</param>
   /// <returns>The normalized path.</returns>
-  private string NormalizePath(string path) {
+  public static string NormalizePath(string path) {
     return path?.Replace('\\', '/');
   }
 

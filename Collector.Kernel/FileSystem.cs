@@ -131,16 +131,51 @@ public class FileSystem {
   /// <returns>True if the operation was successful; otherwise, false.</returns>
   public async Task<bool> PutFile(string path, Stream stream,
                                  IDictionary<string, string>? metadata = null) {
-    return await storage_pipeline_.ExecuteAsync(
-             static async (state, token) =>
-               await state.storage_backend_.SaveFileAsync(
-                 state.path,
-                 state.stream,
-                 state.metadata,
-                 token
-               ),
-             (storage_backend_, path, stream, metadata)
-           );
+    /* The storage pipeline retries the upload, so the content has to be
+       replayable. A forward-only stream (an HTTP response body) is drained by
+       the first attempt, which would leave every later attempt uploading an
+       empty object and still reporting success, so it is spooled to disk once
+       here, outside the pipeline, and rewound per attempt by the backend. */
+    Stream? spool = stream.CanSeek ? null : await SpoolToDisk(stream);
+    try {
+      return await storage_pipeline_.ExecuteAsync(
+               static async (state, token) =>
+                 await state.storage_backend_.SaveFileAsync(
+                   state.path,
+                   state.stream,
+                   state.metadata,
+                   token
+                 ),
+               (storage_backend_, path, stream: spool ?? stream, metadata)
+             );
+    } finally {
+      if (spool != null) {
+        await spool.DisposeAsync();
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Buffers a forward-only stream to a temporary file so that it can be
+  ///   replayed if the upload is retried.
+  /// </summary>
+  /// <param name="stream">The stream to buffer.</param>
+  /// <returns>A seekable stream positioned at the start of the content.</returns>
+  private static async Task<Stream> SpoolToDisk(Stream stream) {
+    FileStream spool = File.Create(
+      Path.GetTempFileName(),
+      8192,
+      FileOptions.DeleteOnClose
+    );
+    try {
+      await stream.CopyToAsync(spool);
+      spool.Seek(0, SeekOrigin.Begin);
+    } catch (Exception) {
+      await spool.DisposeAsync();
+      throw;
+    }
+
+    return spool;
   }
 
 
@@ -159,13 +194,24 @@ public class FileSystem {
   /// </summary>
   /// <param name="module">The module name.</param>
   /// <param name="uri_str">The URI of the artifact.</param>
+  /// <param name="artifact_path">
+  ///   The storage path the artifact was actually written to. Callers that
+  ///   derive their own upload path must pass it, otherwise the link records a
+  ///   second, independent derivation that can disagree with the real key. When
+  ///   omitted it falls back to <see cref="GetArtifactPath" />.
+  /// </param>
   /// <returns>True if the link was created; otherwise, false.</returns>
-  public async Task<bool> CreateDeltaLink(string module, string uri_str) {
+  public async Task<bool> CreateDeltaLink(string module, string uri_str,
+                                          string? artifact_path = null) {
     Uri uri = new(uri_str);
     string location = GetDiskLocation(uri);
     string daily_deposit = GetDeltaDeposit(module);
     string link = Path.Join(daily_deposit, location);
-    string target = GetArtifactPath(module, uri_str);
+    /* The backend normalizes every key it writes, so the recorded target has to
+       be normalized identically or it names a key that does not exist. */
+    string target = MinioStorage.NormalizePath(
+      artifact_path ?? GetArtifactPath(module, uri_str)
+    );
     return await CreateS3Link(link, target);
   }
 
