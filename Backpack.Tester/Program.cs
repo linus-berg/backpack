@@ -13,13 +13,13 @@ using Backpack.Tester.Tests;
 // ============================================================
 
 // --- WebMirror: mirrors a website to S3 ---
-await WebMirrorTest.Run("https://ash-speed.hetzner.com/");
+//await WebMirrorTest.Run("https://ash-speed.hetzner.com/");
 
 // --- Tests that use the shared service provider ---
-// (IServiceProvider sp, HttpClient hc) = ServiceSetup.Build();
+ (IServiceProvider sp, HttpClient hc) = ServiceSetup.Build();
 
 // --- HuggingFace: process model artifact + download files ---
-// await HuggingFaceTest.Run(sp, hc);
+await HuggingFaceTest.Run(sp, hc);
 
 // --- PyPI: process a Python package ---
 // await PypiTest.Run(sp);
