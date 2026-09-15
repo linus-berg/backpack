@@ -2,10 +2,12 @@ using System.Configuration;
 using System.Security.Claims;
 using System.Text.Json;
 using Core.Infrastructure;
+using Core.Infrastructure.Health;
 using Core.Infrastructure.Services;
 using Core.Kernel;
 using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
+using Core.Kernel.Health;
 using Core.Kernel.Registrations;
 using Core.Services;
 using Integration.API;
@@ -13,6 +15,8 @@ using Integration.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
@@ -177,6 +181,11 @@ builder.Services.AddAuthorization(
   }
 );
 
+/* Mapped on Kestrel rather than served by Core.Kernel's HttpListener endpoint:
+   this host already has a server, and the probes should travel the same pipeline
+   as every other route. */
+builder.Services.AddBackpackHealthChecks().AddMongoCheck().AddRedisCheck();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -201,5 +210,39 @@ app.UseCors(
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
+
+/* AllowAnonymous is required: the default policy demands an authenticated user,
+   and a kubelet cannot present a token. */
+app.MapHealthChecks(
+     "/health/live",
+     new HealthCheckOptions {
+       Predicate = r => r.Tags.Contains(HealthEndpoint.C_LIVE_TAG),
+       ResponseWriter = WriteHealthReport
+     }
+   )
+   .AllowAnonymous();
+app.MapHealthChecks(
+     "/health/ready",
+     new HealthCheckOptions {
+       Predicate = r => !r.Tags.Contains(HealthEndpoint.C_LIVE_TAG),
+       ResponseWriter = WriteHealthReport
+     }
+   )
+   .AllowAnonymous();
+app.MapHealthChecks(
+     "/health",
+     new HealthCheckOptions {
+       ResponseWriter = WriteHealthReport
+     }
+   )
+   .AllowAnonymous();
+
 app.MapControllers();
 app.Run();
+
+/* Same document shape as the workers' endpoint, so one probe definition and one
+   dashboard work across the whole fleet. */
+Task WriteHealthReport(HttpContext context, HealthReport report) {
+  context.Response.ContentType = "application/json";
+  return context.Response.WriteAsync(HealthReportJson.Serialize(report));
+}

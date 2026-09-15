@@ -128,15 +128,21 @@ public class FileSystem {
   /// <param name="path">The path where the stream will be written.</param>
   /// <param name="stream">The stream content to write.</param>
   /// <param name="metadata">Optional metadata to store with the file.</param>
+  /// <param name="token">
+  ///   The cancellation token. Covers spooling the body to disk and every upload
+  ///   attempt, so a download that has run past its budget stops here instead of
+  ///   continuing to write for as long as the retries last.
+  /// </param>
   /// <returns>True if the operation was successful; otherwise, false.</returns>
   public async Task<bool> PutFile(string path, Stream stream,
-                                 IDictionary<string, string>? metadata = null) {
+                                 IDictionary<string, string>? metadata = null,
+                                 CancellationToken token = default) {
     /* The storage pipeline retries the upload, so the content has to be
        replayable. A forward-only stream (an HTTP response body) is drained by
        the first attempt, which would leave every later attempt uploading an
        empty object and still reporting success, so it is spooled to disk once
        here, outside the pipeline, and rewound per attempt by the backend. */
-    Stream? spool = stream.CanSeek ? null : await SpoolToDisk(stream);
+    Stream? spool = stream.CanSeek ? null : await SpoolToDisk(stream, token);
     try {
       return await storage_pipeline_.ExecuteAsync(
                static async (state, token) =>
@@ -146,7 +152,8 @@ public class FileSystem {
                    state.metadata,
                    token
                  ),
-               (storage_backend_, path, stream: spool ?? stream, metadata)
+               (storage_backend_, path, stream: spool ?? stream, metadata),
+               token
              );
     } finally {
       if (spool != null) {
@@ -160,15 +167,17 @@ public class FileSystem {
   ///   replayed if the upload is retried.
   /// </summary>
   /// <param name="stream">The stream to buffer.</param>
+  /// <param name="token">The cancellation token.</param>
   /// <returns>A seekable stream positioned at the start of the content.</returns>
-  private static async Task<Stream> SpoolToDisk(Stream stream) {
+  private static async Task<Stream> SpoolToDisk(Stream stream,
+                                                CancellationToken token) {
     FileStream spool = File.Create(
       Path.GetTempFileName(),
       8192,
       FileOptions.DeleteOnClose
     );
     try {
-      await stream.CopyToAsync(spool);
+      await stream.CopyToAsync(spool, token);
       spool.Seek(0, SeekOrigin.Begin);
     } catch (Exception) {
       await spool.DisposeAsync();

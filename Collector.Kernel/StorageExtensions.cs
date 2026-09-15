@@ -1,9 +1,12 @@
 // Copyright (c) 2022 Linus Berg. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Collector.Kernel.Health;
 using Collector.Kernel.Storage.Minio;
 using Core.Kernel;
+using Core.Kernel.Health;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Polly;
 using Polly.Retry;
 
@@ -55,6 +58,15 @@ public static class StorageExtensions {
     };
     services.AddSingleton(minio_options);
     services.AddSingleton<MinioStorage>();
+    services.AddHealthChecks()
+            .AddCheck<StorageHealthCheck>(
+              "s3",
+              HealthStatus.Unhealthy,
+              new[] {
+                HealthEndpoint.C_READY_TAG
+              },
+              HealthEndpoint.S_DEPENDENCY_TIMEOUT
+            );
     return services;
   }
 }

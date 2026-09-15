@@ -15,13 +15,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
-                     services.AddHttpClient("fetch-client")
-                             .ConfigureHttpClient(
-                               client => {
-                                 client.DefaultRequestHeaders.UserAgent
-                                       .ParseAdd("Backpack/1.0");
-                               }
-                             );
+                     services.AddDownloadClient("fetch-client");
                      services.AddStorage();
                      services.AddSingleton<FileSystem>();
                      services.Register(registration);

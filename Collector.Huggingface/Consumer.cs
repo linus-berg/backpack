@@ -3,6 +3,8 @@
 
 using Collector.Kernel;
 using Core.Kernel;
+using Core.Kernel.Exceptions;
+using Core.Kernel.Extensions;
 using Core.Kernel.Messages;
 using MassTransit;
 
@@ -54,7 +56,7 @@ public class Consumer : ICollector {
     using HttpClient client =
       http_client_factory_.CreateClient("fetch-client");
     RemoteFile rf = new(client, location, fs_);
-    if (await rf.Get(fp, context.CancellationToken) && delta_) {
+    if (await Fetch(rf, fp, location, context.CancellationToken) && delta_) {
       /* The storage pipeline retries the upload, so the artifact should be in
          place by now. It is confirmed anyway, because a link to a key that is
          not in the bucket is worse than no link at all: a concurrent collect of
@@ -76,6 +78,47 @@ public class Consumer : ICollector {
           fp
         );
       }
+    }
+  }
+
+  /// <summary>
+  ///   Fetches the artifact under a per-download budget.
+  /// </summary>
+  /// <remarks>
+  ///   The client itself is unbounded, which is what lets multi-gigabyte model
+  ///   weights through at all; this is what stops a download that is no longer
+  ///   making progress. Expiry is reported as an
+  ///   <see cref="ArtifactTimeoutException" /> because that is what the receive
+  ///   endpoint's retry and delayed redelivery policies act on; a bare
+  ///   <see cref="OperationCanceledException" /> is a plain fault, and faults are
+  ///   discarded.
+  /// </remarks>
+  /// <param name="rf">The remote file to fetch.</param>
+  /// <param name="path">The storage path to write to.</param>
+  /// <param name="location">The artifact location, for reporting.</param>
+  /// <param name="token">The consume context's cancellation token.</param>
+  /// <returns>True if the artifact was collected; otherwise, false.</returns>
+  private async Task<bool> Fetch(RemoteFile rf, string path, string location,
+                                 CancellationToken token) {
+    using CancellationTokenSource download_cts =
+      HttpClientExtensions.CreateDownloadTimeout(token);
+    try {
+      return await rf.Get(path, download_cts.Token);
+    } catch (OperationCanceledException ex)
+      when (download_cts.IsCancellationRequested &&
+            !token.IsCancellationRequested) {
+      /* Distinguished from a host shutdown, which cancels the context token and
+         must not be reported as the artifact's fault. */
+      TimeSpan budget = HttpClientExtensions.GetDownloadTimeout();
+      logger_.LogWarning(
+        "{Location} did not transfer within {Budget}; abandoning",
+        location,
+        budget
+      );
+      throw new ArtifactTimeoutException(
+        $"{location} did not transfer within {budget}.",
+        ex
+      );
     }
   }
 }

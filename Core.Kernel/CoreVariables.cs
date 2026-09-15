@@ -58,6 +58,28 @@ public enum CoreVariables {
   BP_COLLECTOR_DIRECTORY,
 
   /// <summary>
+  ///   Wall-clock budget for a single artifact download, as a
+  ///   <see cref="TimeSpan" /> string (for example <c>02:00:00</c>). Covers the
+  ///   request, the transfer of the body and the upload to storage. Keep it
+  ///   below the MassTransit consumer timeout, otherwise the broker gives up on
+  ///   the message before the download is abandoned.
+  /// </summary>
+  BP_COLLECTOR_DOWNLOAD_TIMEOUT,
+
+  /// <summary>
+  ///   Time allowed to establish a TCP connection to a remote host, as a
+  ///   <see cref="TimeSpan" /> string (for example <c>00:00:30</c>). Bounds the
+  ///   connect phase only, so an unreachable host fails fast instead of
+  ///   consuming the whole download budget.
+  /// </summary>
+  BP_COLLECTOR_CONNECT_TIMEOUT,
+
+  /// <summary>
+  ///   Port the health endpoint listens on for liveness and readiness probes.
+  /// </summary>
+  BP_HEALTH_PORT,
+
+  /// <summary>
   ///   MongoDB connection string.
   /// </summary>
   BP_MONGO_STR,

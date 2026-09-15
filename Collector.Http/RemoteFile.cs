@@ -35,7 +35,10 @@ public class RemoteFile {
   ///   retrieved.
   /// </returns>
   public async Task<bool> Get(string path, CancellationToken token = default) {
-    HttpResponseMessage response =
+    /* Disposed explicitly: ResponseHeadersRead keeps the connection checked out
+       until the response is released, and the client has no timeout of its own
+       to eventually reclaim it. */
+    using HttpResponseMessage response =
       await client_.GetAsync(
         url_,
         HttpCompletionOption.ResponseHeadersRead,
@@ -46,8 +49,8 @@ public class RemoteFile {
     }
 
     try {
-      Stream? body = await response.Content.ReadAsStreamAsync(token);
-      bool result = await fs_.PutFile(path, body);
+      await using Stream body = await response.Content.ReadAsStreamAsync(token);
+      bool result = await fs_.PutFile(path, body, token: token);
 
       if (!result) {
         await ClearFile(path);

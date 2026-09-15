@@ -16,6 +16,16 @@ public static class Configuration {
       }, {
         CoreVariables.BP_COLLECTOR_DIRECTORY, "/data/"
       }, {
+        /* Stays under the 180 minute MassTransit consumer timeout in
+           RegistrationUtils, so a stuck download is abandoned by the collector
+           and can be retried, rather than being torn down mid-upload by the
+           broker. */
+        CoreVariables.BP_COLLECTOR_DOWNLOAD_TIMEOUT, "02:00:00"
+      }, {
+        CoreVariables.BP_COLLECTOR_CONNECT_TIMEOUT, "00:00:30"
+      }, {
+        CoreVariables.BP_HEALTH_PORT, "8080"
+      }, {
         CoreVariables.BP_REDIS_HOST, "localhost"
       }, {
         CoreVariables.BP_REDIS_USER, "default"

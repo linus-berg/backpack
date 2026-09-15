@@ -82,15 +82,19 @@ public class RemoteFile {
     }
 
     try {
-      Stream? body = await response.Content.ReadAsStreamAsync(token);
-      
+      /* Disposed explicitly: ResponseHeadersRead keeps the connection checked out
+         until the body is released, and the client has no timeout of its own to
+         eventually reclaim it. */
+      await using Stream body = await response.Content.ReadAsStreamAsync(token);
+
+
       // Store the HF ETAG in metadata
       Dictionary<string, string> metadata = new();
       if (!string.IsNullOrEmpty(remote_etag)) {
         metadata["X-HF-ETag"] = remote_etag;
       }
 
-      bool result = await fs_.PutFile(path, body, metadata);
+      bool result = await fs_.PutFile(path, body, metadata, token);
 
       if (!result) {
         await ClearFile(path);

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Core.Kernel.Exceptions;
+using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,9 @@ public static class RegistrationUtils {
   public static IServiceCollection Register(this IServiceCollection sc,
                                             ModuleRegistration registration) {
     sc.AddScoped<IEventService, EventService>();
+    /* Registered before the bus so that AddMassTransit finds the health check
+       service already in place and contributes its own broker check to it. */
+    sc.AddBackpackHealthEndpoint();
     sc.AddMassTransit(
       mt => {
         mt.AddConsumer(registration.consumer);

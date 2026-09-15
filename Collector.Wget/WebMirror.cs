@@ -298,7 +298,8 @@ public class WebMirror {
       Stream body_stream =
         await response.Content.ReadAsStreamAsync(stream_cts.Token);
       await using (body_stream) {
-        bool success = await fs_.PutFile(storage_path, body_stream);
+        bool success =
+          await fs_.PutFile(storage_path, body_stream, token: stream_cts.Token);
 
         string size_label = content_length.HasValue
           ? $"{content_length.Value} bytes"
@@ -558,7 +559,7 @@ public class WebMirror {
       // Upload to S3 via the FileSystem abstraction
       string storage_path = GetStoragePath(ctx.base_uri, resource.local_path);
       using MemoryStream stream = new(final_bytes);
-      bool success = await fs_.PutFile(storage_path, stream);
+      bool success = await fs_.PutFile(storage_path, stream, token: token);
 
       if (success) {
         logger_.LogDebug(

@@ -51,6 +51,24 @@ public class MinioStorage : IDisposable {
   }
 
   /// <summary>
+  ///   Checks whether the configured bucket is reachable.
+  /// </summary>
+  /// <remarks>
+  ///   Deliberately does not create the bucket: this is used to report on the
+  ///   backend, and a probe that repairs what it is probing hides the fault it
+  ///   was asked about.
+  /// </remarks>
+  /// <param name="cancellation_token">The cancellation token.</param>
+  /// <returns>True if the bucket exists; otherwise, false.</returns>
+  public async Task<bool> BucketExistsAsync(
+    CancellationToken cancellation_token = default) {
+    return await client.BucketExistsAsync(
+             new BucketExistsArgs().WithBucket(bucket_),
+             cancellation_token
+           );
+  }
+
+  /// <summary>
   ///   Ensures that the bucket exists.
   /// </summary>
   private async Task EnsureBucketExists() {

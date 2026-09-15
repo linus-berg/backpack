@@ -2,6 +2,7 @@ using Core.Gateway;
 using Core.Gateway.Consumers;
 using Core.Gateway.Definitions;
 using Core.Infrastructure;
+using Core.Infrastructure.Health;
 using Core.Infrastructure.Services;
 using Core.Kernel;
 using Core.Kernel.Constants;
@@ -17,6 +18,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
+                     services.AddBackpackHealthEndpoint();
+                     services.AddBackpackHealthChecks()
+                             .AddMongoCheck()
+                             .AddRedisCheck();
                      services.AddMassTransit(
                        b => {
                          b.AddConsumer<ProcessedConsumer>(

@@ -14,22 +14,22 @@ IHost host = Host.CreateDefaultBuilder(args)
                  .ConfigureServices(
                    services => {
                      services.AddTelemetry(registration);
-                     services.AddHttpClient("mirror-client")
-                             .ConfigureHttpClient(
-                               client => {
-                                 client.DefaultRequestHeaders.UserAgent
-                                       .ParseAdd("Backpack/1.0");
-                                 client.Timeout = TimeSpan.FromMinutes(5);
-                               }
-                             )
-                             .ConfigurePrimaryHttpMessageHandler(
-                               () => new HttpClientHandler {
-                                 AllowAutoRedirect = true,
-                                 MaxAutomaticRedirections = 10,
-                                 AutomaticDecompression =
-                                   System.Net.DecompressionMethods.All
-                               }
-                             );
+                     /* The client itself is left unbounded on purpose: WebMirror
+                        applies its own per-request and per-stream limits, and a
+                        ceiling here would silently cut a mirror short before
+                        those ever came into play. */
+                     services.AddDownloadClient(
+                       "mirror-client",
+                       configure_handler: handler => {
+                         handler.AllowAutoRedirect = true;
+                         handler.MaxAutomaticRedirections = 10;
+                         /* Unlike the artifact collectors, the mirror parses what
+                            it fetches to rewrite links, so it wants the decoded
+                            body rather than the bytes as served. */
+                         handler.AutomaticDecompression =
+                           System.Net.DecompressionMethods.All;
+                       }
+                     );
                      services.AddStorage();
                      services.AddSingleton<FileSystem>();
                      services.AddSingleton<WebMirror>();
