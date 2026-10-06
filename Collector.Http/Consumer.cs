@@ -52,8 +52,7 @@ public class Consumer : ICollector {
       if (await rf.Get(fp, context.CancellationToken) && delta_) {
         /* The storage pipeline retries the upload, so the artifact should be in
            place by now. It is confirmed anyway, because a link to a key that is
-           not in the bucket is worse than no link at all: a concurrent collect
-           of the same key can still have cleared it on its way out. */
+           not in the bucket is worse than no link at all. */
         if (!await fs_.Exists(fp)) {
           logger_.LogError(
             "Collected {Location} but {Path} is not in the bucket; not linking",

@@ -10,3 +10,4 @@ keycloak.json
 data/
 .DS_Store
 *.DotSettings.user
+findings.md

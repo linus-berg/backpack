@@ -81,27 +81,25 @@ public class RemoteFile {
       return false;
     }
 
-    try {
-      Stream? body = await response.Content.ReadAsStreamAsync(token);
-      
-      // Store the HF ETAG in metadata
-      Dictionary<string, string> metadata = new();
-      if (!string.IsNullOrEmpty(remote_etag)) {
-        metadata["X-HF-ETag"] = remote_etag;
-      }
+    /* Nothing is deleted on failure. PutFile buffers the whole body before it
+       uploads and an S3 put is all or nothing, so a failed collect never leaves
+       a partial object at path. Whatever is there is either the previous good
+       revision or a concurrent collect's finished upload. */
+    Stream body = await response.Content.ReadAsStreamAsync(token);
 
-      bool result = await fs_.PutFile(path, body, metadata);
-
-      if (!result) {
-        await ClearFile(path);
-        throw new HttpRequestException($"{hf_url} failed to collect.");
-      }
-
-      return result;
-    } catch (Exception) {
-      await ClearFile(path);
-      throw;
+    // Store the HF ETAG in metadata
+    Dictionary<string, string> metadata = new();
+    if (!string.IsNullOrEmpty(remote_etag)) {
+      metadata["X-HF-ETag"] = remote_etag;
     }
+
+    bool result = await fs_.PutFile(path, body, metadata);
+
+    if (!result) {
+      throw new HttpRequestException($"{hf_url} failed to collect.");
+    }
+
+    return result;
   }
 
   private string? GetQueryParam(Uri uri, string name) {
@@ -148,23 +146,5 @@ public class RemoteFile {
 
     // Default to org/repo if available
     return $"{host}/{local_path.Substring(0, first_slash)}";
-  }
-
-  /// <summary>
-  ///   Clears the file from the file system.
-  /// </summary>
-  /// <param name="file">The file path to clear.</param>
-  /// <returns>
-  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
-  ///   cleared.
-  /// </returns>
-  private async Task<bool> ClearFile(string file) {
-    if (!await fs_.Exists(file)) {
-      return false;
-    }
-
-    Console.WriteLine($"Clearing {file}");
-    await fs_.Delete(file);
-    return true;
   }
 }

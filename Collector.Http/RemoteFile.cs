@@ -35,7 +35,7 @@ public class RemoteFile {
   ///   retrieved.
   /// </returns>
   public async Task<bool> Get(string path, CancellationToken token = default) {
-    HttpResponseMessage response =
+    using HttpResponseMessage response =
       await client_.GetAsync(
         url_,
         HttpCompletionOption.ResponseHeadersRead,
@@ -45,37 +45,17 @@ public class RemoteFile {
       return false;
     }
 
-    try {
-      Stream? body = await response.Content.ReadAsStreamAsync(token);
-      bool result = await fs_.PutFile(path, body);
+    /* Nothing is deleted on failure. PutFile buffers the whole body before it
+       uploads and an S3 put is all or nothing, so a failed collect never leaves
+       a partial object at path. Whatever is there is either the previous good
+       copy or a concurrent collect's finished upload. */
+    Stream body = await response.Content.ReadAsStreamAsync(token);
+    bool result = await fs_.PutFile(path, body);
 
-      if (!result) {
-        await ClearFile(path);
-        throw new HttpRequestException($"{url_} failed to collect.");
-      }
-
-      return result;
-    } catch (Exception) {
-      await ClearFile(path);
-      throw;
-    }
-  }
-
-  /// <summary>
-  ///   Clears the file from the file system.
-  /// </summary>
-  /// <param name="file">The file path to clear.</param>
-  /// <returns>
-  ///   A task that represents the asynchronous operation. The task result indicates whether the file was successfully
-  ///   cleared.
-  /// </returns>
-  private async Task<bool> ClearFile(string file) {
-    if (!await fs_.Exists(file)) {
-      return false;
+    if (!result) {
+      throw new HttpRequestException($"{url_} failed to collect.");
     }
 
-    Console.WriteLine($"Clearing {file}");
-    await fs_.Delete(file);
-    return true;
+    return result;
   }
 }
