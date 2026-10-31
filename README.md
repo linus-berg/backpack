@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="images/header-image.png" alt="Backpack Header" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/backpack-logo-dark.svg">
+    <img src="images/backpack-logo.svg" alt="Backpack logo" width="160">
+  </picture>
 </p>
 
 # Backpack: Distributed Artifact Synchronization & Mirroring Engine
