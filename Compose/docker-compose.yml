@@ -3,7 +3,7 @@ services:
   # Infrastructure
   # required to run container syncs
   bp-prometheus:
-    image: prom/prometheus:latest
+    image: docker.io/prom/prometheus:v3.15.1
     command:
       - --config.file=/etc/prometheus.yaml
       - --web.enable-remote-write-receiver
@@ -14,56 +14,63 @@ services:
       - "./prometheus.yml:/etc/prometheus.yaml:Z"
 
   bp-telemetry-otel:
-    image: otel/opentelemetry-collector-contrib:0.79.0
+    image: docker.io/otel/opentelemetry-collector-contrib:0.79.0
     command: ["--config=/etc/otel-collector.yaml"]
     volumes:
       - "./otel.yml:/etc/otel-collector.yaml:Z"
     extra_hosts: ["host.docker.internal:host-gateway"]
 
-  bp-minio:
-    image: minio/minio
+  # S3 compatible object storage (SeaweedFS all-in-one "mini" mode).
+  #   S3 API:   http://localhost:9000
+  #   Admin UI: http://localhost:9001 (login backpack-local / backpack-local)
+  # The buckets listed in -bucket are created on startup if they are missing.
+  bp-s3:
+    image: docker.io/chrislusf/seaweedfs:4.51
     restart: always
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - "./volumes/minio:/data:Z"
+      - "./volumes/seaweedfs:/data:Z"
     environment:
-      MINIO_ROOT_USER: backpack-local
-      MINIO_ROOT_PASSWORD: backpack-local
-      MINIO_PROMETHEUS_URL: http://bp-prometheus:9090
-      MINIO_PROMETHEUS_JOB_ID: minio-job
-      MINIO_PROMETHEUS_AUTH_TYPE: public
-    command: server --console-address ":9001" /data
-
-  bp-minio-init:
-    image: minio/mc
-    depends_on:
-      - bp-minio
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set myminio http://bp-minio:9000 backpack-local backpack-local) do echo '...waiting for minio...' && sleep 1; done;
-      /usr/bin/mc mb --ignore-existing myminio/backpack;
-      exit 0;
-      "
+      # Static S3 credentials (admin identity), used by BP_S3_ACCESS_KEY / BP_S3_SECRET_KEY.
+      AWS_ACCESS_KEY_ID: backpack-local
+      AWS_SECRET_ACCESS_KEY: backpack-local
+    command:
+      - mini
+      - -dir=/data
+      - -bucket=backpack,docker-registry
+      - -s3.port=9000
+      - -admin.port=9001
+      - -admin.user=backpack-local
+      - -admin.password=backpack-local
+      - -metricsPort=9324
+      - -webdav=false
+      - -s3.port.iceberg=0
+      - -s3.port.lance=0
 
   bp-internal-registry:
-    image: registry:2.8
+    image: docker.io/library/registry:2.8.3
     restart: always
+    depends_on:
+      - bp-s3
     ports:
       - "6000:5000"
     environment:
       REGISTRY_STORAGE: s3
       REGISTRY_STORAGE_S3_ACCESSKEY: backpack-local
       REGISTRY_STORAGE_S3_SECRETKEY: backpack-local
-      REGISTRY_STORAGE_S3_REGIONENDPOINT: http://bp-minio:9000
+      REGISTRY_STORAGE_S3_REGIONENDPOINT: http://bp-s3:9000
       REGISTRY_STORAGE_S3_BUCKET: docker-registry
       REGISTRY_STORAGE_S3_SECURE: "false"
-      REGISTRY_STORAGE_S3_region: ignored-for-minio
+      REGISTRY_STORAGE_S3_REGION: not-used-for-dev
       REGISTRY_STORAGE_REDIRECT_DISABLE: "true"
 
+  # MongoDB >= 8.0 refuses to start on Linux 6.19 - 7.0.13 (TCMalloc/rseq,
+  # https://jira.mongodb.org/browse/SERVER-121912). 7.0 is unaffected. Only bump
+  # past 7.0 once the host kernel is >= 7.0.14 (and on 8.0.30+ / 8.3.9+ / 9.x).
   bp-mongo:
-    image: mongo
+    image: docker.io/library/mongo:7.0.45
     restart: always
     ports:
       - 27017:27017
@@ -75,7 +82,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
 
   bp-keycloak-db:
-    image: postgres:13
+    image: docker.io/library/postgres:13.23
     volumes:
       - "./volumes/kc_db:/var/lib/postgresql/data:Z"
     environment:
@@ -101,7 +108,7 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
 
   bp-mongo-express:
-    image: mongo-express
+    image: docker.io/library/mongo-express:1.0.2
     restart: always
     ports:
       - 8081:8081
@@ -111,7 +118,7 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://root:example@bp-mongo:27017/
 
   bp-ingest-redis:
-    image: redis/redis-stack:6.2.6-v9
+    image: docker.io/redis/redis-stack:6.2.6-v9
     container_name: bp-ingest-redis
     environment:
       REDIS_ARGS: "--requirepass myverylongpassword"
@@ -122,7 +129,7 @@ services:
       - 8001:8001
 
   bp-rabbitmq:
-    image: masstransit/rabbitmq
+    image: docker.io/masstransit/rabbitmq:4.3.1
     container_name: bp-rabbitmq
     ports:
       - 15672:15672

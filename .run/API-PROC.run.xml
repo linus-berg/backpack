@@ -1,10 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="API-PROC" type="CompoundRunConfigurationType">
-    <toRun name="Collector.Http" type="LaunchSettings" />
-    <toRun name="Collector.Router" type="LaunchSettings" />
-    <toRun name="Core.Gateway" type="LaunchSettings" />
     <toRun name="Integration.API" type="LaunchSettings" />
-    <toRun name="Processor.Github.Releases" type="LaunchSettings" />
     <method v="2" />
   </configuration>
 </component>

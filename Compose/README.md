@@ -10,6 +10,22 @@ start the development environment with:
 sudo docker-compose up
 ```
 
+## S3 storage
+S3 compatible storage is provided by [SeaweedFS](https://github.com/seaweedfs/seaweedfs)
+(`bp-s3`, running `weed mini`):
+
+| What            | Value                                    |
+|-----------------|------------------------------------------|
+| S3 endpoint     | `localhost:9000` (`http://bp-s3:9000` inside compose) |
+| Access key      | `backpack-local`                         |
+| Secret key      | `backpack-local`                         |
+| Buckets         | `backpack`, `docker-registry` (created on startup) |
+| Admin UI        | <http://localhost:9001> (`backpack-local` / `backpack-local`) |
+
+The region is not validated, so any `BP_S3_REGION` works. To create more
+buckets on startup, add them to the `-bucket=` argument of `bp-s3`. Data is
+stored in `./volumes/seaweedfs`.
+
 ## Run with `podman` in rootless mode on Fedora
 The development environment can be run with `podman` in rootless mode on Fedora
 as well.
