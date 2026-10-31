@@ -9,65 +9,72 @@
 
 Backpack is a high-performance, distributed system for people whose security teams have serious trust issues. It is engineered for those building in the quiet, isolated comfort of air-gapped bunkers who still need their 4GB of `node_modules` despite having zero bytes of external connectivity.
 
-At its core, Backpack is a **one-way artifact collection and tracking engine**. It doesn't host repositories or serve files to your developers; instead, it acts as a tireless background harvester. It recursively resolves dependency trees for entire ecosystems (NPM, Docker, NuGet, etc.), fetches every available version, and persists them into a unified S3-compatible storage layer for later transfer to your isolated environment. 
+At its core, Backpack is a **one-way artifact collection and tracking engine**. It doesn't host repositories or serve files to your developers; instead, it acts as a tireless background harvester. It recursively resolves dependency trees for entire ecosystems (npm, NuGet, PyPI, container images, Helm, Terraform, Hugging Face, Git and more), fetches every available version, and persists them into S3-compatible storage for later transfer to your isolated environment.
 
 Think of it as a professional-grade, recursively-obsessive digital hoarder: Backpack siphons every version and every dependency from the public internet and stuffs them into your private storage. It harvests all, presents nothing, and ensures that when the internet inevitably lets you down (or your firewall is just that good), your codebase is already stocked for the long-term survival of your builds.
 
-## 📖 Documentation Index
+## How it works
 
-To understand the system's design and operational details, refer to the following guides:
+1. You add an artifact (`lodash`, `docker.io/library/alpine`, `git://github.com/owner/repo`, ...) in the
+   [GUI](https://github.com/linus-berg/backpack-gui) or through the API.
+2. The ecosystem's **processor** asks the upstream registry for every version, the files that make up each
+   version, and the artifact's direct dependencies.
+3. **Core.Gateway** stores what changed in MongoDB, hands the files to **Collector.Router**, and sends every
+   dependency to its processor in turn, until the whole dependency tree is known.
+4. **Collectors** download each file that isn't in the bucket yet, store it under
+   `<module>/<host><path>`, and record it in a daily **delta** folder, so you know exactly what to carry
+   across the air gap.
+5. **Tracker.Scheduler** re-tracks ecosystems on a schedule to pick up new versions.
 
-### Core Architecture & Strategy
-- **[System Philosophy & Standards](GEMINI.md)**: Core mandates, exhaustive collection logic, and architectural principles.
-- **[Service & Module Inventory](docs/ServiceInventory.md)**: Detailed inventory of all core modules, processors, and collectors.
-- **[Architecture & Diagrams](docs/ArchitectureDiagrams.md)**: Visual representation of message propagation and service interaction.
-- **[Storage Architecture](STORAGE.md)**: Detailed breakdown of the S3-hierarchical structure and `Collector.Kernel` implementation.
-- **[Glossary of Terms](docs/Glossary.md)**: Standardized definitions for Backpack architecture, roles, and components.
-- **[Type Reference](docs/TypeReference.md)**: Technical schemas for internal messages and metadata structures.
+Everything talks through RabbitMQ, so each ecosystem and protocol is its own small service that you deploy
+only if you need it.
 
-### Deployment & Configuration
-- **[Configuration Guide](docs/Configuration.md)**: Environment variables, service endpoints, and infrastructure settings.
-- **[Deployment Guide](docs/DeploymentGuide.md)**: Full solution deployment (Docker Compose and Kubernetes/Helm).
-- **[Development Setup](docs/DevelopmentSetup.md)**: Detailed technical instructions for local development environments.
-- **[Troubleshooting](docs/Troubleshooting.md)**: Common failure patterns and resolution steps.
+## Quick start
 
-### Extension & Integration
-- **[Processor Development Guide](docs/ProcessorDevelopment.md)**: Complete guide to implementing custom package managers and scaffolded processors.
-- **[Raw Integration API](docs/RawIntegration.md)**: Documentation for interacting directly with the `Integration.API`.
+- **Try it**: [`example/`](example/README.md) runs a complete, single-machine stack with Docker Compose.
+- **Develop**: start the infrastructure from [`Compose/`](Compose/README.md) and run the services from your
+  IDE; see [Development Setup](docs/DevelopmentSetup.md).
+- **Deploy**: Kubernetes via the [Helm chart](https://github.com/linus-berg/helm-charts); see the
+  [Deployment Guide](docs/DeploymentGuide.md).
 
----
+## 📖 Documentation
 
-## 🏗 System Architecture Overview
+### Understanding Backpack
+- **[Architecture Diagrams](docs/ArchitectureDiagrams.md)**: components, queues and the life of an artifact.
+- **[Service Inventory](docs/ServiceInventory.md)**: every processor and collector, with its queues and what it needs.
+- **[Storage Architecture](STORAGE.md)**: how collected files are laid out in the bucket, and delta links.
+- **[Glossary](docs/Glossary.md)**: the terms used in the code and documentation.
+- **[Type Reference](docs/TypeReference.md)**: artifacts, messages and stored documents.
 
-Backpack follows a **microservice-oriented architecture** centered around a decoupled message-passing pattern using **MassTransit** and **RabbitMQ**.
+### Running Backpack
+- **[Deployment Guide](docs/DeploymentGuide.md)**: infrastructure, images, Helm and Compose, sign-in, security notes.
+- **[Configuration](docs/Configuration.md)**: every environment variable, and processor definitions.
+- **[Development Setup](docs/DevelopmentSetup.md)**: a local stack for working on Backpack.
+- **[Troubleshooting](docs/Troubleshooting.md)**: following an artifact through the system, and common problems.
 
-For a complete list of all services, see the **[Service & Module Inventory](docs/ServiceInventory.md)**.
+### Extending Backpack
+- **[Processor Development](docs/ProcessorDevelopment.md)**: adding an ecosystem with the .NET template.
+- **[Raw Integration](docs/RawIntegration.md)**: processors and collectors in other languages.
+- **[Integration.API](Integration.API/README.md)**: REST endpoints, roles and API keys.
+- **[Contributor standards](GEMINI.md)**: conventions for code in this repository.
 
-### 1. Core Services
-The central orchestrators of the ingestion lifecycle, managing state and routing through **MongoDB**.
+Every service has its own README with its queues, settings and behaviour.
 
-### 2. Artifact Processors
-Ecosystem-specific logic units (NPM, PyPi, Docker, etc.) that resolve dependency manifests and identify required files.
+## 🛠 Technical stack
 
-### 3. Artifact Collectors
-Protocol-specific workers (HTTP, Git, Skopeo, etc.) that perform the physical retrieval and persistence to **S3-compatible storage**.
+- **Runtime**: .NET 8 (C#), one container image per service.
+- **Messaging**: MassTransit on RabbitMQ.
+- **Persistence**: S3-compatible object storage (artifacts), MongoDB (artifact metadata, settings, events),
+  Redis (per-ingest dependency tracking).
+- **Observability**: OpenTelemetry traces, metrics and logs over OTLP.
+- **Security**: any OIDC provider, an `Administrator` role, API keys for automation, optional approval of
+  requests per ecosystem.
 
-## 🛠 Technical Stack
+## 🚀 Infrastructure requirements
 
-- **Runtime**: .NET 8.0 (C#)
-- **Messaging**: MassTransit with RabbitMQ transport.
-- **Persistence**: S3-compatible Object Storage (Artifacts), MongoDB (Metadata), Redis (Distributed Caching).
-- **Observability**: Fully instrumented with **OpenTelemetry** (Tracing, Metrics, Logs).
-- **Security**: Generic OIDC provider support with RBAC (Role-Based Access Control).
-
-## 🚀 Infrastructure Requirements
-
-To run a full production-ready suite of Backpack services, the following infrastructure sidecars are required:
-- **RabbitMQ**: Message brokering.
-- **MinIO/S3**: Artifact persistence.
-- **MongoDB**: Metadata and tracking state.
-- **Redis**: Rate limiting and caching.
-- **OIDC Provider**: Authentication (e.g., Keycloak).
-
----
-*Note: This project is optimized for horizontal scalability and high-concurrency ingestion workloads.*
+- **RabbitMQ** with the management and delayed-message-exchange plugins (the `masstransit/rabbitmq` image
+  has both).
+- **S3-compatible storage**: MinIO, SeaweedFS, Ceph, AWS S3, ...
+- **MongoDB** and **Redis**.
+- **An OIDC provider**, e.g. Keycloak.
+- **A container registry**, only if you mirror container images.

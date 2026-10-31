@@ -1,17 +1,67 @@
 # Collector.Kernel
 
-Collector.Kernel is a shared library that contains common components and logic used by all Collector services within the
-Backpack ecosystem.
+Shared library for the collectors that write to S3-compatible storage: it builds the S3
+client from environment variables and provides `FileSystem`, which derives object keys,
+uploads files and writes delta links. Used by Collector.Http, Collector.Huggingface,
+Collector.Git, Collector.Wget and Collector.DockerArchive. (`ICollector`, the consumer
+interface every collector implements, is in Core.Kernel, not here.)
 
-## Key Components
+## Setup
 
-- **ICollector**: Defines the base interface for all collectors, which are essentially MassTransit consumers for
-  `ArtifactCollectRequest` messages.
-- **FileSystem**: Provides shared methods for file system operations, such as creating directories and writing artifact
-  files.
-- **StorageExtensions**: Extension methods for configuring and interacting with storage systems like S3.
+A collector calls `services.AddStorage()` and registers `FileSystem` as a singleton.
+`AddStorage` reads the S3 variables below while the host is built, so a missing variable
+stops the service at startup with `NoNullAllowedException: <NAME> is null!`.
 
-## Interaction with Other Services
+## Configuration
 
-This library is used as a base dependency for all `Collector.*` services. It ensures consistency in how different
-collectors interact with the system and manage their local file systems and storage.
+| Variable                 | Default  | Effect |
+|--------------------------|----------|--------|
+| `BP_S3_ENDPOINT`         | none     | Required. `https://host:port` uses TLS; `http://host:port` or a bare `host:port` uses plain HTTP. |
+| `BP_S3_ACCESS_KEY`       | none     | Required. |
+| `BP_S3_SECRET_KEY`       | none     | Required. |
+| `BP_S3_BUCKET`           | none     | Required. Created if missing (checked once per process, on the first storage call). |
+| `BP_S3_REGION`           | none     | Required, but may be empty; an empty value is not passed to the client. |
+| `BP_S3_TRACING`          | `false`  | Parsed with `bool.Parse`, so anything but `true`/`false` stops the service at startup. `true` prints every S3 request and response body to stdout. |
+| `BP_COLLECTOR_DIRECTORY` | `/data/` | Local working directory. `GetModuleDir(name)` returns `<dir>/<name>`. Only Collector.Git and Collector.DockerArchive use it. |
+
+## Object keys
+
+`GetArtifactPath(module, url)` returns `<module>/<host><path>`: the host is lower-cased and
+loses its port, the path is percent-decoded, query string and fragment are dropped, and
+every `/-/` becomes `/`. Backslashes are turned into `/` on every read and write.
+
+```text
+module npm, https://registry.npmjs.org/@babel/core/-/core-7.0.0.tgz
+  -> npm/registry.npmjs.org/@babel/core/core-7.0.0.tgz
+```
+
+Only Collector.Http uses this function directly. Git, DockerArchive, Wget and
+Huggingface build their own keys; see their READMEs.
+
+## Delta links
+
+`CreateDeltaLink(module, url, artifact_path)` writes a small object at
+`delta/<module>/<yyyy_MM_dd>/<host><path>` (UTC date of the write, host and path derived
+from `url` as above) whose content is the key of the stored artifact (`artifact_path`
+if given, otherwise `GetArtifactPath(module, url)`). Listing `delta/<module>/<day>/` shows
+what was collected that day. A second write on the same day overwrites the link. No
+collector ever deletes links.
+
+```text
+delta/npm/2026_10_31/registry.npmjs.org/@babel/core/core-7.0.0.tgz
+  content: npm/registry.npmjs.org/@babel/core/core-7.0.0.tgz
+```
+
+## Uploads and retries
+
+- `PutFile` and `PutString` run through the `storage-pipeline` Polly policy: any
+  exception is retried up to 5 times, 5 seconds apart (6 attempts). After that the
+  exception reaches the collector.
+- A stream that can't seek (an HTTP response body) is first copied in full to a temp
+  file (`Path.GetTempFileName()`, i.e. `TMPDIR`, usually `/tmp`), which is deleted after
+  the upload. Collectors therefore need temp space for the largest file they download,
+  times the number of downloads running at once.
+- An upload replaces whatever is at the key; the new object appears only once the upload
+  has completed.
+- `Exists` is false only when S3 reports the key or bucket as missing; connection or
+  permission errors throw. `GetFileInfo` returns null on any error.

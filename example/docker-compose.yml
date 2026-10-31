@@ -1,48 +1,54 @@
-version: "3.8"
-name: backpack-full-stack
+# Evaluation stack: the infrastructure Backpack needs plus a minimal Backpack
+# (GUI, API, gateway, scheduler, router, the npm processor and the HTTP
+# collector). Not hardened for production; see README.md before starting it.
+name: backpack-example
 
 services:
-  # --- INFRASTRUCTURE LAYER ---
+  # --- INFRASTRUCTURE ---
 
-  minio:
-    image: minio/minio
+  # S3-compatible storage (SeaweedFS all-in-one "mini" mode). The bucket is
+  # created on startup; Backpack would also create it on first use.
+  s3:
+    image: docker.io/chrislusf/seaweedfs:4.51
     restart: always
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000" # S3 API
+      - "9001:9001" # admin UI
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-backpack_pass}
-    command: server --console-address ":9001" /data
-    networks:
-      - backpack-network
-
-  minio-init:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-backpack_pass}) do echo '...waiting for minio...' && sleep 1; done;
-      /usr/bin/mc mb --ignore-existing myminio/backpack;
-      exit 0;
-      "
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-backpack}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-backpack_pass}
+    command:
+      - mini
+      - -dir=/data
+      - -bucket=backpack
+      - -s3.port=9000
+      - -admin.port=9001
+      - -admin.user=${S3_ACCESS_KEY:-backpack}
+      - -admin.password=${S3_SECRET_KEY:-backpack_pass}
+      - -metricsPort=9324
+      - -webdav=false
+      - -s3.port.iceberg=0
+      - -s3.port.lance=0
+    volumes:
+      - s3-data:/data
     networks:
       - backpack-network
 
   mongo:
-    image: mongo:6
+    image: docker.io/library/mongo:7.0
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-backpack}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-backpack_pass}
     volumes:
+      - mongo-data:/data/db
+      # Seeds the processor definitions; runs only when the volume is empty.
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - backpack-network
 
   mongo-express:
-    image: mongo-express
+    image: docker.io/library/mongo-express:1.0.2
     restart: always
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER:-backpack}
@@ -53,30 +59,37 @@ services:
     networks:
       - backpack-network
 
+  # Backpack authenticates as user "default" with BP_REDIS_PASS.
   redis:
-    image: redis:7-alpine
+    image: docker.io/library/redis:7-alpine
     restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASS:-backpack_pass}"]
     networks:
       - backpack-network
 
+  # The MassTransit image ships the delayed message exchange plugin, which
+  # Backpack's delayed redelivery needs, and the management plugin, which the
+  # Status page uses.
   rabbitmq:
-    image: masstransit/rabbitmq:3
+    image: docker.io/masstransit/rabbitmq:4.3.1
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-backpack}
-      RABBITMQ_DEFAULT_PASSWORD: ${RABBIT_PASS:-backpack_pass}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS:-backpack_pass}
     ports:
-      - "15672:15672"
+      - "15672:15672" # management UI
     networks:
       - backpack-network
 
+  # Browsers and the API must reach Keycloak under the same URL, so add
+  # "127.0.0.1 keycloak" to your hosts file (see README.md).
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
     restart: always
     command: start-dev --http-port 8090 --import-realm
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_USER:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_PASS:-backpack_pass}
+      KEYCLOAK_ADMIN: ${KC_USER:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_PASS:-backpack_pass}
     ports:
       - "8090:8090"
     volumes:
@@ -84,61 +97,73 @@ services:
     networks:
       - backpack-network
 
-  # --- BACKPACK CORE SERVICES ---
+  # --- BACKPACK ---
 
-  gateway:
-    image: ghcr.io/backpack/core/gateway:latest
+  gui:
+    image: ghcr.io/linus-berg/backpack/gui:latest
     restart: always
-    env_file:
-      - vars.env
+    ports:
+      - "3000:80"
     networks:
       - backpack-network
 
+  # The GUI calls the API on port 8004 of the host it was loaded from.
   api:
-    image: ghcr.io/backpack/integration/api:latest
+    image: ghcr.io/linus-berg/backpack/integration/api:latest
     restart: always
     env_file:
       - vars.env
     ports:
-      - "8004:80"
+      - "8004:8080"
+    networks:
+      - backpack-network
+
+  gateway:
+    image: ghcr.io/linus-berg/backpack/core/gateway:latest
+    restart: always
+    env_file:
+      - vars.env
     networks:
       - backpack-network
 
   scheduler:
-    image: ghcr.io/backpack/tracker/scheduler:latest
+    image: ghcr.io/linus-berg/backpack/tracker/scheduler:latest
     restart: always
     env_file:
       - vars.env
     networks:
       - backpack-network
-
-  # --- PROCESSORS (Examples) ---
-
-  processor-npm:
-    image: ghcr.io/backpack/processor/npm:latest
-    restart: always
-    env_file:
-      - vars.env
-    networks:
-      - backpack-network
-
-  # --- COLLECTORS (Examples) ---
 
   collector-router:
-    image: ghcr.io/backpack/collector/router:latest
+    image: ghcr.io/linus-berg/backpack/collector/router:latest
     restart: always
     env_file:
       - vars.env
     networks:
       - backpack-network
 
-  collector-http:
-    image: ghcr.io/backpack/collector/http:latest
+  # Processors: one service per ecosystem, each also needs a definition in
+  # mongo-init.js (or the GUI's Processors page).
+  processor-npm:
+    image: ghcr.io/linus-berg/backpack/processor/npm:latest
     restart: always
     env_file:
       - vars.env
     networks:
       - backpack-network
+
+  # Collectors: picked by URL scheme. npm tarballs are https:// URLs.
+  collector-http:
+    image: ghcr.io/linus-berg/backpack/collector/http:latest
+    restart: always
+    env_file:
+      - vars.env
+    networks:
+      - backpack-network
+
+volumes:
+  s3-data:
+  mongo-data:
 
 networks:
   backpack-network:

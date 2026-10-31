@@ -1,91 +1,116 @@
 # Architecture Diagrams
 
-## Advanced Architectural View
-This diagram illustrates the high-level orchestration, state management, and storage flows within the Backpack ecosystem.
+## Components
+
+Solid arrows are RabbitMQ messages (labelled with the queue), dashed arrows are other
+connections.
 
 ```mermaid
-graph TB
-    subgraph "External Realms"
-        REG[Public Registries: NPM, OCI, PyPi, etc.]
-        OIDC[OIDC Provider: Keycloak/Auth0]
+flowchart LR
+    subgraph Users
+        GUI[Backpack GUI]
+        CLI["Scripts / CI<br/>(API key)"]
     end
+    OIDC[OIDC provider]
 
-    subgraph "Entry Points"
-        GUI[Backpack Web GUI]
+    subgraph Backpack
         API[Integration.API]
-    end
-
-    subgraph "Orchestration Layer"
-        GW(Core.Gateway)
         SCHED[Tracker.Scheduler]
-        BUS((RabbitMQ / MassTransit))
-    end
-
-    subgraph "Logic & Retrieval"
-        PROC{Processors}
+        GW[Core.Gateway]
+        PROC["Processors<br/>processor-{id}"]
         ROUTER[Collector.Router]
-        COLL{Collectors}
+        COLL["Collectors<br/>collector-{scheme}"]
     end
 
-    subgraph "Persistence & State"
-        MONGO[(MongoDB: Metadata)]
-        REDIS[(Redis: Cache/Rate-Limit)]
-        S3[(S3/MinIO: Persistent Storage)]
-        DISK[(Local Disk: Transient Storage)]
+    subgraph State
+        MONGO[("MongoDB<br/>artifacts, processors,<br/>schedules, events")]
+        REDIS[("Redis<br/>ingest contexts")]
+        S3[(S3 bucket)]
+        REG[(Container registry)]
     end
 
-    %% Interaction Flow
-    GUI -- "Auth" --> OIDC
-    API -- "Validate" --> OIDC
-    GUI -- "Trigger Ingest" --> API
-    SCHED -- "Scheduled Ingest" --> BUS
-    API -- "Ingest Request" --> BUS
-    BUS --> GW
-    
-    GW -- "State & History" --> MONGO
-    GW -- "Route Process" --> BUS
-    BUS --> PROC
-    
-    PROC -- "Fetch Metadata" --> REG
-    PROC -- "Resolve Deps" --> BUS
-    BUS -- "Processed Response" --> GW
-    
-    GW -- "Recursive Discovery" --> BUS
-    
-    GW -- "Route Collect" --> BUS
-    BUS --> ROUTER
-    ROUTER --> COLL
-    
-    COLL -- "Existence Check" --> S3
-    COLL -- "Download" --> REG
-    COLL -- "Atomic Write" --> DISK
-    DISK -- "Finalize" --> S3
-    
-    COLL -- "Locking" --> REDIS
+    UP["Upstream registries<br/>npm, PyPI, NuGet, OCI, Git, ..."]
+
+    GUI -.->|sign-in| OIDC
+    GUI -.->|"REST + token"| API
+    CLI -.->|"REST + X-API-KEY"| API
+    API -.->|validate tokens| OIDC
+
+    API -->|gateway-ingest-unprocessed| GW
+    SCHED -->|gateway-ingest-unprocessed| GW
+    GW -->|"processor-{id}"| PROC
+    PROC -->|gateway-ingest-processed| GW
+    GW -->|collector-router| ROUTER
+    ROUTER -->|"collector-{scheme}"| COLL
+    API -->|"collector-{scheme}<br/>(direct collect)"| COLL
+    API -->|"processor-{id}-preview"| PROC
+    API -->|"collector-router<br/>(validate)"| ROUTER
+    API -->|system-event| GW
+
+    API -.-> MONGO
+    GW -.-> MONGO
+    SCHED -.-> MONGO
+    API -.-> REDIS
+    GW -.-> REDIS
+    SCHED -.-> REDIS
+
+    PROC -.->|metadata| UP
+    COLL -.->|download| UP
+    COLL -.->|store| S3
+    COLL -.->|container images| REG
 ```
 
-## Message Propagation Diagram
-The following diagram illustrates the simplified flow of messages and artifact ingestion requests.
+- The **API** is the only entry point for users. It writes artifacts and settings to
+  MongoDB and starts work by sending messages. Only previews wait for an answer
+  (request/response).
+- **Tracker.Scheduler** runs the re-track schedules stored in MongoDB.
+- **Core.Gateway** is the only service that interprets processor results: it detects
+  changes, stores them, and fans out to the router and to dependencies.
+- **Processors** only read upstream metadata. **Collectors** only download and store.
+  Neither uses MongoDB or Redis.
+- `direct_collect` processors skip the gateway, processors and router: the artifact ID is
+  the URL handed to a collector.
+
+## Processing an artifact
 
 ```mermaid
-graph TD
-    API[Integration.API] -- ArtifactIngestRequest --> GW(Core.Gateway)
-    SCHED[Tracker.Scheduler] -- ArtifactIngestRequest --> GW
-    GW -- ArtifactProcessRequest --> PROC{Processors}
-    PROC -- ArtifactProcessedRequest --> GW
-    GW -- ArtifactRouteRequest --> ROUTER[Collector.Router]
-    ROUTER -- ArtifactCollectRequest --> COLL{Collectors}
-    COLL -- Download --> STORAGE[(S3 Storage)]
+sequenceDiagram
+    participant API as Integration.API
+    participant GW as Core.Gateway
+    participant R as Redis
+    participant DB as MongoDB
+    participant P as processor-npm
+    participant RT as collector-router
+    participant C as collector-https
+    participant S3 as S3 bucket
 
-    subgraph Processors
-        PROC_NPM[Processor.Npm]
-        PROC_PYPI[Processor.Pypi]
-        PROC_...[...]
-    end
-
-    subgraph Collectors
-        COLL_HTTP[Collector.Http]
-        COLL_GIT[Collector.Git]
-        COLL_...[...]
+    API->>DB: store artifact (root)
+    API->>GW: ArtifactIngestRequest
+    GW->>R: new ingest context (GUID, 2 days)
+    GW->>P: ArtifactProcessRequest(ctx, artifact)
+    P->>P: fetch metadata upstream
+    P->>GW: ArtifactProcessedRequest(context, artifact)
+    GW->>DB: compare with stored artifact
+    alt unchanged
+        GW-->>GW: stop
+    else changed
+        GW->>DB: save artifact
+        GW->>RT: ArtifactRouteRequest(artifact)
+        loop each version matching the filter, each file
+            RT->>C: ArtifactCollectRequest(url, module)
+            C->>S3: exists?
+            opt missing (or force)
+                C->>C: download
+                C->>S3: put object, delta link
+            end
+        end
+        loop each dependency not yet in the context
+            GW->>R: add to context
+            GW->>DB: add artifact (non-root) if new
+            GW->>P: ArtifactProcessRequest(ctx, dependency)
+        end
     end
 ```
+
+See [Troubleshooting](Troubleshooting.md) for each step in detail and
+[Storage Architecture](../STORAGE.md) for the object layout.

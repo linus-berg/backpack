@@ -2,6 +2,12 @@
 The `docker-compose.yml` in this directory will set up the surrounding
 infrastructure environment for development, or at least hopefully it does.
 
+It contains only the infrastructure (RabbitMQ, MongoDB, Redis, S3, a container
+registry, Keycloak and telemetry), not the Backpack services: run those from your
+IDE or with `dotnet run`, using their launch profiles. Addresses, credentials and the
+steps after `up` are in [Development Setup](../docs/DevelopmentSetup.md). For a stack
+that includes Backpack itself, see [`example/`](../example/README.md).
+
 ## Run with `docker`
 Make sure that `docker` and `docker-compose` is installed on your machine. Then
 start the development environment with:

@@ -1,21 +1,35 @@
-# Backpack Documentation Index
+# Backpack Documentation
 
-Welcome to the Backpack documentation. This index provides a quick reference to the available documentation files in this directory.
+## Understanding Backpack
 
-## Core Documentation
-- [**Architecture Diagrams**](ArchitectureDiagrams.md) - High-level system architecture and data flow diagrams.
-- [**Service & Module Inventory**](ServiceInventory.md) - A comprehensive list of collectors, processors, and gateway services.
-- [**Glossary of Terms**](Glossary.md) - Definitions of key terms used throughout the project.
+- [Architecture Diagrams](ArchitectureDiagrams.md): components, queues and the life of an
+  artifact.
+- [Service Inventory](ServiceInventory.md): every service, its queues, and which
+  collectors each processor needs.
+- [Storage Architecture](../STORAGE.md): how collected files are named in the bucket, and
+  delta links.
+- [Glossary](Glossary.md): the terms used in the code and these documents.
+- [Type Reference](TypeReference.md): artifacts, messages and stored documents.
 
-## Guides & Setup
-- [**Development Setup**](DevelopmentSetup.md) - Instructions for setting up your local development environment.
-- [**Deployment Guide**](DeploymentGuide.md) - How to deploy Backpack in various environments.
-- [**Configuration**](Configuration.md) - Detailed guide on configuring the system and its services.
+## Running Backpack
 
-## Development & Extension
-- [**Processor Development**](ProcessorDevelopment.md) - Guide for creating new collectors and processors.
-- [**Type Reference**](TypeReference.md) - Reference for data types and schemas used in the system.
-- [**Raw Integration**](RawIntegration.md) - Information on integrating directly with Backpack's internal systems.
+- [Development Setup](DevelopmentSetup.md): a local stack for working on Backpack.
+- [Deployment Guide](DeploymentGuide.md): infrastructure, images, Helm and Compose,
+  sign-in, security notes.
+- [Configuration](Configuration.md): every environment variable, and processor
+  definitions.
+- [Troubleshooting](Troubleshooting.md): following an artifact through the system, and
+  common problems.
+- [Example stack](../example/README.md): a single-machine Compose deployment for
+  evaluation.
 
-## Support
-- [**Troubleshooting**](Troubleshooting.md) - Solutions to common issues and debugging tips.
+## Extending Backpack
+
+- [Processor Development](ProcessorDevelopment.md): adding an ecosystem with the .NET
+  template.
+- [Raw Integration](RawIntegration.md): processors and collectors in other languages.
+
+Each service also has a README in its directory (for example
+[`Collector.Git/README.md`](../Collector.Git/README.md)) with its queues, settings and
+behaviour in detail. The API's endpoints are listed in
+[`Integration.API/README.md`](../Integration.API/README.md).

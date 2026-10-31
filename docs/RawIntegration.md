@@ -1,102 +1,136 @@
-# Non-.NET (Raw) Integration Guide
+# Raw Integration (processors in other languages)
 
-If you are implementing a processor in a language other than C# (e.g., Python, Go, Node.js) and cannot use the MassTransit SDK, Backpack provides a **Raw Ingestion** path. This allows you to interact with the system using standard JSON messages over RabbitMQ.
+A processor doesn't have to be .NET. Anything that can read and write JSON over RabbitMQ
+can serve an ecosystem: it consumes MassTransit messages from its queue and replies in
+plain JSON to a gateway queue that accepts messages without the MassTransit envelope.
 
-## 1. High-Level Flow
+## Overview
 
-Standard .NET processors use binary-wrapped MassTransit messages. Raw processors use plain JSON:
+1. The gateway sends an `ArtifactProcessRequest` to the queue `processor-<id>`, where
+   `<id>` is the processor's ID in `backpack-processors` (for example `go`).
+2. Your service reads the artifact, fetches its metadata upstream, and fills in versions,
+   files and direct dependencies.
+3. It publishes an `ArtifactProcessedRequest` as plain JSON to
+   `gateway-ingest-processed-raw`.
 
-1.  **Request**: The Gateway sends an `ArtifactProcessRequest` to your queue (e.g., `processor-python-ecosystem`).
-2.  **Processing**: Your service parses the metadata.
-3.  **Reply**: Instead of replying to the standard ingest queue, you send a raw JSON `Artifact` object to the **`gateway-ingest-processed-raw`** queue.
+Everything after that (storing, routing to collectors, recursing into dependencies) is the
+same as for .NET processors; see [Troubleshooting](Troubleshooting.md#how-an-artifact-moves-through-the-system).
 
-## 2. Consuming the Request
+## Consuming requests
 
-Your service should listen on a queue named `processor-<your-name>`. 
+MassTransit sends to `processor-<id>` through a fanout exchange of the same name bound to
+a durable queue of the same name, and creates both on first send. If your service may
+start first, declare them the same way: durable, not auto-delete.
 
-Because the Gateway is written in .NET, the incoming message will be wrapped in a **MassTransit JSON Envelope**. You must parse the `message` field to get the actual payload.
+Messages are MassTransit JSON envelopes (`application/vnd.masstransit+json`). The payload
+is in `message`:
 
-### Example Incoming Message
 ```json
 {
-  "messageId": "08db0000-5c70-0005-0123-08db23456789",
-  "correlationId": "08db0000-5c70-0005-9876-08db23456789",
-  "conversationId": "08db0000-5c70-0005-abcd-08db23456789",
-  "sourceAddress": "rabbitmq://localhost/gateway",
-  "destinationAddress": "rabbitmq://localhost/processor-python-ecosystem",
-  "messageType": [
-    "urn:message:Core.Kernel.Messages:ArtifactProcessRequest"
-  ],
+  "messageId": "0b4e0000-5c70-0005-0123-08dc23456789",
+  "conversationId": "0b4e0000-5c70-0005-abcd-08dc23456789",
+  "sourceAddress": "rabbitmq://rabbitmq/...",
+  "destinationAddress": "rabbitmq://rabbitmq/processor-go",
+  "messageType": ["urn:message:Core.Kernel.Messages:ArtifactProcessRequest"],
   "message": {
+    "ctx": "5f0c1c62-8d55-4c7e-9a3e-2b6f1d0a9c41",
     "artifact": {
-      "id": "my-package",
-      "processor": "python-ecosystem",
-      "filter": ".*",
-      "config": {}
-    },
-    "ctx": "CORRELATION_TOKEN_12345"
+      "id": "golang.org/x/text",
+      "processor": "go",
+      "filter": "",
+      "config": {},
+      "versions": {},
+      "dependencies": [],
+      "root": true
+    }
   },
-  "sentTime": "2023-10-27T10:00:00.000Z",
+  "sentTime": "2026-10-31T10:00:00Z",
   "headers": {},
-  "host": {
-    "machineName": "BACKPACK-GATEWAY",
-    "processName": "Core.Gateway",
-    "processId": 1234,
-    "assembly": "Core.Gateway",
-    "assemblyVersion": "1.0.0.0",
-    "frameworkVersion": "8.0.0",
-    "massTransitVersion": "8.1.0",
-    "operatingSystemVersion": "Unix 13.0.0"
-  }
+  "host": { "machineName": "gateway-7d9f", "processName": "Core.Gateway" }
 }
 ```
 
-### Key Fields to Extract:
-*   **`message.artifact`**: The skeleton artifact object (id, processor, config).
-*   **`message.ctx`**: A correlation context string. **Crucial**: You must include this exact string in your reply so the Gateway can track the recursive discovery chain.
+- `message.ctx`: the ingest context, a **GUID**. Copy it unchanged into the reply as
+  `context`. The gateway uses it to visit every dependency only once per ingest.
+- `message.artifact`: the artifact as stored. `config` holds the per-artifact fields
+  defined for your processor. `versions` contains what was found last time; you can
+  ignore it and return everything again.
 
-## 3. Sending the Reply (The Raw Path)
+The artifact fields are described in the [Type Reference](TypeReference.md).
 
-Once processing is complete, publish a JSON message to the **`gateway-ingest-processed-raw`** exchange/queue. 
+## Sending the reply
 
-### Message Structure
-The message must be a JSON object with two top-level fields:
+Publish a plain JSON body (content type `application/json`, no MassTransit envelope) to
+the exchange `gateway-ingest-processed-raw`, or to the default exchange with that routing
+key. The gateway reads it as an `ArtifactProcessedRequest`:
 
 ```json
 {
-  "context": "the-ctx-string-from-the-request",
+  "context": "5f0c1c62-8d55-4c7e-9a3e-2b6f1d0a9c41",
   "artifact": {
-    "id": "my-package",
-    "processor": "python-ecosystem",
+    "id": "golang.org/x/text",
+    "processor": "go",
+    "filter": "",
+    "config": {},
+    "root": true,
     "versions": {
-      "1.0.0": {
-        "version": "1.0.0",
+      "v0.14.0": {
+        "version": "v0.14.0",
         "files": {
-          "package.zip": {
-            "uri": "https://upstream.com/package.zip",
-            "folder": "optional-subfolder"
+          "text-v0.14.0.zip": {
+            "uri": "https://proxy.golang.org/golang.org/x/text/@v/v0.14.0.zip",
+            "folder": ""
           }
         }
       }
     },
     "dependencies": [
-      {
-        "id": "required-lib",
-        "processor": "python-ecosystem"
-      }
+      { "id": "golang.org/x/tools", "processor": "go", "config": {} }
     ]
-  }
+  },
+  "collect_requests": []
 }
 ```
 
-## 4. Why use the Raw Endpoint?
+Rules:
 
-The `gateway-ingest-processed-raw` endpoint in the Gateway is configured with `UseRawJsonDeserializer`. This tells MassTransit to skip its own envelope headers and security checks and simply parse the body as a direct mapping to the `Artifact` class.
+- Return the artifact you received with `versions` and `dependencies` filled in. Keep
+  `id`, `processor`, `filter`, `config` and `root` as they were: the gateway compares the
+  whole artifact with the stored one, and a difference counts as a change.
+- `versions` maps a version string to its files; `files` maps a file name to its URL.
+  The URL's scheme picks the collector (`https` → `collector-https`). `folder` is the
+  storage namespace: files are stored under `<folder>/<host><path>`, or
+  `<processor id>/...` when it's empty.
+- Report every version you find. The artifact's filter is applied later by the router.
+- List only **direct** dependencies. The gateway handles recursion. A dependency is
+  identified by `id` only; give the `processor` that handles it.
+- `collect_requests` (optional): extra files to collect regardless of the filter, as
+  `{ "location": "<url>", "module": "<folder>", "force": false }`.
 
-## 5. Summary Checklist
-1.  Configure your RabbitMQ client to use **Plain JSON** (no MassTransit headers).
-2.  Listen on `processor-<name>`.
-3.  Extract the `ctx` field from the incoming message.
-4.  Perform your logic.
-5.  Publish the result to `gateway-ingest-processed-raw`.
-6.  Ensure the `context` field in your reply matches the `ctx` from the request.
+There is no error reply: if the upstream fails, log it and drop the request. The
+artifact is tried again the next time it's processed (a re-track, or a change in an
+artifact that depends on it).
+
+## Previews
+
+The GUI's add form can ask the processor for a preview through `processor-<id>-preview`,
+using MassTransit request/response. A raw processor would have to answer with a
+MassTransit envelope sent to the request's `responseAddress`, carrying its `requestId`. If
+yours doesn't, set `preview_enabled: false` in its processor definition.
+
+## Raw collectors
+
+Collectors can be written the same way. A collector for the URL scheme `foo` consumes
+`collector-foo`; the payload of each envelope is an `ArtifactCollectRequest`
+(`{ "location", "module", "force" }`). Nothing is sent back. To keep the storage layout,
+write to `<module>/<host><path>` in the bucket and skip existing objects unless `force`
+is true; see [Storage Architecture](../STORAGE.md).
+
+## Checklist
+
+1. Add a processor definition with `_id` = your processor ID.
+2. Consume `processor-<id>` and read `message.ctx` and `message.artifact` from the
+   envelope.
+3. Publish `{ "context": <ctx>, "artifact": <filled-in artifact> }` as plain JSON to
+   `gateway-ingest-processed-raw`.
+4. Make sure collectors exist for the URL schemes of your files.
