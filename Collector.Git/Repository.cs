@@ -7,6 +7,7 @@ namespace Collector.Git;
 ///   Represents a git repository and its local configuration.
 /// </summary>
 public class Repository {
+  private const int C_GIT_PROTOCOL_PORT_ = 9418;
   private readonly string original_uri_;
   private readonly UriBuilder uri_;
 
@@ -17,9 +18,15 @@ public class Repository {
   /// <param name="local_directory">The base local directory for repositories.</param>
   public Repository(string repo, string local_directory) {
     original_uri_ = repo;
+    UriBuilder original = new(original_uri_);
+    /* Remotes are fetched over https. Keep an explicit port (e.g. an
+       enterprise host on :8443) unless it is the git protocol default. */
+    bool keep_port = original.Port > 0 &&
+                     original.Port != C_GIT_PROTOCOL_PORT_ &&
+                     !original.Uri.IsDefaultPort;
     uri_ = new UriBuilder(original_uri_) {
       Scheme = Uri.UriSchemeHttps,
-      Port = -1
+      Port = keep_port ? original.Port : -1
     };
     owner = GetOwner();
     remote = uri_.Uri.ToString();

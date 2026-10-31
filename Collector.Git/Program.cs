@@ -32,6 +32,11 @@ IHost host = Host.CreateDefaultBuilder(args)
                        }
                      );
                      services.AddSingleton<FileSystem>();
+                     services.AddSingleton(
+                       sp => HostCredentials.FromEnvironment(
+                         sp.GetRequiredService<ILogger<HostCredentials>>()
+                       )
+                     );
                      services.AddSingleton<Git>();
                      services.Register(registration);
                      services.AddHostedService<Worker>();

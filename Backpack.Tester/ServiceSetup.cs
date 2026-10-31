@@ -3,9 +3,11 @@
 
 using Collector.Git;
 using Collector.Kernel;
+using Core.Kernel;
 using Library.Github;
 using Library.Skopeo;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Timeout;
 using Processor.HuggingFace;
@@ -46,6 +48,11 @@ public static class ServiceSetup {
 
     services.AddLogging();
     services.AddSingleton<FileSystem>();
+    services.AddSingleton(
+      sp => HostCredentials.FromEnvironment(
+        sp.GetRequiredService<ILogger<HostCredentials>>()
+      )
+    );
     services.AddSingleton<Git>();
     services.AddSingleton<IPypi, Pypi>();
     services.AddSingleton<ITerraform, Terraform>();

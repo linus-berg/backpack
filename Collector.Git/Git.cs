@@ -19,6 +19,7 @@ public class Git {
 
   private readonly string bundle_dir_;
   private readonly string dir_;
+  private readonly HostCredentials credentials_;
   private readonly FileSystem fs_;
   private readonly ResiliencePipeline<bool> git_timeout_;
   private readonly ILogger<Git> logger_;
@@ -28,10 +29,12 @@ public class Git {
   /// </summary>
   /// <param name="fs">The file system.</param>
   /// <param name="polly">The resilience pipeline provider.</param>
+  /// <param name="credentials">Credentials for private git hosts.</param>
   /// <param name="logger">The logger.</param>
   public Git(FileSystem fs, ResiliencePipelineProvider<string> polly,
-             ILogger<Git> logger) {
+             HostCredentials credentials, ILogger<Git> logger) {
     fs_ = fs;
+    credentials_ = credentials;
     dir_ = fs_.GetModuleDir("git", true);
     bundle_dir_ = Path.GetFullPath(Path.Join(dir_, "/tmp", "/bundles"));
     git_timeout_ = polly.GetPipeline<bool>("git-timeout");
@@ -92,6 +95,10 @@ public class Git {
           token
         );
       logger_.LogDebug("{Remote}: {Success}", remote, success);
+      if (!success) {
+        LogMirrorFailure(repository);
+      }
+
       if (success) {
         logger_.LogDebug("{Remote}: Creating bundle", remote);
         await CreateIncrementalGitBundle(repository, token);
@@ -100,6 +107,30 @@ public class Git {
       return success;
     } finally {
       repo_lock.Release();
+    }
+  }
+
+  /// <summary>
+  ///   Logs why mirroring may have failed, pointing at credentials for
+  ///   private repositories. git's own error output is logged by
+  ///   <see cref="Bin.Execute" />.
+  /// </summary>
+  /// <param name="repository">The repository that failed.</param>
+  private void LogMirrorFailure(Repository repository) {
+    Uri remote = new(repository.remote);
+    if (credentials_.TryGet(remote, out HostCredential? _)) {
+      logger_.LogError(
+        "{RepositoryRemote}: Mirroring failed using the credentials configured for {Host}. Check that the token is valid, unexpired and can read this repository",
+        repository.remote,
+        remote.Authority
+      );
+    } else {
+      logger_.LogError(
+        "{RepositoryRemote}: Mirroring failed. If the repository is private, add credentials for {Host} to {Variable}",
+        repository.remote,
+        remote.Authority,
+        HostCredentials.C_FILE_VARIABLE
+      );
     }
   }
 
@@ -142,6 +173,20 @@ public class Git {
   /// </returns>
   private async Task<bool> CloneOrUpdateLocalMirror(
     Repository repository, CancellationToken token = default) {
+    IReadOnlyDictionary<string, string?> environment =
+      GitAuthentication.BuildEnvironment(
+        new Uri(repository.remote),
+        credentials_,
+        out bool has_credentials
+      );
+    if (has_credentials) {
+      logger_.LogDebug(
+        "{RepositoryRemote}: Using credentials for {Host}",
+        repository.remote,
+        new Uri(repository.remote).Authority
+      );
+    }
+
     if (!Directory.Exists(repository.local_path)) {
       Directory.CreateDirectory(Path.Join(dir_, repository.owner));
       // Clone the mirror repository
@@ -159,7 +204,8 @@ public class Git {
                  args.Add(repository.local_path);
                },
                logger_,
-               token: token
+               token: token,
+               environment: environment
              );
     }
 
@@ -174,7 +220,8 @@ public class Git {
              },
              logger_,
              repository.local_path,
-             token: token
+             token: token,
+             environment: environment
            );
   }
 

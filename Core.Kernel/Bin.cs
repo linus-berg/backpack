@@ -21,6 +21,11 @@ public static class Bin {
   /// <param name="wd">The working directory in which to execute the binary.</param>
   /// <param name="success_code">The expected exit code indicating success.</param>
   /// <param name="token">A cancellation token to cancel the operation.</param>
+  /// <param name="environment">
+  ///   Extra environment variables for the process, merged over the current
+  ///   environment. Use this for secrets rather than arguments, which are
+  ///   visible in the process list.
+  /// </param>
   /// <returns>
   ///   A task that represents the asynchronous operation, returning true if the binary executed successfully;
   ///   otherwise, false.
@@ -31,7 +36,9 @@ public static class Bin {
                                          string wd = "",
                                          int success_code = 0,
                                          CancellationToken token =
-                                           default) {
+                                           default,
+                                         IReadOnlyDictionary<string, string?>?
+                                           environment = null) {
     StringBuilder std_out = new();
     StringBuilder std_err = new();
     Command cmd = Cli.Wrap(binary)
@@ -42,7 +49,12 @@ public static class Bin {
                      )
                      .WithStandardErrorPipe(
                        PipeTarget.ToStringBuilder(std_err)
-                     );
+                     )
+                     .WithValidation(CommandResultValidation.None);
+    if (environment != null) {
+      cmd = cmd.WithEnvironmentVariables(environment);
+    }
+
     CommandResult? result = null;
     try {
       result = await cmd.ExecuteAsync(token);
@@ -51,7 +63,20 @@ public static class Bin {
     }
 
     logger.LogDebug("{StdOut}", std_out.ToString());
-    logger.LogDebug("{StdErr}", std_err.ToString());
-    return result?.ExitCode == success_code;
+    bool success = result?.ExitCode == success_code;
+    if (success) {
+      logger.LogDebug("{StdErr}", std_err.ToString());
+    } else {
+      /* Surface why a command failed (e.g. git authentication errors)
+         instead of hiding it at debug level. */
+      logger.LogWarning(
+        "{Binary} exited with {ExitCode}: {StdErr}",
+        binary,
+        result?.ExitCode.ToString() ?? "no result",
+        std_err.ToString().Trim()
+      );
+    }
+
+    return success;
   }
 }

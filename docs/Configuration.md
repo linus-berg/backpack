@@ -55,6 +55,7 @@ Required by all Collector modules to store binaries in S3-compatible storage.
 | `BP_COLLECTOR_HTTP_DELTA`| Whether to use delta-mode for HTTP downloads. | `true` |
 | `BP_COLLECTOR_HTTP_MODE` | Storage strategy for HTTP (e.g., `lake`). | `lake` |
 | `BP_COLLECTOR_CONTAINER_REGISTRY` | The registry host for the Container collector. | `-` |
+| `BP_CREDENTIALS_FILE` | Path to a JSON file with credentials per host, for private sources (currently used by the Git collector). See `Collector.Git/README.md`. | `-` |
 
 ### Frontend (GUI)
 These are typically built into the React application or provided via a `.env` file during development.
