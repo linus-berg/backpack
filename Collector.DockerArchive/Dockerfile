@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
+FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
 WORKDIR /app
 
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -21,7 +21,7 @@ RUN dotnet publish "Collector.DockerArchive.csproj" -a $TARGETARCH -c Release -o
 # Build static skopeo binary (this is unsupported)
 # Requires newer debian release than 8.0 dotnet image has
 # https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
-FROM docker.io/ubuntu:24.04 AS skopeo-build
+FROM docker.io/ubuntu:25.10 AS skopeo-build
 # Set skopeo version here
 ARG SKOPEO_VERSION=1.21.0
 WORKDIR /src
