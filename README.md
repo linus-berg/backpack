@@ -5,6 +5,12 @@
   </picture>
 </p>
 
+<p align="center">
+  <a href="https://github.com/linus-berg/backpack/actions/workflows/build-and-publish.yml"><img src="https://github.com/linus-berg/backpack/actions/workflows/build-and-publish.yml/badge.svg?branch=master" alt="Build and Publish"></a>
+  <a href="https://github.com/linus-berg/backpack/actions/workflows/codeql.yml"><img src="https://github.com/linus-berg/backpack/actions/workflows/codeql.yml/badge.svg?branch=master" alt="CodeQL"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/linus-berg/backpack" alt="MIT License"></a>
+</p>
+
 # Backpack: Distributed Artifact Synchronization & Mirroring Engine
 
 Backpack is a high-performance, distributed system for people whose security teams have serious trust issues. It is engineered for those building in the quiet, isolated comfort of air-gapped bunkers who still need their 4GB of `node_modules` despite having zero bytes of external connectivity.

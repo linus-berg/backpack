@@ -1,0 +1,71 @@
+# Dependabot version updates. Security updates are enabled in the repository
+# settings and apply to every ecosystem below.
+version: 2
+updates:
+  # NuGet packages of every project in Backpack.sln.
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      nuget-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # MassTransit 9 is commercially licensed; moving to it is a decision,
+      # not a routine update.
+      - dependency-name: "MassTransit*"
+        update-types: ["version-update:semver-major"]
+      # Microsoft.* majors follow the .NET version and are upgraded together
+      # with the target framework.
+      - dependency-name: "Microsoft.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "System.*"
+        update-types: ["version-update:semver-major"]
+
+  # Base images of the published services (see build-and-publish.yml).
+  - package-ecosystem: docker
+    directories:
+      - "/Backpack.GitUnpack"
+      - "/Collector.Container"
+      - "/Collector.DockerArchive"
+      - "/Collector.Git"
+      - "/Collector.Http"
+      - "/Collector.Huggingface"
+      - "/Collector.Router"
+      - "/Collector.Wget"
+      - "/Core.Gateway"
+      - "/Integration.API"
+      - "/Processor.Container"
+      - "/Processor.Github.Releases"
+      - "/Processor.Helm"
+      - "/Processor.HuggingFace"
+      - "/Processor.Jetbrains.IDE"
+      - "/Processor.Jetbrains.Plugins"
+      - "/Processor.Npm"
+      - "/Processor.Nuget"
+      - "/Processor.Pypi"
+      - "/Processor.Rancher"
+      - "/Processor.Terraform"
+      - "/Tracker.Scheduler"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      docker-base-images:
+        patterns: ["*"]
+    ignore:
+      # The .NET images must match the target framework (net8.0).
+      - dependency-name: "*dotnet/*"
+        update-types: ["version-update:semver-major"]
+
+  # Actions are pinned to commits; Dependabot keeps the pins current.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns: ["*"]

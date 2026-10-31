@@ -52,6 +52,29 @@ concurrency limit (10 by default) of messages at a time. The exception is
 Tracker.Scheduler: it has no locking, so every replica would fire every schedule. Run
 exactly one.
 
+### Verifying images
+
+Images published by CI are signed with [Sigstore](https://www.sigstore.dev/) cosign,
+keylessly: the signature is bound to the GitHub Actions workflow that built the image and
+recorded in Sigstore's public transparency log. Each image also carries an SPDX SBOM and
+SLSA provenance. This applies to images built from the commit that introduced signing
+onwards; earlier images are unsigned.
+
+```bash
+cosign verify ghcr.io/linus-berg/backpack/core/gateway:master-<commit> \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github\.com/linus-berg/backpack(-gui)?/\.github/workflows/build-and-publish\.yml@refs/heads/(master|development)$'
+
+# The SBOM and the build provenance:
+docker buildx imagetools inspect ghcr.io/linus-berg/backpack/core/gateway:master-<commit> --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/linus-berg/backpack/core/gateway:master-<commit> --format '{{ json .Provenance }}'
+```
+
+To enforce signatures in a cluster, use an admission policy such as Sigstore's
+policy-controller or Kyverno's `verifyImages` with the same issuer and identity. Mirror the
+signatures together with the images (`cosign copy`, or a registry that copies
+referrers) when you move them into an isolated network.
+
 ## Option 1: Kubernetes with Helm
 
 The chart in [linus-berg/helm-charts](https://github.com/linus-berg/helm-charts)
