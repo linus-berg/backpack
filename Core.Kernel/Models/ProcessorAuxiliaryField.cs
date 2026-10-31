@@ -26,4 +26,10 @@ public class ProcessorAuxiliaryField {
   ///   Gets or sets the placeholder text for the configuration field.
   /// </summary>
   public string placeholder { get; set; } = string.Empty;
+
+  /// <summary>
+  ///   Gets or sets the value the field is pre-filled with when adding an
+  ///   artifact. Serialized as <c>default</c>.
+  /// </summary>
+  public string? @default { get; set; }
 }

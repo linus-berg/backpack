@@ -234,16 +234,19 @@ public class ArtifactController : ControllerBase {
   [HttpPost("reject")]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Reject(
-    [FromBody] ArtifactValidationInput input) {
+    [FromBody] ArtifactRejectInput input) {
     bool result =
       await database_.DeletePendingArtifact(input.processor, input.id);
     if (!result) {
       return NotFound();
     }
 
+    string reason_suffix = string.IsNullOrWhiteSpace(input.reason)
+                             ? string.Empty
+                             : $": {input.reason.Trim()}";
     await event_service_.LogEvent(
       "API",
-      $"Artifact {input.processor}/{input.id} was REJECTED",
+      $"Artifact {input.processor}/{input.id} was REJECTED{reason_suffix}",
       EventSeverity.WARNING,
       HttpContext.User.Identity?.Name ?? "Unknown"
     );

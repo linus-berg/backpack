@@ -73,6 +73,16 @@ public class SchedulerController : ControllerBase {
       return BadRequest("Processor and Cron are required");
     }
 
+    string? cron_error = GetCronError(schedule.cron);
+    if (cron_error != null) {
+      return BadRequest(
+        new {
+          Valid = false,
+          Error = cron_error
+        }
+      );
+    }
+
     await database_.UpdateSchedule(schedule);
     await event_service_.LogEvent(
       "API",
@@ -90,6 +100,16 @@ public class SchedulerController : ControllerBase {
     if (string.IsNullOrEmpty(schedule.processor) ||
         string.IsNullOrEmpty(schedule.cron)) {
       return BadRequest("Processor and Cron are required");
+    }
+
+    string? cron_error = GetCronError(schedule.cron);
+    if (cron_error != null) {
+      return BadRequest(
+        new {
+          Valid = false,
+          Error = cron_error
+        }
+      );
     }
 
     schedule.id ??= Guid.NewGuid().ToString();
@@ -120,6 +140,19 @@ public class SchedulerController : ControllerBase {
     );
     await publish_endpoint_.Publish(new ReloadSchedulesRequest());
     return NoContent();
+  }
+
+  /// <summary>
+  ///   Parses a six-field (seconds-first) cron expression.
+  /// </summary>
+  /// <returns>The parse error message, or null when the expression is valid.</returns>
+  private static string? GetCronError(string cron) {
+    try {
+      CronExpression.Parse(cron, CronFormat.IncludeSeconds);
+      return null;
+    } catch (Exception ex) {
+      return ex.Message;
+    }
   }
 
   [HttpPost("validate")]
