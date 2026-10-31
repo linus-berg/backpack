@@ -138,7 +138,18 @@ public class ArtifactService : IArtifactService {
       enumerable.Count()
     );
     foreach (Artifact artifact in enumerable) {
-      await Validate(artifact, processor);
+      /* One broken artifact (e.g. a direct-collect ID without a protocol)
+         must not stop the rest of the processor from being validated. */
+      try {
+        await Validate(artifact, processor);
+      } catch (Exception e) {
+        logger_.LogError(
+          "[{Processor}] Could not validate {Artifact}: {Error}",
+          processor.id,
+          artifact.id,
+          e.Message
+        );
+      }
     }
   }
 

@@ -9,6 +9,7 @@ using Core.Kernel.Extensions;
 using Core.Kernel.Registrations;
 using Core.Services;
 using Integration.API;
+using Integration.API.Errors;
 using Integration.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -179,6 +180,12 @@ builder.Services.AddAuthorization(
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
+/* Unhandled exceptions become RFC 7807 ProblemDetails (status, title,
+   traceId) in every environment. Without this, Development returns the
+   developer exception page, whose stack trace and request headers
+   (including the bearer token) the GUI would show to the user. */
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<InvalidCollectLocationExceptionHandler>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -198,6 +205,9 @@ app.UseCors(
     b.AllowAnyMethod();
   }
 );
+/* After UseCors, so error responses still carry CORS headers and the GUI
+   can read them. Exceptions are logged by this middleware. */
+app.UseExceptionHandler();
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();

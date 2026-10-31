@@ -2,6 +2,7 @@ using System.Security.Authentication;
 using System.Security.Claims;
 using Core.Infrastructure.Models;
 using Core.Kernel;
+using Core.Kernel.Exceptions;
 using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
@@ -94,6 +95,11 @@ public class ArtifactController : ControllerBase {
 
     Artifact? artifact = await database_.GetArtifact(input.id, input.processor);
     Processor proc = await database_.GetProcessor(input.processor);
+    if (proc.direct_collect &&
+        !ArtifactCollectRequest.TryGetCollectorModule(input.id, out string? _)) {
+      return InvalidLocation(input.id);
+    }
+
     bool is_admin = u.IsInRole("Administrator");
     bool needs_approval = proc.requires_approval && !is_admin;
 
@@ -181,6 +187,12 @@ public class ArtifactController : ControllerBase {
       await database_.GetPendingArtifact(input.processor, input.id);
     if (pending == null) {
       return NotFound("Pending artifact not found");
+    }
+
+    Processor pending_processor = await database_.GetProcessor(pending.processor);
+    if (pending_processor.direct_collect &&
+        !ArtifactCollectRequest.TryGetCollectorModule(pending.id, out string? _)) {
+      return InvalidLocation(pending.id);
     }
 
     // Create actual artifact
@@ -339,6 +351,13 @@ public class ArtifactController : ControllerBase {
 
   [HttpPost("collect")]
   public async Task<ActionResult> Collect(ArtifactCollectRequest request) {
+    if (!ArtifactCollectRequest.TryGetCollectorModule(
+          request.location,
+          out string? _
+        )) {
+      return InvalidLocation(request.location);
+    }
+
     log_.Information("Collecting {RequestLocation}", request.location);
     await aps_.Collect(request.location, request.module);
     await event_service_.LogEvent(
@@ -348,5 +367,19 @@ public class ArtifactController : ControllerBase {
       HttpContext.User.Identity?.Name ?? "Unknown"
     );
     return Ok("OK");
+  }
+
+  /// <summary>
+  ///   400 response for a location no collector can handle, e.g. a
+  ///   direct-collect artifact added without its protocol.
+  /// </summary>
+  /// <param name="location">The rejected location.</param>
+  /// <returns>A ProblemDetails response explaining the expected format.</returns>
+  private ObjectResult InvalidLocation(string location) {
+    return Problem(
+      detail: InvalidCollectLocationException.DescribeProblem(location),
+      statusCode: StatusCodes.Status400BadRequest,
+      title: "Invalid artifact location"
+    );
   }
 }
