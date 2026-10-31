@@ -1,607 +1,607 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backpack | The Ultimate Artifact Bridge</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #0a0a0a;
-            --surface: #141414;
-            --surface-accent: #1a1a1a;
-            --primary: #f97316; /* Orange-500 */
-            --primary-muted: rgba(249, 115, 22, 0.2);
-            --secondary: #fb923c; /* Orange-400 */
-            --accent: #ea580c; /* Orange-600 */
-            --text-main: #e5e7eb;
-            --text-dim: #71717a;
-            --border: #262626;
-            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
-            --terminal-green: #22c55e;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Backpack · Mirror software ecosystems for air-gapped networks</title>
+  <meta name="description" content="Backpack collects every version of the packages you choose, and everything they depend on, into S3-compatible storage for transfer to air-gapped networks. npm, NuGet, PyPI, container images, Helm, Hugging Face and more.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111418" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://linus-berg.github.io/backpack/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Backpack">
+  <meta property="og:description" content="Collects and mirrors entire software ecosystems for air-gapped networks.">
+  <meta property="og:url" content="https://linus-berg.github.io/backpack/">
+  <meta property="og:image" content="https://linus-berg.github.io/backpack/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    /* Inter is served from this site (assets/fonts, SIL Open Font License),
+       so the page makes no third-party requests. */
+    @font-face {
+      font-family: "Inter";
+      src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    /* Colours follow the logo: neutral ink, one gold accent. */
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #f6f7f9;
+      --surface: #ffffff;
+      --ink: #1c2127;
+      --ink-2: #404854;
+      --muted: #5f6b7c;
+      --border: #e1e5ea;
+      --gold: #ffc247;
+      --gold-hover: #f2a93b;
+      --gold-text: #9a5b00;
+      --code-bg: #1c2127;
+      --code-ink: #e6e9ed;
+      --code-muted: #8f99a8;
+      --grid: rgba(28, 33, 39, 0.07);
+      --shadow: 0 1px 2px rgba(17, 20, 24, 0.04), 0 8px 24px rgba(17, 20, 24, 0.06);
+      --radius: 14px;
+      --max: 1160px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111418;
+        --bg-soft: #151a1f;
+        --surface: #1a1f25;
+        --ink: #f6f7f9;
+        --ink-2: #c5cbd3;
+        --muted: #a1abb8;
+        --border: #2a313a;
+        --gold-text: #ffc247;
+        --code-bg: #0c0f12;
+        --grid: rgba(246, 247, 249, 0.06);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+      }
+    }
 
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: 'JetBrains Mono', monospace;
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    body {
+      margin: 0;
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 17px;
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .skip {
+      position: absolute; left: -9999px; top: 8px; z-index: 100;
+      background: var(--gold); color: #1c2127; padding: 8px 14px; border-radius: 8px;
+    }
+    .skip:focus { left: 8px; }
 
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                rgba(18, 16, 16, 0) 50%,
-                rgba(0, 0, 0, 0.25) 50%
-            ), linear-gradient(
-                90deg,
-                rgba(255, 0, 0, 0.06),
-                rgba(0, 255, 0, 0.02),
-                rgba(0, 0, 255, 0.06)
-            );
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-            z-index: 1000;
-        }
+    /* Brand */
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand svg { width: 30px; height: 30px; flex-shrink: 0; }
+    .wordmark { font-weight: 800; letter-spacing: 0.14em; font-size: 15px; }
 
-        .noise-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            opacity: 0.05;
-            pointer-events: none;
-            z-index: 1001;
-        }
+    /* Header */
+    .site-header {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: saturate(160%) blur(12px);
+      -webkit-backdrop-filter: saturate(160%) blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .site-header .container { display: flex; align-items: center; height: 64px; gap: 32px; }
+    .site-nav { display: flex; gap: 28px; margin-left: auto; }
+    .site-nav a { text-decoration: none; color: var(--ink-2); font-size: 15px; font-weight: 500; }
+    .site-nav a:hover { color: var(--ink); }
+    .header-cta { display: flex; gap: 10px; }
+    @media (max-width: 860px) { .site-nav { display: none; } .header-cta { margin-left: auto; } }
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 10px;
+      font: inherit; font-size: 15px; font-weight: 600; text-decoration: none;
+      border: 1px solid transparent; cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .btn-sm { padding: 7px 14px; font-size: 14px; }
+    .btn-primary { background: var(--gold); color: #1c2127; }
+    .btn-primary:hover { background: var(--gold-hover); }
+    .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--border); }
+    .btn-secondary:hover { border-color: var(--muted); }
+    .btn svg { width: 18px; height: 18px; }
 
-        /* Hero Section */
-        header {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-            background: radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.1) 0%, transparent 70%);
-        }
+    /* Hero */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 96px 0 104px;
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero::before {
+      /* Isometric lattice, faded towards the edges. */
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(30deg, var(--grid) 0 1px, transparent 1px 36px),
+        repeating-linear-gradient(150deg, var(--grid) 0 1px, transparent 1px 36px);
+      -webkit-mask-image: radial-gradient(ellipse 70% 80% at 72% 50%, #000 20%, transparent 75%);
+      mask-image: radial-gradient(ellipse 70% 80% at 72% 50%, #000 20%, transparent 75%);
+      pointer-events: none;
+    }
+    .hero .container {
+      position: relative;
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--gold-text);
+      margin: 0 0 20px;
+    }
+    .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--gold); transform: rotate(45deg); }
+    h1 {
+      margin: 0 0 22px;
+      font-size: clamp(2.3rem, 4.6vw, 3.4rem);
+      line-height: 1.08; letter-spacing: -0.025em; font-weight: 760;
+      text-wrap: balance;
+    }
+    .lead { margin: 0 0 32px; max-width: 34em; font-size: 1.18rem; color: var(--ink-2); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .stack { margin: 32px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--muted); }
+    .stack li { display: inline-flex; align-items: center; gap: 8px; }
+    .stack li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); opacity: 0.6; }
+    .hero-mark { display: flex; justify-content: center; }
+    .hero-mark svg {
+      width: min(380px, 90%); height: auto; aspect-ratio: 1; color: var(--ink);
+      filter: drop-shadow(0 24px 40px rgba(17, 20, 24, 0.14));
+    }
+    @media (prefers-color-scheme: dark) { .hero-mark svg { filter: drop-shadow(0 24px 48px rgba(255, 194, 71, 0.10)); } }
+    @media (max-width: 860px) {
+      .hero { padding: 64px 0 72px; }
+      .hero .container { grid-template-columns: 1fr; }
+      .hero-mark { order: -1; justify-content: flex-start; }
+      .hero-mark svg { width: 112px; }
+    }
 
-        .hero-logo {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 2rem;
-            filter: grayscale(1) brightness(1.5) drop-shadow(0 0 20px var(--primary-muted));
-            animation: pulse 4s infinite ease-in-out;
-        }
+    /* Sections */
+    section { padding: 96px 0; }
+    section.alt { background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .section-head { max-width: 680px; margin: 0 0 48px; }
+    .section-head .kicker, .kicker { margin: 0 0 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-text); }
+    h2 { margin: 0 0 14px; font-size: clamp(1.75rem, 3vw, 2.35rem); line-height: 1.15; letter-spacing: -0.02em; font-weight: 720; }
+    .section-head p { margin: 0; color: var(--ink-2); font-size: 1.06rem; }
+    h3 { margin: 0 0 8px; font-size: 1.08rem; font-weight: 650; letter-spacing: -0.005em; }
+    @media (max-width: 860px) { section { padding: 72px 0; } }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); filter: grayscale(1) brightness(1.2) drop-shadow(0 0 15px var(--primary-muted)); }
-            50% { transform: scale(1.02); filter: grayscale(0) brightness(1) drop-shadow(0 0 30px rgba(249, 115, 22, 0.4)); }
-        }
+    /* Features */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-3 > * { min-width: 0; }
+    @media (max-width: 960px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .grid-3 { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 26px; box-shadow: var(--shadow);
+    }
+    .card p { margin: 0; color: var(--ink-2); font-size: 0.97rem; }
+    .card p code { font-size: 0.86em; color: var(--ink); background: var(--bg-soft); border: 1px solid var(--border); padding: 1px 6px; border-radius: 6px; }
+    .icon {
+      width: 42px; height: 42px; margin-bottom: 18px; border-radius: 10px;
+      display: grid; place-items: center;
+      background: color-mix(in srgb, var(--gold) 16%, transparent);
+      color: var(--gold-text);
+    }
+    .icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-        h1 {
-            font-size: clamp(3rem, 8vw, 5rem);
-            font-weight: 800;
-            letter-spacing: -0.05em;
-            margin-bottom: 1rem;
-            color: var(--primary);
-            text-transform: uppercase;
-        }
+    /* How it works */
+    .how { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    @media (max-width: 960px) { .how { grid-template-columns: 1fr; } }
+    .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+    .steps li { position: relative; padding: 0 0 30px 62px; counter-increment: step; }
+    .steps li:last-child { padding-bottom: 0; }
+    .steps li::before {
+      content: counter(step); position: absolute; left: 0; top: 0;
+      width: 38px; height: 38px; border-radius: 10px;
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 15px;
+      background: var(--surface); border: 1px solid var(--border); color: var(--ink);
+    }
+    .steps li:not(:last-child)::after {
+      content: ""; position: absolute; left: 19px; top: 46px; bottom: 8px; width: 1px; background: var(--border);
+    }
+    .steps p { margin: 0; color: var(--ink-2); font-size: 0.97rem; }
+    .steps code { font-size: 0.88em; }
 
-        .tagline {
-            font-size: clamp(1rem, 2.5vw, 1.4rem);
-            color: var(--text-dim);
-            max-width: 800px;
-            margin-bottom: 3rem;
-            font-weight: 400;
-        }
+    .listing { background: var(--code-bg); color: var(--code-ink); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid #2a313a; }
+    .listing-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #2a313a; font-size: 13px; color: var(--code-muted); }
+    .listing-head svg { width: 18px; height: 18px; color: #f6f7f9; }
+    .listing-head strong { color: var(--code-ink); font-weight: 600; }
+    .listing ul { list-style: none; margin: 0; padding: 12px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; }
+    .listing li { padding: 5px 18px; display: flex; gap: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .listing li span { overflow: hidden; text-overflow: ellipsis; }
+    .listing li::before { content: "+"; color: var(--gold); font-weight: 700; }
+    .listing .note { margin: 0; padding: 14px 18px; border-top: 1px solid #2a313a; font-size: 13px; color: var(--code-muted); font-family: "Inter", ui-sans-serif, system-ui, sans-serif; }
+    .listing .note code { color: var(--code-ink); }
 
-        .tagline::before {
-            content: "> ";
-            color: var(--primary);
-        }
+    /* Ecosystems */
+    .eco { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0; padding: 0; list-style: none; }
+    @media (max-width: 860px) { .eco { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 360px) { .eco { grid-template-columns: 1fr; } }
+    .eco li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .eco strong { display: block; font-weight: 650; font-size: 0.98rem; }
+    .eco span { display: block; color: var(--muted); font-size: 0.88rem; margin-top: 2px; }
+    .eco li.own { border-style: dashed; background: transparent; }
 
-        .cta-group {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+    /* Deploy */
+    .deploy-list { display: grid; gap: 20px; }
+    .deploy .card { display: grid; grid-template-columns: 0.75fr 1.25fr; gap: 32px; align-items: center; }
+    .deploy .card > * { min-width: 0; }
+    .deploy .card p { margin-top: 0; }
+    @media (max-width: 960px) { .deploy .card { grid-template-columns: 1fr; gap: 18px; } }
+    .code { background: var(--code-bg); border: 1px solid #2a313a; border-radius: 10px; overflow: hidden; color-scheme: dark; }
+    .code-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 10px 8px 16px; border-bottom: 1px solid #2a313a;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--code-muted);
+    }
+    .code pre {
+      margin: 0; padding: 16px 18px;
+      color: var(--code-ink); font-size: 13.5px; line-height: 1.7;
+      overflow-x: auto; scrollbar-color: #3a424d transparent;
+    }
+    .code pre .c { color: var(--code-muted); }
+    .code code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+    .copy {
+      padding: 5px 10px; border-radius: 7px; border: 1px solid #3a424d;
+      background: #232a32; color: var(--code-ink);
+      font: 600 12px "Inter", ui-sans-serif, system-ui, sans-serif; cursor: pointer;
+    }
+    .copy:hover { background: #2c343e; }
+    .card .hint { margin: 14px 0 0; font-size: 0.88rem; color: var(--muted); }
 
-        .btn {
-            padding: 0.8rem 2rem;
-            border-radius: 4px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            border: 1px solid var(--primary);
-        }
+    /* Docs */
+    .docs a.card { display: block; text-decoration: none; transition: border-color 0.15s, transform 0.15s; }
+    .docs a.card:hover { border-color: var(--muted); transform: translateY(-2px); }
+    @media (prefers-reduced-motion: reduce) { .docs a.card:hover { transform: none; } }
+    .docs h3 { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .docs h3::after { content: "→"; color: var(--muted); font-weight: 500; }
 
-        .btn-primary {
-            background: var(--primary);
-            color: var(--bg);
-        }
-
-        .btn-primary:hover {
-            background: var(--accent);
-            border-color: var(--accent);
-            transform: scale(1.05);
-        }
-
-        .btn-secondary {
-            color: var(--primary);
-            background: transparent;
-        }
-
-        .btn-secondary:hover {
-            background: var(--primary-muted);
-            transform: scale(1.05);
-        }
-
-        /* Features Section */
-        .section {
-            padding: 8rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .section-title {
-            font-size: 2rem;
-            margin-bottom: 4rem;
-            text-align: left;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-        }
-
-        .section-title::before {
-            content: "# ";
-            opacity: 0.5;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 2rem;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .card:hover {
-            border-color: var(--primary);
-            background: var(--surface-accent);
-        }
-
-        .card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .card h3::before {
-            content: "[+]";
-            font-size: 0.8rem;
-            color: var(--text-dim);
-        }
-
-        .card p {
-            color: var(--text-dim);
-            font-size: 0.9rem;
-        }
-
-        /* Ecosystems Section */
-        .ecosystem-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1rem;
-            margin-top: 3rem;
-        }
-
-        .eco-item {
-            background: var(--bg);
-            padding: 1.5rem;
-            border-radius: 4px;
-            text-align: center;
-            border: 1px solid var(--border);
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            aspect-ratio: 1 / 1;
-        }
-
-        .eco-item:hover {
-            border-color: var(--primary);
-            background: var(--surface);
-        }
-
-        .eco-icon {
-            width: 40px;
-            height: 40px;
-            fill: var(--text-dim);
-            display: block;
-        }
-
-        .eco-item:hover .eco-icon {
-            fill: var(--primary);
-        }
-
-        .eco-name {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-        }
-
-        /* Architecture */
-        .arch-box {
-            background: #000;
-            border: 1px solid var(--border);
-            padding: 2rem;
-            border-radius: 4px;
-            margin-top: 2rem;
-            position: relative;
-        }
-
-        .arch-box::after {
-            content: "SYSTEM_DIAGRAM.LOG";
-            position: absolute;
-            top: -10px;
-            left: 20px;
-            background: var(--bg);
-            padding: 0 10px;
-            font-size: 0.7rem;
-            color: var(--text-dim);
-        }
-
-        pre {
-            font-family: 'JetBrains Mono', monospace;
-            background: transparent;
-            padding: 1rem;
-            overflow-x: auto;
-            font-size: 0.85rem;
-            color: var(--primary);
-        }
-
-        /* Terminal Prompt */
-        .terminal-prompt {
-            color: var(--terminal-green);
-            margin-bottom: 1rem;
-        }
-
-        .terminal-prompt span {
-            color: var(--primary);
-        }
-
-        /* Mermaid Customization */
-        .mermaid {
-            display: flex;
-            justify-content: center;
-            filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.2));
-        }
-
-        .mermaid svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .mermaid .edgePaths .edgePath path {
-            stroke: var(--primary) !important;
-            stroke-width: 2px !important;
-            filter: drop-shadow(0 0 5px var(--primary));
-        }
-
-        .mermaid .marker {
-            fill: var(--primary) !important;
-            stroke: var(--primary) !important;
-        }
-
-        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon {
-            fill: var(--surface) !important;
-            stroke: var(--primary) !important;
-            stroke-width: 2px !important;
-        }
-
-        .mermaid .node .label {
-            color: var(--text-main) !important;
-            font-family: 'JetBrains Mono', monospace !important;
-        }
-
-        .mermaid .cluster rect {
-            fill: rgba(249, 115, 22, 0.05) !important;
-            stroke: var(--border) !important;
-            stroke-dasharray: 5 5 !important;
-        }
-
-        .arch-status {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-
-        /* Footer */
-        footer {
-            padding: 4rem 0;
-            text-align: left;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .scroll-down {
-            position: absolute;
-            bottom: 2rem;
-            animation: bounce 2s infinite;
-            color: var(--text-dim);
-            opacity: 0.5;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-10px);}
-            60% {transform: translateY(-5px);}
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            h1 { font-size: 3rem; }
-            .section { padding: 4rem 0; }
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'base',
-            securityLevel: 'loose',
-            fontFamily: 'JetBrains Mono',
-            themeVariables: {
-                primaryColor: '#141414',
-                primaryTextColor: '#e5e7eb',
-                primaryBorderColor: '#f97316',
-                lineColor: '#f97316',
-                secondaryColor: '#1a1a1a',
-                tertiaryColor: '#0a0a0a',
-                mainBkg: '#141414',
-                nodeBorder: '#f97316',
-                clusterBkg: 'rgba(249, 115, 22, 0.05)',
-                clusterBorder: '#262626',
-                edgeLabelBackground: '#0a0a0a',
-                defaultLinkColor: '#f97316'
-            }
-        });
-    </script>
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 40px 0; background: var(--bg-soft); }
+    .site-footer .container { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 40px; }
+    .site-footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-left: auto; }
+    .site-footer nav a { text-decoration: none; color: var(--ink-2); font-size: 14px; }
+    .site-footer nav a:hover { color: var(--ink); }
+    .site-footer small { color: var(--muted); font-size: 13px; width: 100%; }
+  </style>
 </head>
 <body>
-    <div class="scanlines"></div>
-    <div class="noise-overlay"></div>
+  <!-- The logo, defined once and reused with <use>. It is drawn in
+       currentColor, so it takes the colour of the element it's in. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="mark" viewBox="0 0 64 64">
+      <g fill="currentColor">
+        <path d="M14.33 37.71 L22.11 42.2 L14.33 46.69 L6.56 42.2 Z"/>
+        <path d="M6.03 43.12 L13.8 47.61 L13.8 56.58 L6.03 52.09 Z" fill-opacity="0.68"/>
+        <path d="M22.64 43.12 L14.86 47.61 L14.86 56.58 L22.64 52.09 Z" fill-opacity="0.42"/>
+        <path d="M32 37.71 L39.77 42.2 L32 46.69 L24.23 42.2 Z"/>
+        <path d="M23.7 43.12 L31.47 47.61 L31.47 56.58 L23.7 52.09 Z" fill-opacity="0.68"/>
+        <path d="M40.3 43.12 L32.53 47.61 L32.53 56.58 L40.3 52.09 Z" fill-opacity="0.42"/>
+        <path d="M49.67 37.71 L57.44 42.2 L49.67 46.69 L41.89 42.2 Z"/>
+        <path d="M41.36 43.12 L49.14 47.61 L49.14 56.58 L41.36 52.09 Z" fill-opacity="0.68"/>
+        <path d="M57.97 43.12 L50.2 47.61 L50.2 56.58 L57.97 52.09 Z" fill-opacity="0.42"/>
+        <path d="M23.17 22.41 L30.94 26.9 L23.17 31.39 L15.39 26.9 Z"/>
+        <path d="M14.86 27.82 L22.64 32.31 L22.64 41.28 L14.86 36.79 Z" fill-opacity="0.68"/>
+        <path d="M31.47 27.82 L23.7 32.31 L23.7 41.28 L31.47 36.79 Z" fill-opacity="0.42"/>
+        <path d="M40.83 22.41 L48.61 26.9 L40.83 31.39 L33.06 26.9 Z"/>
+        <path d="M32.53 27.82 L40.3 32.31 L40.3 41.28 L32.53 36.79 Z" fill-opacity="0.68"/>
+        <path d="M49.14 27.82 L41.36 32.31 L41.36 41.28 L49.14 36.79 Z" fill-opacity="0.42"/>
+      </g>
+      <path d="M32 7.11 L39.77 11.6 L32 16.09 L24.23 11.6 Z" fill="#ffc247"/>
+      <path d="M23.7 12.52 L31.47 17.01 L31.47 25.98 L23.7 21.49 Z" fill="#f29f2c"/>
+      <path d="M40.3 12.52 L32.53 17.01 L32.53 25.98 L40.3 21.49 Z" fill="#cf7a17"/>
+    </symbol>
+    <symbol id="github" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/>
+    </symbol>
+  </svg>
 
-    <header>
-        <img src="images/backpack-256.png" alt="Backpack Logo" class="hero-logo" onerror="this.src='https://raw.githubusercontent.com/google/gemini-cli/main/assets/gemini-cli-logo.png'">
-        <div class="container">
-            <div class="terminal-prompt">admin@backpack:~$ <span>./init --focus-artifact-collection</span></div>
-            <h1>Backpack</h1>
-            <p class="tagline">The ultimate artifact bridge for airgapped and high-security networks.</p>
-            <div class="cta-group">
-                <a href="https://github.com/linus-berg/backpack" class="btn btn-primary">View on GitHub</a>
-                <a href="#features" class="btn btn-secondary">Explore Features</a>
-            </div>
-        </div>
-        <div class="scroll-down">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
-        </div>
-    </header>
+  <a class="skip" href="#main">Skip to content</a>
 
-    <section id="features" class="section">
-        <div class="container">
-            <h2 class="section-title">Core Capabilities</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3>Recursive Infiltration</h3>
-                    <p>Backpack's recursive engine maps every transitive dependency and captures every version. Zero blind spots. Your isolated environment becomes a perfect mirror of the source ecosystem.</p>
-                </div>
-                <div class="card">
-                    <h3>Surgical Synchronization</h3>
-                    <p>Stop moving mountains. Every newly collected file is recorded in a daily delta, so only what is new has to cross the air gap. Built for high-security, low-bandwidth transfer pipelines.</p>
-                </div>
-                <div class="card">
-                    <h3>Modular Cyber-Core</h3>
-                    <p>Built on a microservice chassis. Swap processors, add custom collectors, and scale horizontally. A plug-and-play fortress designed to adapt to any artifact protocol in minutes.</p>
-                </div>
-            </div>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="#" aria-label="Backpack home">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg>
+        <span class="wordmark">BACKPACK</span>
+      </a>
+      <nav class="site-nav" aria-label="Sections">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#ecosystems">Ecosystems</a>
+        <a href="#deploy">Deploy</a>
+        <a href="#docs">Docs</a>
+      </nav>
+      <div class="header-cta">
+        <a class="btn btn-secondary btn-sm" href="https://github.com/linus-berg/backpack">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#github"/></svg>GitHub
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="hero">
+      <div class="container">
+        <div>
+          <p class="eyebrow">Open source · MIT licensed</p>
+          <h1>The whole dependency tree, ready to cross the air gap.</h1>
+          <p class="lead">
+            Backpack collects every version of the packages you choose, and everything they
+            depend on, into S3-compatible storage. Then it tells you exactly what's new, so
+            each transfer carries only what changed.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#deploy">Get started</a>
+            <a class="btn btn-secondary" href="https://github.com/linus-berg/backpack/blob/master/docs/ArchitectureDiagrams.md">See the architecture</a>
+          </div>
+          <ul class="stack" aria-label="Technology">
+            <li>.NET 8</li>
+            <li>RabbitMQ</li>
+            <li>S3 storage</li>
+            <li>Kubernetes or Compose</li>
+          </ul>
         </div>
+        <div class="hero-mark">
+          <svg viewBox="0 0 64 64" role="img" aria-label="Backpack logo: a pile of packages with a new gold one on top"><use href="#mark"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker">Features</p>
+          <h2>A mirror you can trust to be complete</h2>
+          <p>Backpack runs on the connected side of your network. It doesn't serve packages;
+            it makes sure that everything your builds will ask for is already collected.</p>
+        </div>
+        <div class="grid-3">
+          <article class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5.5" cy="18.5" r="2.2"/><circle cx="12" cy="18.5" r="2.2"/><circle cx="18.5" cy="18.5" r="2.2"/><path d="M12 7.2v9.1M10.6 6.7 6.6 16.5M13.4 6.7l4 9.8"/></svg></div>
+            <h3>Exhaustive by default</h3>
+            <p>Every version of every artifact you add, and recursively every version of
+              everything it depends on. Filters narrow down what you ask for, never what it needs.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4M12 12.5l3 5H9z"/></svg></div>
+            <h3>Built for the transfer</h3>
+            <p>Every newly collected file is recorded in a daily delta folder, so an incremental
+              transfer copies exactly what was added since the last one.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M8 14h8"/></svg></div>
+            <h3>The upstream layout, kept</h3>
+            <p>Files are stored under the host and path they came from, grouped by ecosystem:
+              <code>npm/<wbr>registry.npmjs.org/<wbr>express/<wbr>express-4.21.2.tgz</code>.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg></div>
+            <h3>One service per ecosystem</h3>
+            <p>Processors understand ecosystems, collectors speak protocols, and RabbitMQ
+              connects them. Deploy only what you use, scale what's busy, add your own in any language.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5.5c0 4.2 2.9 7.9 7 9.5 4.1-1.6 7-5.3 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></svg></div>
+            <h3>Controlled intake</h3>
+            <p>Sign in with your own OIDC provider. Require an administrator's approval per
+              ecosystem before anything is collected, and give automation API keys.</p>
+          </article>
+          <article class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="16" height="6.5" rx="1.8"/><path d="M8 7.25h.01M8 16.75h.01M12 7.25h4M12 16.75h4"/></svg></div>
+            <h3>Runs on your infrastructure</h3>
+            <p>Kubernetes with the Helm chart or Docker Compose, MinIO, SeaweedFS, Ceph or AWS S3,
+              and OpenTelemetry traces and metrics.</p>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <section class="section" style="background: rgba(255,255,255,0.02)">
-        <div class="container">
-            <h2 class="section-title">Supported Ecosystems</h2>
-            <p style="text-align: center; color: var(--text-dim); margin-top: -3rem; margin-bottom: 3rem;">Ready to process and collect from the most popular artifact registries.</p>
-            
-            <div class="ecosystem-grid">
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 0v24h24V0H0zm18 18h-3V6h-3v12H6V6H3v15h15v-3z"/></svg>
-                    <span class="eco-name">NPM</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 .586L2.253 10.333l9.747 9.747 9.747-9.747L12 .586zM12 5.43l4.903 4.903L12 15.237l-4.903-4.903L12 5.43z"/></svg>
-                    <span class="eco-name">NuGet</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M13.983 11.078h2.119c.695 0 1.264.561 1.264 1.256 0 .696-.569 1.256-1.264 1.256h-2.119v-2.512zm10.017 1.054c0-6.191-5.03-11.209-11.231-11.209-6.201 0-11.231 5.018-11.231 11.209 0 6.191 5.03 11.21 11.231 11.21 6.201 0 11.231-5.019 11.231-11.21zm-14.28 1.034c0 .607-.492 1.099-1.099 1.099-.606 0-1.099-.492-1.099-1.099 0-.606.493-1.099 1.099-1.099.607 0 1.099.493 1.099 1.099zm0-2.834c0 .606-.492 1.099-1.099 1.099-.606 0-1.099-.493-1.099-1.099 0-.607.493-1.099 1.099-1.099.607 0 1.099.492 1.099 1.099zm2.833 2.834c0 .607-.492 1.099-1.099 1.099-.606 0-1.099-.492-1.099-1.099 0-.606.493-1.099 1.099-1.099.607 0 1.099.493 1.099 1.099zm0-2.834c0 .606-.492 1.099-1.099 1.099-.606 0-1.099-.493-1.099-1.099 0-.607.493-1.099 1.099-1.099.607 0 1.099.492 1.099 1.099zm5.667 4.09h-3.4v2.512h3.4c1.373 0 2.491-1.11 2.491-2.474 0-1.363-1.118-2.473-2.491-2.473h-2.119v-2.513h2.119c1.373 0 2.491-1.11 2.491-2.473 0-1.364-1.118-2.474-2.491-2.474h-3.4v7.433z"/></svg>
-                    <span class="eco-name">Docker</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12.181 0l11.819 6.825v13.65l-11.819 6.825-11.819-6.825v-13.65l11.819-6.825zm0 2.822l-9.375 5.412v10.825l9.375 5.412 9.375-5.412v-10.825l-9.375-5.412z"/></svg>
-                    <span class="eco-name">Helm</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 1L2 6.5v11l10 5 10-5v-11L12 1zM4 16V8l8 4.5V20l-8-4z"/></svg>
-                    <span class="eco-name">Hugging Face</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 1L3.25 6v12L12 23l8.75-5V6L12 1zm0 2.5l6.5 3.75v7.5L12 18.5 5.5 14.75v-7.5L12 3.5z"/></svg>
-                    <span class="eco-name">PyPI</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M1.44 0v7.575l6.561 3.79V3.787L1.44 0zm14.559 0v7.575L9.438 11.365V3.787L15.999 0zM8.72 12.63l6.56 3.791v-7.575L8.72 5.056v7.574zm-7.28 0l6.56 3.791v-7.575L1.44 5.056v7.574zm7.28 11.37l6.56-3.791v-7.574l-6.56 3.79v7.575z"/></svg>
-                    <span class="eco-name">Terraform</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.43.372.823 1.102.823 2.222 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-                    <span class="eco-name">GitHub Releases</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M23.533 15.717l-1.422-1.129a.44.44 0 0 0-.547-.005l-.105.076c-.958.683-1.666 1.189-2.924 1.189-1.385 0-2.338-.633-3.076-1.644l-3.34-4.57c-.1-.133-.133-.219-.133-.31 0-.171.147-.324.343-.324h2.296c.261 0 .447-.143.552-.395l1.047-2.529a.475.475 0 0 0-.024-.39c-.067-.114-.18-.18-.31-.18h-4.839a.471.471 0 0 0-.319.124L2.529 14.152a.466.466 0 0 0-.019.657l1.457 1.48c.086.086.205.133.329.133h5.176c.262 0 .448-.143.553-.395l1.048-2.529a.47.47 0 0 0-.024-.39c-.067-.114-.181-.181-.31-.181H9.866a.186.186 0 0 1-.186-.186c0-.052.023-.102.064-.136l4.639-3.877a.466.466 0 0 1 .59 0l4.31 3.593c1.076.895 2.372 1.976 4.319 1.976.129 0 .252-.007.367-.019a.445.445 0 0 0 .36-.26c.036-.086.04-.18.012-.27z"/></svg>
-                    <span class="eco-name">Git</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 0v24h24V0H0zm21.408 17.653l-9.408-9.408-9.408 9.408v-11.306l9.408-9.408 9.408 9.408v11.306z"/></svg>
-                    <span class="eco-name">Rancher</span>
-                </div>
-                <div class="eco-item">
-                    <svg class="eco-icon" viewBox="0 0 24 24"><path d="M0 0v24h24V0H0zm15.11 11.83l-3.36 3.36-3.36-3.36 3.36-3.36 3.36 3.36zM12 2l10 10-10 10L2 12 12 2z"/></svg>
-                    <span class="eco-name">JetBrains</span>
-                </div>
-            </div>
+    <section id="how-it-works" class="alt">
+      <div class="container how">
+        <div>
+          <div class="section-head">
+            <p class="kicker">How it works</p>
+            <h2>From one request to a complete mirror</h2>
+          </div>
+          <ol class="steps">
+            <li>
+              <h3>Add an artifact</h3>
+              <p>Request <code>express</code>, <code>Newtonsoft.Json</code> or
+                <code>docker.io/library/nginx</code> in the web interface or through the REST API.</p>
+            </li>
+            <li>
+              <h3>Resolve the tree</h3>
+              <p>The ecosystem's processor lists every version, its files and its direct
+                dependencies. The gateway follows each dependency in turn until the tree is complete.</p>
+            </li>
+            <li>
+              <h3>Collect</h3>
+              <p>Collectors download what isn't stored yet, write it to your bucket and record it
+                in the day's delta. Scheduled re-tracking picks up new releases.</p>
+            </li>
+            <li>
+              <h3>Carry it across</h3>
+              <p>Copy the delta folders since your last transfer to the isolated network, and load
+                them into the registries and proxies you already run there.</p>
+            </li>
+          </ol>
         </div>
+        <figure class="listing" style="margin:0" aria-label="Example: files added to npm today">
+          <div class="listing-head">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg>
+            <span><strong>delta/npm/2026_10_31/</strong> · added today</span>
+          </div>
+          <ul>
+            <li><span>registry.npmjs.org/express/express-4.21.2.tgz</span></li>
+            <li><span>registry.npmjs.org/body-parser/body-parser-1.20.3.tgz</span></li>
+            <li><span>registry.npmjs.org/cookie/cookie-0.7.1.tgz</span></li>
+            <li><span>registry.npmjs.org/send/send-0.19.0.tgz</span></li>
+            <li><span>registry.npmjs.org/qs/qs-6.13.0.tgz</span></li>
+          </ul>
+          <figcaption class="note">Each entry points at the stored file, e.g.
+            <code>npm/registry.npmjs.org/express/express-4.21.2.tgz</code>.</figcaption>
+        </figure>
+      </div>
     </section>
 
-    <section class="section">
-        <div class="container">
-            <h2 class="section-title">Architecture</h2>
-            <div class="arch-box">
-                <div class="arch-status">
-                    <span>STATUS: OPERATIONAL</span>
-                    <span>MODE: ONE-WAY</span>
-                    <span>UPLINK: ACTIVE</span>
-                </div>
-                <div class="mermaid">
-                    graph LR
-                        subgraph Ingress
-                            API[Integration.API]
-                            SCHED[Tracker.Scheduler]
-                        end
-
-                        subgraph Core
-                            GW((Core.Gateway))
-                            ROUTER{Collector.Router}
-                        end
-
-                        subgraph Processing
-                            PROC{Processors}
-                        end
-
-                        subgraph Collection
-                            COLL[Collectors]
-                            STORAGE[(S3 Storage)]
-                        end
-
-                        API -- "REQ" --> GW
-                        SCHED -- "REQ" --> GW
-                        GW -- "PROC" --> PROC
-                        PROC -- "RES" --> GW
-                        GW -- "ROUTE" --> ROUTER
-                        ROUTER -- "FETCH" --> COLL
-                        COLL -- "SAVE" --> STORAGE
-
-                        classDef default font-family:'JetBrains Mono',font-size:12px;
-                        classDef highlight fill:#f97316,color:#0a0a0a,stroke:#ea580c;
-                        class GW highlight;
-                </div>
-            </div>
+    <section id="ecosystems">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker">Ecosystems</p>
+          <h2>The registries your builds depend on</h2>
+          <p>Each ecosystem is a small service you deploy when you need it.</p>
         </div>
+        <ul class="eco">
+          <li><strong>npm</strong><span>Node.js packages</span></li>
+          <li><strong>NuGet</strong><span>.NET packages</span></li>
+          <li><strong>PyPI</strong><span>Python packages</span></li>
+          <li><strong>Container images</strong><span>Into a registry, or as tarballs</span></li>
+          <li><strong>Helm</strong><span>Charts and the images they use</span></li>
+          <li><strong>Terraform</strong><span>Providers</span></li>
+          <li><strong>Hugging Face</strong><span>Models</span></li>
+          <li><strong>GitHub Releases</strong><span>Release assets</span></li>
+          <li><strong>JetBrains</strong><span>IDEs and plugins</span></li>
+          <li><strong>Rancher</strong><span>Release image lists</span></li>
+          <li><strong>Git</strong><span>Whole repositories, as bundles</span></li>
+          <li class="own"><strong>Your own</strong><span>.NET template, or JSON over RabbitMQ</span></li>
+        </ul>
+      </div>
     </section>
 
-    <section class="section">
-        <div class="container" style="text-align: center;">
-            <h2 class="section-title">Get Started</h2>
-            <p class="tagline" style="margin: 0 auto 3rem;">Ready to bridge your artifacts?</p>
-            <div class="card" style="max-width: 750px; margin: 0 auto; text-align: left;">
-                <p style="margin-bottom: 1rem; color: var(--primary); font-family: 'JetBrains Mono', monospace;"># Quick deploy with Helm</p>
-                <pre style="white-space: pre-wrap; word-break: break-all;">helm repo add backpack https://linus-berg.github.io/helm-charts/
-helm show values backpack/backpack &gt; my-values.yaml   # point it at your RabbitMQ, MongoDB, Redis, S3 and OIDC
-helm install backpack backpack/backpack -n backpack --create-namespace -f my-values.yaml</pre>
-            </div>
+    <section id="deploy" class="alt deploy">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker">Deploy</p>
+          <h2>Get started</h2>
+          <p>Backpack needs RabbitMQ, MongoDB, Redis, S3-compatible storage and an OIDC provider.</p>
         </div>
+        <div class="deploy-list">
+          <article class="card">
+            <div>
+              <h3>Kubernetes</h3>
+              <p>Install with the Helm chart and point it at your RabbitMQ, MongoDB, Redis, storage
+                and OIDC provider. Add the processors and collectors you need to its values.</p>
+              <p class="hint">Every value is documented in the <a href="https://github.com/linus-berg/helm-charts/tree/main/charts/backpack">chart README</a>.</p>
+            </div>
+            <div class="code">
+              <div class="code-bar"><span>Shell</span><button class="copy" type="button">Copy</button></div>
+              <pre><code>helm repo add backpack https://linus-berg.github.io/helm-charts/
+helm show values backpack/backpack &gt; my-values.yaml
+<span class="c"># set oidc, rabbitmq, mongo, redis and s3</span>
+helm install backpack backpack/backpack \
+  -n backpack --create-namespace -f my-values.yaml</code></pre>
+            </div>
+          </article>
+          <article class="card">
+            <div>
+              <h3>Docker Compose</h3>
+              <p>Try a complete single-machine stack, infrastructure and sign-in included, with npm
+                ready to go.</p>
+              <p class="hint">See the <a href="https://github.com/linus-berg/backpack/blob/master/example/README.md">example README</a> for signing in and adding ecosystems.</p>
+            </div>
+            <div class="code">
+              <div class="code-bar"><span>Shell</span><button class="copy" type="button">Copy</button></div>
+              <pre><code>git clone https://github.com/linus-berg/backpack.git
+cd backpack/example
+<span class="c"># first add "127.0.0.1 keycloak" to /etc/hosts</span>
+docker compose up -d
+<span class="c"># then open http://localhost:3000</span></code></pre>
+            </div>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Backpack Project. Built for high-security environments.</p>
+    <section id="docs">
+      <div class="container">
+        <div class="section-head">
+          <p class="kicker">Documentation</p>
+          <h2>Learn more</h2>
         </div>
-    </footer>
+        <div class="grid-3 docs">
+          <a class="card" href="https://github.com/linus-berg/backpack/blob/master/docs/ArchitectureDiagrams.md">
+            <h3>Architecture</h3>
+            <p>Components, queues and the life of an artifact.</p>
+          </a>
+          <a class="card" href="https://github.com/linus-berg/backpack/blob/master/docs/DeploymentGuide.md">
+            <h3>Deployment Guide</h3>
+            <p>Infrastructure, images, sign-in and security notes.</p>
+          </a>
+          <a class="card" href="https://github.com/linus-berg/backpack/blob/master/docs/Configuration.md">
+            <h3>Configuration</h3>
+            <p>Every environment variable, processors and schedules.</p>
+          </a>
+          <a class="card" href="https://github.com/linus-berg/backpack/blob/master/STORAGE.md">
+            <h3>Storage</h3>
+            <p>How files are laid out in the bucket, and delta links.</p>
+          </a>
+          <a class="card" href="https://github.com/linus-berg/backpack/blob/master/docs/ProcessorDevelopment.md">
+            <h3>Processor Development</h3>
+            <p>Add an ecosystem with the .NET template or any language.</p>
+          </a>
+          <a class="card" href="https://github.com/linus-berg/backpack/blob/master/docs/Troubleshooting.md">
+            <h3>Troubleshooting</h3>
+            <p>Follow an artifact through the system and fix common problems.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
 
-    <script>
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
+  <footer class="site-footer">
+    <div class="container">
+      <a class="brand" href="#" aria-label="Backpack home">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#mark"/></svg>
+        <span class="wordmark">BACKPACK</span>
+      </a>
+      <nav aria-label="Project">
+        <a href="https://github.com/linus-berg/backpack">Backend</a>
+        <a href="https://github.com/linus-berg/backpack-gui">Web interface</a>
+        <a href="https://github.com/linus-berg/helm-charts">Helm chart</a>
+        <a href="https://github.com/linus-berg/backpack/blob/master/docs/README.md">Documentation</a>
+      </nav>
+      <small>© Linus Berg · Released under the <a href="https://github.com/linus-berg/backpack/blob/master/LICENSE">MIT License</a>.</small>
+    </div>
+  </footer>
+
+  <script>
+    // Copy buttons for the code blocks; the label confirms the copy.
+    document.querySelectorAll('.copy').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var code = button.closest('.code').querySelector('code').innerText;
+        navigator.clipboard.writeText(code).then(function () {
+          button.textContent = 'Copied';
+          setTimeout(function () { button.textContent = 'Copy'; }, 1600);
+        }, function () {
+          button.textContent = 'Press Ctrl+C';
         });
-
-        // Simple reveal animation on scroll
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = "1";
-                    entry.target.style.transform = "translateY(0)";
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.card, .eco-item, .arch-box').forEach(el => {
-            el.style.opacity = "0";
-            el.style.transform = "translateY(20px)";
-            el.style.transition = "all 0.6s ease-out";
-            observer.observe(el);
-        });
-    </script>
+      });
+    });
+  </script>
 </body>
 </html>
