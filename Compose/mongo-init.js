@@ -34,7 +34,7 @@ db["backpack-processors"].insertMany([
     description: ''
   },
   {
-    _id: 'jetbrains',
+    _id: 'jetbrains-plugins',
     config: {},
     direct_collect: false,
     description: ''

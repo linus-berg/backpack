@@ -6,6 +6,7 @@ using Processor._NAME_;
 
 ModuleRegistration registration = new(ModuleType.PROCESSOR, typeof(Consumer));
 registration.AddEndpoint("_ENDPOINT_");
+registration.AddEndpoint("_ENDPOINT_-preview");
 
 IHost host = ProcessorHost.Create(args, registration, services => {
     services.AddSingleton<I_NAME_, _NAME_>();
