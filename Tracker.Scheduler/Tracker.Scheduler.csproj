@@ -13,7 +13,7 @@
         <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.12"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
         <PackageReference Include="Quartz" Version="3.22.9"/>
-        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.22.9"/>
+        <PackageReference Include="Quartz.Extensions.Hosting" Version="4.6.2"/>
         <PackageReference Include="StackExchange.Redis" Version="2.13.17"/>
     </ItemGroup>
 
