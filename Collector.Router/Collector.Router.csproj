@@ -10,7 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
-        <PackageReference Include="semver" Version="2.3.0"/>
+        <PackageReference Include="semver" Version="3.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
