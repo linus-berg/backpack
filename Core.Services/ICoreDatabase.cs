@@ -17,6 +17,14 @@ public interface ICoreDatabase {
   public Task<IEnumerable<ArtifactSummary>> GetArtifactSummaries(
     string processor, bool only_roots = true);
 
+  /// <summary>
+  ///   Counts a processor's artifacts in MongoDB, without loading them.
+  /// </summary>
+  /// <param name="processor">The processor ID.</param>
+  /// <param name="only_roots">Count root artifacts only; otherwise all of them.</param>
+  /// <returns>The number of artifacts.</returns>
+  public Task<long> CountArtifacts(string processor, bool only_roots = true);
+
   public Task<bool> DeleteArtifact(Artifact artifact);
   public Task<bool> DeleteProcessor(string processor_id);
 

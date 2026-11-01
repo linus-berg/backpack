@@ -76,6 +76,18 @@ public class MongoDatabase : ICoreDatabase {
     return await cursor.ToListAsync();
   }
 
+  public async Task<long> CountArtifacts(string processor,
+                                         bool only_roots = true) {
+    IMongoCollection<Artifact> collection = GetCollection<Artifact>(processor);
+    /* The total comes from the collection's metadata, so it costs nothing
+       even for huge collections; roots need a filtered count. */
+    return only_roots
+             ? await collection.CountDocumentsAsync(
+                 Builders<Artifact>.Filter.Eq("root", true)
+               )
+             : await collection.EstimatedDocumentCountAsync();
+  }
+
   public async Task<IEnumerable<ArtifactSummary>> GetArtifactSummaries(
     string processor, bool only_roots = true) {
     IMongoCollection<Artifact> collection = GetCollection<Artifact>(processor);

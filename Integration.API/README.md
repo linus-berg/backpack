@@ -84,6 +84,7 @@ Auth: **anon** = no authentication; **user** = any authenticated caller (bearer 
 | GET | `/api/apikey` | admin, bearer | List keys: `id`, `name`, `key_preview` (first and last 4 characters), `is_admin`, `created_at`, `created_by`. |
 | POST | `/api/apikey` | admin, bearer | Body `{name, is_admin}`. Create a key and return it in full. |
 | DELETE | `/api/apikey/{id}` | admin, bearer | Delete a key; 400 if not found. |
+| GET | `/api/artifact/counts` | user | `[{processor, roots, total}]` for every processor, counted by MongoDB. For overviews that only need the numbers. |
 | GET | `/api/artifact/all?processor=&only_roots=` | user | Summaries of one processor's artifacts (version and dependency counts). |
 | GET | `/api/artifact?processor=&id=` | user | Full artifact document; 404 if not found. |
 | POST | `/api/artifact/preview` | user | Body `{id, processor, filter, config}`. Request to `processor-<processor lower-cased>-preview`; returns the artifact or 400 with the processor's error. Nothing is stored. |

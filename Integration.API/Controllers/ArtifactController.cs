@@ -7,6 +7,7 @@ using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Input;
+using Integration.API.Output;
 using Integration.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,6 +44,27 @@ public class ArtifactController : ControllerBase {
     IEnumerable<ArtifactSummary> artifacts =
       await database_.GetArtifactSummaries(processor, only_roots);
     return artifacts;
+  }
+
+  /// <summary>
+  ///   Artifact counts of every processor in one response, counted by
+  ///   MongoDB. Overviews use it instead of loading every processor's
+  ///   artifact list just to count it.
+  /// </summary>
+  /// <returns>One entry per processor.</returns>
+  // GET: api/Artifact/counts
+  [HttpGet("counts")]
+  public async Task<IEnumerable<ArtifactCountOutput>> GetCounts() {
+    IEnumerable<Processor> processors = await database_.GetProcessors();
+    return await Task.WhenAll(
+             processors.Select(
+               async processor => new ArtifactCountOutput {
+                 processor = processor.id,
+                 roots = await database_.CountArtifacts(processor.id),
+                 total = await database_.CountArtifacts(processor.id, false)
+               }
+             )
+           );
   }
 
   // GET: api/Artifact
