@@ -10,9 +10,17 @@ updates:
       day: monday
     open-pull-requests-limit: 10
     groups:
+      # MongoDB.Bson, MongoDB.Driver and MongoDB.Driver.Core must stay on the
+      # same version: the driver calls Bson APIs that change between them.
+      mongodb:
+        patterns: ["MongoDB.*"]
       nuget-minor-and-patch:
         update-types: [minor, patch]
     ignore:
+      # MongoDB 3.x is a breaking upgrade (GUID handling, MongoDB.Driver.Core
+      # merged into MongoDB.Driver) to be done for all packages at once.
+      - dependency-name: "MongoDB.*"
+        update-types: ["version-update:semver-major"]
       # MassTransit 9 is commercially licensed; moving to it is a decision,
       # not a routine update.
       - dependency-name: "MassTransit*"
