@@ -7,6 +7,7 @@ using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Integration.API.Input;
+using Integration.API.Jobs;
 using Integration.API.Output;
 using Integration.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -22,18 +23,21 @@ public class ArtifactController : ControllerBase {
   private readonly IArtifactService aps_;
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
+  private readonly JobStarter jobs_;
   private readonly ILogger log_;
   private readonly PreviewRoutingService router_;
 
   public ArtifactController(IArtifactService aps, ICoreDatabase database,
                             IEventService event_service,
                             PreviewRoutingService router,
-                            ILogger log) {
+                            ILogger log,
+                            JobStarter jobs) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;
     log_ = log.ForContext<ArtifactController>();
     router_ = router;
+    jobs_ = jobs;
   }
 
   // GET: api/Artifact
@@ -309,30 +313,26 @@ public class ArtifactController : ControllerBase {
     return BadRequest("Something went wrong");
   }
 
+  /* Both run as background jobs (see JobsController): 202 with the job,
+     or 409 while another job runs. */
   [HttpPost("track/all")]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> TrackAll() {
-    await aps_.Track();
-    await event_service_.LogEvent(
-      "API",
-      "Global re-track triggered",
-      EventSeverity.WARNING,
-      HttpContext.User.Identity?.Name ?? "Unknown"
-    );
-    return Ok("Triggered re-tracking");
+    return await jobs_.Start(
+             JobKinds.TRACK,
+             null,
+             HttpContext.User.Identity?.Name ?? "Unknown"
+           );
   }
 
   [HttpPost("validate/all")]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> ValidateAllArtifacts() {
-    await aps_.Validate();
-    await event_service_.LogEvent(
-      "API",
-      "Global validation triggered",
-      EventSeverity.WARNING,
-      HttpContext.User.Identity?.Name ?? "Unknown"
-    );
-    return Ok("Validating all artifacts!");
+    return await jobs_.Start(
+             JobKinds.VALIDATE,
+             null,
+             HttpContext.User.Identity?.Name ?? "Unknown"
+           );
   }
 
   [HttpPost("validate")]

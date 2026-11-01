@@ -54,6 +54,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                      services.AddScoped<ICoreDatabase, MongoDatabase>();
                      services.AddSingleton<ICoreCache, CoreCache>();
                      services.AddScoped<IArtifactService, ArtifactService>();
+                     /* Scheduled runs are jobs, one at a time with the API's. */
+                     services.AddScoped<IEventService, EventService>();
+                     services.AddSingleton<IJobService, MongoJobService>();
+                     services.AddScoped<JobRunner>();
 
                      services.AddQuartz(
                        q => {

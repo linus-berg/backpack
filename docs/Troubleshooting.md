@@ -110,6 +110,7 @@ Database `backpack`:
 | `pending-approvals` | Artifacts waiting for approval |
 | `backpack-events` | System events |
 | `backpack-schedules` | Schedules |
+| `backpack-jobs` | Background jobs (re-track and validate), as on the GUI's Jobs page |
 | `backpack-api-keys`, `backpack-news` | API keys, news posts |
 
 An artifact whose `versions` stay empty was never answered by its processor. If the

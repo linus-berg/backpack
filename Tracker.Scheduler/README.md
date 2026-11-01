@@ -33,17 +33,25 @@ that queue, so only one of them reloads.
 
 ## When a schedule fires
 
-`TrackingJob` calls `ArtifactService.Track(processor)`. For every root artifact of the processor:
+`TrackingJob` runs the schedule as a background re-track job, the same kind the GUI starts
+(see "Background jobs" in `Integration.API/README.md`), so it shows up on the GUI's Jobs page
+with `started_by: Scheduler`. Only one job runs at a time: if another job is running, for
+example a validation started in the GUI, the scheduled run is added as `waiting` and checks
+every 15 seconds whether it can start. After three hours of waiting it ends as `skipped`. If
+the scheduler stops while the run is waiting, it ends as `interrupted`; either way the next
+firing runs normally. Two schedules that fire together therefore run one after the other.
+
+For every root artifact of the processor:
 
 - `direct_collect` processor: `ArtifactCollectRequest` for the artifact id, sent to
   `collector-<scheme>` (without `force`).
 - any other processor: `ArtifactIngestRequest` with the stored artifact, sent to
   `gateway-ingest-unprocessed`.
 
-Then `last_run` of the first schedule with that processor is set to the current UTC time.
-Exceptions are logged as critical and the job ends; the next firing runs normally. An unknown
-processor id fails with a `NullReferenceException` here. Non-root artifacts are not tracked
-directly; the Gateway visits them when a parent artifact changes.
+When the job succeeds, `last_run` of the first schedule with that processor is set to the
+current UTC time. Other exceptions are logged as critical and the run ends; the next firing
+runs normally. A schedule for a processor that doesn't exist ends as a `failed` job. Non-root
+artifacts are not tracked directly; the Gateway visits them when a parent artifact changes.
 
 ## Cron format
 
@@ -97,5 +105,5 @@ from the repository root with `docker build -f Tracker.Scheduler/Dockerfile .`.
   processor id.
 - Triggers live in memory. Quartz state is rebuilt from MongoDB on every start; firings missed
   while the service was down are not run.
-- `POST /api/scheduler/trigger/{processor}` in Integration.API tracks a processor without this
-  service and does not update `last_run`.
+- `POST /api/scheduler/trigger/{processor}` in Integration.API starts the same re-track job
+  without this service, and does not update `last_run`.

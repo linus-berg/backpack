@@ -174,7 +174,7 @@ public class ArtifactService : IArtifactService {
     }
   }
 
-  private async Task<bool> Track(Artifact artifact, Processor processor) {
+  public async Task<bool> Track(Artifact artifact, Processor processor) {
     if (processor.direct_collect) {
       await Collect(artifact.id, artifact.processor);
     } else {

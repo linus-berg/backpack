@@ -3,6 +3,7 @@ using Core.Kernel.Messages;
 using Core.Kernel.Models;
 using Core.Services;
 using Cronos;
+using Integration.API.Jobs;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +17,18 @@ public class SchedulerController : ControllerBase {
   private readonly IArtifactService aps_;
   private readonly ICoreDatabase database_;
   private readonly IEventService event_service_;
+  private readonly JobStarter jobs_;
   private readonly IPublishEndpoint publish_endpoint_;
 
   public SchedulerController(ICoreDatabase database, IArtifactService aps,
                              IEventService event_service,
-                             IPublishEndpoint publish_endpoint) {
+                             IPublishEndpoint publish_endpoint,
+                             JobStarter jobs) {
     database_ = database;
     aps_ = aps;
     event_service_ = event_service;
     publish_endpoint_ = publish_endpoint;
+    jobs_ = jobs;
   }
 
   [HttpGet]
@@ -51,18 +55,13 @@ public class SchedulerController : ControllerBase {
   [HttpPost("trigger/{processor}")]
   [Authorize(Roles = "Administrator")]
   public async Task<ActionResult> Trigger(string processor) {
-    await aps_.Track(processor);
-    await event_service_.LogEvent(
-      "API",
-      $"Manual track triggered for processor: {processor}",
-      EventSeverity.INFO,
-      HttpContext.User.Identity?.Name ?? "Unknown"
-    );
-    return Ok(
-      new {
-        Message = $"Sync triggered for {processor}"
-      }
-    );
+    /* A background re-track job: 202 with the job, or 409 while another
+       job runs. */
+    return await jobs_.Start(
+             JobKinds.TRACK,
+             processor,
+             HttpContext.User.Identity?.Name ?? "Unknown"
+           );
   }
 
   [HttpPut]

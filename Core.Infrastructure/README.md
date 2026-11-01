@@ -16,6 +16,7 @@ startup. Tracker.Scheduler uses the database during startup, so it fails immedia
 | `<processor id>`, e.g. `npm` | `Artifact` documents of that processor, roots and dependencies | artifact id |
 | `backpack-processors` | `Processor` documents | processor id |
 | `backpack-schedules` | `Schedule` documents | schedule id (GUID string) |
+| `backpack-jobs` | `Job` documents: background re-track and validation jobs. A unique partial index on `lock_key` lets only one run; finished jobs expire after 90 days. | job id (GUID string) |
 | `backpack-events` | `Event` audit log; read newest first, 100 by default | GUID string |
 | `pending-approvals` | `PendingArtifact` requests awaiting approval | artifact id |
 | `backpack-api-keys` | `ApiKey` documents; the key is stored in plain text in `key` | GUID string |

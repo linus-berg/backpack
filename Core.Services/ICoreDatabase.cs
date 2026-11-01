@@ -14,6 +14,16 @@ public interface ICoreDatabase {
   public Task<IEnumerable<Artifact>> GetArtifacts(
     string processor, bool only_roots = true);
 
+  /// <summary>
+  ///   Reads a processor's artifacts in batches instead of loading them all,
+  ///   for jobs over large mirrors.
+  /// </summary>
+  /// <param name="processor">The processor ID.</param>
+  /// <param name="only_roots">Root artifacts only; otherwise all of them.</param>
+  /// <param name="token">Stops reading.</param>
+  public IAsyncEnumerable<Artifact> StreamArtifacts(
+    string processor, bool only_roots, CancellationToken token = default);
+
   public Task<IEnumerable<ArtifactSummary>> GetArtifactSummaries(
     string processor, bool only_roots = true);
 

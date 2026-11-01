@@ -82,6 +82,7 @@ All in the MongoDB database `backpack`.
 | `backpack-processors` | `Processor` | see [Processor definitions](Configuration.md#processor-definitions) |
 | `pending-approvals` | `PendingArtifact` | `id`, `processor`, `filter`, `config`, `requested_by`, `timestamp` |
 | `backpack-schedules` | `Schedule` | `id`, `processor`, `cron`, `last_run`, `next_run` |
+| `backpack-jobs` | `Job` | `id`, `kind` (`track`, `validate`), `processor` (null for all), `state`, `started_by`, `scheduled`, `created_at`, `started_at`, `finished_at`, `heartbeat_at`, `host`, `total`, `done`, `failed`, `current_processor`, `message`, `cancel_requested`, `cancelled_by`, `lock_key` |
 | `backpack-events` | `Event` | `id`, `timestamp`, `source`, `message`, `severity` (`INFO`, `WARNING`, `ERROR`, `SUCCESS`), `user` |
 
 API keys (`backpack-api-keys`) and news posts (`backpack-news`) are described in

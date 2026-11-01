@@ -96,9 +96,9 @@ Auth: **anon** = no authentication; **user** = any authenticated caller (bearer 
 | POST | `/api/artifact/approve` | admin | Body `{id, processor}`. Create the artifact from the request, delete the request, start ingest or collect. |
 | POST | `/api/artifact/reject` | admin | Body `{id, processor, reason?}`. Delete the request; the reason goes into the event log. |
 | POST | `/api/artifact/track` | user | Body `{id, processor}`. Re-ingest the stored artifact (collect it for `direct_collect`); 400 if not stored. |
-| POST | `/api/artifact/track/all` | admin | Track the root artifacts of every processor. |
+| POST | `/api/artifact/track/all` | admin | Start a background job that tracks the root artifacts of every processor. 202 with the job, or 409 while a job runs (see [Background jobs](#background-jobs)). |
 | POST | `/api/artifact/validate` | user | Body `{id, processor, force}`. Route the stored artifact to `collector-router` (collect with `force` for `direct_collect`). |
-| POST | `/api/artifact/validate/all` | admin | Validate every artifact, including dependencies, of every processor. |
+| POST | `/api/artifact/validate/all` | admin | Start a background job that validates every artifact, including dependencies, of every processor. 202 with the job, or 409 while a job runs. |
 | DELETE | `/api/artifact` | admin | Body `{id, processor}`. Delete the metadata document and return it; stored files are not touched. |
 | POST | `/api/artifact/collect` | user | Body `{location, module}`. Send `ArtifactCollectRequest` to `collector-<scheme>`; `force` is ignored. |
 | GET | `/api/container/container` | anon | Sends a hard-coded collect of `docker-archive://docker.io/nginx:latest`. |
@@ -115,7 +115,11 @@ Auth: **anon** = no authentication; **user** = any authenticated caller (bearer 
 | PUT | `/api/scheduler` | admin | Body `{id, processor, cron}`. Replace the schedule with that id and publish `ReloadSchedulesRequest`. |
 | DELETE | `/api/scheduler/{id}` | admin | Delete a schedule (204, or 404) and publish `ReloadSchedulesRequest`. |
 | POST | `/api/scheduler/validate` | admin | Body `{processor, cron}`. Returns `{Valid, NextOccurrences}` (next 5, UTC) or `{Valid: false, Error}`. |
-| POST | `/api/scheduler/trigger/{processor}` | admin | Track one processor now. `last_run` is not updated. |
+| POST | `/api/scheduler/trigger/{processor}` | admin | Start a background job that tracks one processor now. 202 with the job, 409 while a job runs, 404 for an unknown processor. `last_run` is not updated. |
+| GET | `/api/jobs?limit=` | admin | Background jobs, newest first (50 by default, at most 200), running and waiting ones included. |
+| GET | `/api/jobs/{id}` | admin | One job; 404 if not found. |
+| POST | `/api/jobs` | admin | Body `{kind: "track" \| "validate", processor?}`. Start a job for one processor or (without `processor`) every processor. 202 with the job; 409 `{message, job}` with the running job; 400 for an unknown kind; 404 for an unknown processor. |
+| POST | `/api/jobs/{id}/cancel` | admin | Cancel a waiting job, or ask the running one to stop after the artifact it is sending. 202 with the job; 409 if it already ended; 404 if not found. |
 | GET | `/api/status/status` | anon | Always returns `Backpack is OK.`; nothing is checked. |
 | GET | `/api/status/queue` | anon | Queue name, messages, consumers and rates from the management API. |
 | GET | `/api/status/health` | user | `{status, checked_at, checks: [{name, status, description, duration_ms}]}` for `rabbitmq`, `rabbitmq-management`, `mongodb`, `redis`, `s3` (only with the `BP_S3_*` settings) and `oidc`, for the Status page. A dependency that is down is `Unhealthy` here even where it only degrades readiness. Results are shared for 10 seconds. |
@@ -160,9 +164,31 @@ runs them with Quartz, which is stricter; see `Tracker.Scheduler/README.md`.
   ValidationProblemDetails.
 - Many actions return a plain string for 400 and 404, e.g. `Artifact not found`.
 - A processor id that is not in `backpack-processors` makes `POST /api/artifact`, `/approve`,
-  `/track`, `/validate`, `/api/processor/update` and `/api/scheduler/trigger/{processor}`
-  throw, which returns 500. Validating an artifact that is not stored also returns 500.
+  `/track`, `/validate` and `/api/processor/update` throw, which returns 500. Validating an artifact that is not stored also returns 500.
 - A preview whose processor does not answer within 30 s returns 500.
+
+## Background jobs
+
+Re-tracking or validating many artifacts runs as a background job, so the request that starts
+it returns at once (`JobsController`, `Jobs/`, `Core.Infrastructure/Services/JobRunner.cs`).
+
+- **One at a time.** Jobs are stored in MongoDB (`backpack-jobs`). The running job holds a
+  lock field with a unique index, so a second job can't start from any API replica or from
+  Tracker.Scheduler; starting one answers 409 with the running job.
+- **What a job does.** It counts the artifacts, then streams them from MongoDB and sends each
+  one on: an ingest request for a re-track (roots only), a route or collect request for a
+  validation (every artifact). Progress (`done` of `total`, `failed`, the current processor)
+  is saved every second. A job ends once everything is sent; the processors and collectors
+  then work through their queues.
+- **Where it runs.** On the API replica that started it, in `JobWorker`.
+- **Cancelling.** `POST /api/jobs/{id}/cancel` sets a flag the runner checks every second, so
+  it works from any replica.
+- **Stopping.** When the API shuts down (for example during a rolling update), the running
+  job ends as `interrupted`. A replica that dies without shutting down stops sending
+  heartbeats; after two minutes the job is marked `interrupted` and the lock is released.
+- **States.** `waiting` (a scheduled run waiting its turn), `running`, `succeeded`, `failed`,
+  `cancelled`, `interrupted`, `skipped`. Finished jobs are deleted after 90 days.
+- **Events.** Each job logs a system event when it starts and when it ends.
 
 ## Other behaviour
 

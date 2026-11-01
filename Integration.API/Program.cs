@@ -14,6 +14,7 @@ using Core.Services;
 using Integration.API;
 using Integration.API.Errors;
 using Integration.API.Health;
+using Integration.API.Jobs;
 using Integration.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -86,6 +87,12 @@ builder.Services.AddSingleton<ICoreCache, CoreCache>();
 builder.Services.AddScoped<IArtifactService, ArtifactService>();
 builder.Services.AddSingleton<IStatusService, RabbitMqStatusService>();
 builder.Services.AddScoped<IEventService, EventService>();
+/* Background jobs (re-track and validate), one at a time across replicas. */
+builder.Services.AddSingleton<IJobService, MongoJobService>();
+builder.Services.AddScoped<JobRunner>();
+builder.Services.AddSingleton<JobQueue>();
+builder.Services.AddScoped<JobStarter>();
+builder.Services.AddHostedService<JobWorker>();
 
 /* Authentication & Authorization */
 string? authority =

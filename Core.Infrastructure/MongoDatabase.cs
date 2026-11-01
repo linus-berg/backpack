@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Core.Infrastructure.Models;
 using Core.Kernel;
 using Core.Kernel.Models;
@@ -74,6 +75,23 @@ public class MongoDatabase : ICoreDatabase {
       await GetCollection<Artifact>(processor)
         .FindAsync(a => a.root || !only_roots);
     return await cursor.ToListAsync();
+  }
+
+  public async IAsyncEnumerable<Artifact> StreamArtifacts(
+    string processor, bool only_roots,
+    [EnumeratorCancellation] CancellationToken token = default) {
+    /* The same filter as CountArtifacts, so progress adds up. */
+    FilterDefinition<Artifact> filter = only_roots
+                                          ? Builders<Artifact>.Filter.Eq("root", true)
+                                          : FilterDefinition<Artifact>.Empty;
+    using IAsyncCursor<Artifact> cursor =
+      await GetCollection<Artifact>(processor)
+        .FindAsync(filter, new FindOptions<Artifact> { BatchSize = 200 }, token);
+    while (await cursor.MoveNextAsync(token)) {
+      foreach (Artifact artifact in cursor.Current) {
+        yield return artifact;
+      }
+    }
   }
 
   public async Task<long> CountArtifacts(string processor,
