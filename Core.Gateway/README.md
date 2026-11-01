@@ -89,6 +89,7 @@ never sent. Validate (see Integration.API) re-routes the stored artifact. It doe
 | `BP_REDIS_HOST`, `BP_REDIS_USER`, `BP_REDIS_PASS` | `localhost`, `default`, `myverylongpassword` | Redis. Connected during startup; startup fails if Redis is unreachable. |
 | `BP_MONGO_STR` | none | MongoDB. Read when the first message is consumed, not at startup. |
 | `BP_OTEL_HOST` | `http://localhost:4318` | OTLP gRPC export of logs, traces and metrics; `""` disables it. |
+| `BP_HEALTH_PORT` | `8080` | `/healthz/live` and `/healthz/ready` (RabbitMQ, MongoDB, Redis); `""` disables it. |
 
 `dotnet run --project Core.Gateway` uses `Properties/launchSettings.json` (RabbitMQ and Redis on
 localhost, `mongodb://root:example@localhost:27017`). The image is built from the repository

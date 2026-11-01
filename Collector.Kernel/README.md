@@ -12,6 +12,10 @@ A collector calls `services.AddStorage()` and registers `FileSystem` as a single
 `AddStorage` reads the S3 variables below while the host is built, so a missing variable
 stops the service at startup with `NoNullAllowedException: <NAME> is null!`.
 
+`AddStorage` also adds the `s3` readiness check (`/healthz/ready`): healthy when the bucket
+exists, degraded when it doesn't exist yet (it is created on first write), unhealthy when S3
+is unreachable or rejects the credentials.
+
 ## Configuration
 
 | Variable                 | Default  | Effect |

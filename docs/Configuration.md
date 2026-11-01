@@ -19,6 +19,7 @@ variables but stored in MongoDB; see [Processor definitions](#processor-definiti
 | `BP_RABBIT_MQ_USER` | `guest`                 | Also used for the management API (see the API below). |
 | `BP_RABBIT_MQ_PASS` | `guest`                 | |
 | `BP_OTEL_HOST`      | `http://localhost:4318` | OTLP endpoint for traces, metrics and logs, sent over **gRPC**. Set it to an empty string to turn telemetry off. |
+| `BP_HEALTH_PORT`    | `8080`                  | Port of the [health endpoints](DeploymentGuide.md#health-checks) of every service except Integration.API, which serves them on its own HTTP port. Empty turns them off. |
 
 `BP_OTEL_HOST` always has a value unless you clear it, so every service tries to export
 telemetry by default. The default points at port 4318, which is normally the OTLP/HTTP
@@ -142,6 +143,7 @@ scheduler reloads them when they change. `SCHEDULE_FILE` only seeds an empty col
 |---------------------------------|------|
 | GUI                             | 3000 in development (`yarn start`), 80 in its container |
 | Integration.API                 | 8080 in its container (8004 expected by the GUI; 8004 in the local launch profile) |
+| Health endpoints of the gateway, router, scheduler, collectors and processors | 8080 (`BP_HEALTH_PORT`) |
 | RabbitMQ AMQP / management      | 5672 / 15672 |
 | MongoDB                         | 27017 |
 | Redis                           | 6379 |

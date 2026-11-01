@@ -58,6 +58,21 @@ RabbitMQ management API.
   starts. An ingest for processor `foo` goes to `processor-foo`, so the processor
   definition's ID must match the endpoint the service registers.
 
+### Health endpoints
+
+A pod that shows `0/1` in `kubectl get pods` is failing its readiness probe, and
+`kubectl describe pod` shows the probe's status code. `/healthz/ready` names the
+dependency that fails (see [Health checks](DeploymentGuide.md#health-checks)):
+
+```bash
+kubectl port-forward deploy/processor-npm 8080:health
+curl -s localhost:8080/healthz/ready
+```
+
+Use `8080:http` for the API. The images contain no curl, so `kubectl exec` won't help. A
+worker that is not ready while every check is healthy except `masstransit-bus` can't reach
+RabbitMQ.
+
 ### Service logs
 
 Failures are only visible in the logs of the service that failed: the console, plus the

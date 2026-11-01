@@ -1,8 +1,10 @@
 using Core.Infrastructure;
+using Core.Infrastructure.Health;
 using Core.Infrastructure.Services;
 using Core.Kernel;
 using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
+using Core.Kernel.Health;
 using Core.Kernel.Registrations;
 using Core.Services;
 using MassTransit;
@@ -47,6 +49,8 @@ IHost host = Host.CreateDefaultBuilder(args)
                          }
                        )
                      );
+                     /* /healthz/live and /healthz/ready (RabbitMQ, MongoDB, Redis). */
+                     services.AddHealthEndpoint().AddMongo().AddRedis();
                      services.AddScoped<ICoreDatabase, MongoDatabase>();
                      services.AddSingleton<ICoreCache, CoreCache>();
                      services.AddScoped<IArtifactService, ArtifactService>();

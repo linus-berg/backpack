@@ -115,5 +115,12 @@ public enum CoreVariables {
   /// <summary>
   ///   OIDC audience
   /// </summary>
-  BP_OIDC_AUDIENCE
+  BP_OIDC_AUDIENCE,
+
+  /// <summary>
+  ///   Port of the health endpoint of worker services (/healthz/live,
+  ///   /healthz/ready). Empty disables it. The API serves the same paths on
+  ///   its own port.
+  /// </summary>
+  BP_HEALTH_PORT
 }

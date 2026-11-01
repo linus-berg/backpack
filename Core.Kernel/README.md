@@ -23,6 +23,7 @@ returns the empty string, not the default.
 | `BP_REDIS_PASS` | `myverylongpassword` | Redis password. |
 | `BP_MONGO_STR` | none | MongoDB connection string. Required where MongoDB is used. |
 | `BP_OTEL_HOST` | `http://localhost:4318` | OTLP endpoint, see below. |
+| `BP_HEALTH_PORT` | `8080` | Port of the health endpoint, see below. Empty turns it off. |
 | `BP_OIDC_AUTHORITY` | `http://localhost:8090/realms/backpack` | OIDC issuer (Integration.API). |
 | `BP_OIDC_AUDIENCE` | `backpack` | OIDC client ID (Integration.API). |
 | `BP_S3_ENDPOINT`, `BP_S3_ACCESS_KEY`, `BP_S3_SECRET_KEY`, `BP_S3_BUCKET`, `BP_S3_REGION` | none | S3 storage. Required where storage is used. |
@@ -93,7 +94,8 @@ registration.AddEndpoint("npm-preview");  // queue processor-npm-preview
 services.Register(registration);
 ```
 
-`Register` (`RegistrationUtils.cs`) also registers `IEventService`. Each endpoint gets an
+`Register` (`RegistrationUtils.cs`) also registers `IEventService` and the health endpoint
+(see [Health checks](#health-checks)). Each endpoint gets an
 in-memory outbox (messages sent by the consumer are only delivered once it succeeds), a
 180-minute timeout, and this retry policy:
 
@@ -106,6 +108,30 @@ in-memory outbox (messages sent by the consumer are only delivered once it succe
 
 Delayed redelivery uses RabbitMQ delayed delivery, which needs the delayed message exchange
 plugin (the `masstransit/rabbitmq` image in `Compose/` includes it).
+
+## Health checks
+
+`services.AddHealthEndpoint()` (`Health/HealthExtensions.cs`) starts `HealthEndpointService`,
+a minimal HTTP/1.1 listener on `BP_HEALTH_PORT` (IPv4 and IPv6) for services without a web
+server, and returns the `IHealthChecksBuilder` for adding checks. `Register` calls it, so every
+processor and collector has it; Core.Gateway and Tracker.Scheduler call it themselves.
+
+- `/healthz/live`: 200 between `ApplicationStarted` and `ApplicationStopping`, otherwise 503.
+- `/healthz/ready`: runs the checks tagged `HealthTags.READY` (`"ready"`). 503 if one is
+  unhealthy or the MassTransit bus (tag `masstransit`, added by MassTransit) isn't healthy.
+- A port that is already taken logs a warning; the service runs without the endpoint.
+
+Add a readiness check with the `ready` tag and a timeout:
+
+```csharp
+services.AddHealthEndpoint()
+        .AddCheck<MyCheck>("my-dependency", HealthStatus.Unhealthy,
+                           new[] { HealthTags.READY }, TimeSpan.FromSeconds(3));
+```
+
+`Core.Infrastructure` adds `.AddMongo()` and `.AddRedis()`; `Collector.Kernel`'s `AddStorage`
+adds the `s3` check. `HealthReportJson` writes the response body, which Integration.API reuses
+for its own `/healthz` endpoints.
 
 ## Telemetry and logging
 

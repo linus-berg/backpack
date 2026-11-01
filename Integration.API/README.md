@@ -79,6 +79,8 @@ Auth: **anon** = no authentication; **user** = any authenticated caller (bearer 
 
 | Method | Route | Auth | Description |
 | :--- | :--- | :--- | :--- |
+| GET | `/healthz/live` | anon | 200 while the API runs; checks no dependencies. For liveness and startup probes. |
+| GET | `/healthz/ready` | anon | Runs the readiness checks: RabbitMQ, MongoDB, Redis, and (degraded only) the OIDC provider and the RabbitMQ management API. 503 when one is unhealthy. See [Health checks](../docs/DeploymentGuide.md#health-checks). |
 | GET | `/api/auth/oidc` | anon | OIDC authority and client ID for the GUI. |
 | GET | `/api/auth/me` | user | Caller name and roles. |
 | GET | `/api/apikey` | admin, bearer | List keys: `id`, `name`, `key_preview` (first and last 4 characters), `is_admin`, `created_at`, `created_by`. |
@@ -167,7 +169,8 @@ runs them with Quartz, which is stricter; see `Tracker.Scheduler/README.md`.
 - **Swagger:** only with `ASPNETCORE_ENVIRONMENT=Development`. The UI is at `/swagger` and the
   document at `/swagger/v1/swagger.json`.
 - **Logging:** Serilog writes to the console and to `<BP_LOGS>/backpack_api.log` (one file, no
-  rolling) and logs every request. Logs are not sent over OTLP.
+  rolling) and logs every request except the health probes (`/healthz/*`). Logs are not sent
+  over OTLP.
 - **Pending requests:** a `PendingArtifact` uses the artifact id as its MongoDB `_id`. A second
   pending request for the same id fails with a duplicate-key error (500), even for a different
   processor.

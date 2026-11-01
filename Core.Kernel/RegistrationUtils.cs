@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Core.Kernel.Exceptions;
+using Core.Kernel.Health;
 using Core.Kernel.Registrations;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,9 @@ public static class RegistrationUtils {
   public static IServiceCollection Register(this IServiceCollection sc,
                                             ModuleRegistration registration) {
     sc.AddScoped<IEventService, EventService>();
+    /* /healthz/live and /healthz/ready; MassTransit adds the RabbitMQ
+       check, collectors with storage add S3 (Collector.Kernel). */
+    sc.AddHealthEndpoint();
     sc.AddMassTransit(
       mt => {
         mt.AddConsumer(registration.consumer);

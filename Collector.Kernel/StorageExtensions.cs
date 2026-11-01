@@ -3,7 +3,9 @@
 
 using Collector.Kernel.Storage.Minio;
 using Core.Kernel;
+using Core.Kernel.Health;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Polly;
 using Polly.Retry;
 
@@ -55,6 +57,14 @@ public static class StorageExtensions {
     };
     services.AddSingleton(minio_options);
     services.AddSingleton<MinioStorage>();
+    /* Readiness: the storage collectors also need S3. */
+    services.AddHealthChecks()
+            .AddCheck<S3HealthCheck>(
+              "s3",
+              HealthStatus.Unhealthy,
+              new[] { HealthTags.READY },
+              TimeSpan.FromSeconds(3)
+            );
     return services;
   }
 }

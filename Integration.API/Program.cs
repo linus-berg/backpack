@@ -2,18 +2,23 @@ using System.Configuration;
 using System.Security.Claims;
 using System.Text.Json;
 using Core.Infrastructure;
+using Core.Infrastructure.Health;
 using Core.Infrastructure.Services;
 using Core.Kernel;
 using Core.Kernel.Constants;
 using Core.Kernel.Extensions;
+using Core.Kernel.Health;
 using Core.Kernel.Registrations;
 using Core.Services;
 using Integration.API;
 using Integration.API.Errors;
+using Integration.API.Health;
 using Integration.API.Services;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
@@ -186,6 +191,26 @@ builder.Services.AddControllers();
    (including the bearer token) the GUI would show to the user. */
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<InvalidCollectLocationExceptionHandler>();
+
+/* /healthz/live and /healthz/ready for Kubernetes probes. MassTransit adds
+   its RabbitMQ check; the OIDC provider and the management API only degrade
+   readiness, since the API still serves API keys without them. */
+builder.Services.AddHttpClient("health", c => c.Timeout = TimeSpan.FromSeconds(5));
+builder.Services.AddHealthChecks()
+       .AddMongo()
+       .AddRedis()
+       .AddCheck<OidcHealthCheck>(
+         "oidc",
+         HealthStatus.Degraded,
+         new[] { HealthTags.READY },
+         TimeSpan.FromSeconds(3)
+       )
+       .AddCheck<RabbitMqManagementHealthCheck>(
+         "rabbitmq-management",
+         HealthStatus.Degraded,
+         new[] { HealthTags.READY },
+         TimeSpan.FromSeconds(3)
+       );
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -208,8 +233,38 @@ app.UseCors(
 /* After UseCors, so error responses still carry CORS headers and the GUI
    can read them. Exceptions are logged by this middleware. */
 app.UseExceptionHandler();
-app.UseSerilogRequestLogging();
+/* Probes hit /healthz every few seconds; keep them out of the request log. */
+app.UseSerilogRequestLogging(
+  options => options.GetLevel = (context, _, error) =>
+               context.Request.Path.StartsWithSegments("/healthz")
+                 ? LogEventLevel.Verbose
+                 : error != null || context.Response.StatusCode >= 500
+                   ? LogEventLevel.Error
+                   : LogEventLevel.Information
+);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks(
+     "/healthz/live",
+     new HealthCheckOptions {
+       Predicate = _ => false,
+       ResponseWriter = WriteHealth
+     }
+   )
+   .AllowAnonymous();
+app.MapHealthChecks(
+     "/healthz/ready",
+     new HealthCheckOptions {
+       Predicate = check => check.Tags.Contains(HealthTags.READY),
+       ResponseWriter = WriteHealth
+     }
+   )
+   .AllowAnonymous();
 app.Run();
+
+/* The same JSON as the worker services' health endpoint. */
+static Task WriteHealth(HttpContext context, HealthReport report) {
+  context.Response.ContentType = "application/json";
+  return context.Response.WriteAsync(HealthReportJson.Serialize(report));
+}

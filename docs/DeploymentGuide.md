@@ -92,7 +92,9 @@ helm install backpack backpack/backpack -n backpack --create-namespace -f my-val
 The chart README documents every value. The essentials: `oidc`, `rabbitmq`, `mongo`,
 `redis` and `s3` point at your infrastructure, `collectors` and `processors` list the
 workers to run, `credentials` holds tokens for private Git hosts, and `http_proxy`,
-`no_proxy` and `ca_certificates` cover restricted networks.
+`no_proxy` and `ca_certificates` cover restricted networks. Every workload gets startup,
+liveness and readiness probes on its [health endpoints](#health-checks); `probes` in the
+values tunes or turns them off.
 
 The chart does not deploy Tracker.Scheduler, so schedules don't run in a Helm deployment
 unless you run the scheduler yourself.
@@ -132,6 +134,50 @@ GUI's API keys page. See `Integration.API/README.md`.
    [Processor definitions](Configuration.md#processor-definitions) lists the fields.
 3. Add an artifact and follow it on the Status page.
 
+## Health checks
+
+Every service answers two endpoints for Kubernetes probes and monitoring. Integration.API
+serves them on its HTTP port. The other services have no web server, so they serve them
+on `BP_HEALTH_PORT` (8080 by default) with a minimal built-in HTTP listener.
+
+| Endpoint | Answers | Use for |
+| :--- | :--- | :--- |
+| `GET /healthz/live` | 200 once the service has started, 503 while it starts or shuts down. Checks no dependencies, so an outage of e.g. MongoDB doesn't restart every pod. | Startup and liveness probes |
+| `GET /healthz/ready` | 200 when the service can reach what it needs, 503 when it can't. The JSON body lists every check with its status, description and duration. | Readiness probes, monitoring |
+
+What `/healthz/ready` checks:
+
+| Service | Checks |
+| :--- | :--- |
+| Integration.API | RabbitMQ (the MassTransit bus), MongoDB, Redis; the OIDC provider's discovery document and the RabbitMQ management API, which can only degrade it |
+| Core.Gateway, Tracker.Scheduler | RabbitMQ, MongoDB, Redis |
+| Collectors that write to S3 (HTTP, Git, Hugging Face, Wget, Docker archive) | RabbitMQ, S3 (the bucket) |
+| Collector.Router, the container and rsync collectors, processors | RabbitMQ |
+
+```json
+{"status":"Degraded","duration_ms":61,"checks":[
+  {"name":"masstransit-bus","status":"Healthy","description":"Ready","duration_ms":12},
+  {"name":"s3","status":"Degraded","description":"Bucket backpack doesn’t exist yet; it is created on first write.","duration_ms":42}]}
+```
+
+- **Degraded is still ready** (200). The API stays ready without the OIDC provider (API
+  keys and tokens it has already validated keep working) and without the management API
+  (only the Status page and purging need it). A bucket that doesn't exist yet is
+  degraded too, since collectors create it on first write.
+- **Workers are only ready while they consume.** While RabbitMQ is unreachable,
+  MassTransit reports the bus as degraded and keeps reconnecting; the gateway, router,
+  collectors and processors answer 503 until it is back. Liveness stays 200, so the pods
+  aren't restarted. The API has no queues of its own, so a RabbitMQ outage shows there as
+  a degraded management API.
+- Each check times out after 3 seconds and the checks run in parallel, so a probe timeout
+  of 5 seconds is enough.
+- The body never contains exception details, since the API's endpoints need no
+  authentication. Failing checks are logged with the exception by the service.
+- When several services run on one machine, as in development, only the first gets port
+  8080; the others log `Health endpoint not started on port 8080` and run without it. Give
+  each service its own `BP_HEALTH_PORT`, or set it to an empty string to turn the
+  endpoint off.
+
 ## Security notes
 
 Backpack is usually deployed on a trusted internal network. Things to be aware of:
@@ -143,8 +189,8 @@ Backpack is usually deployed on a trusted internal network. Things to be aware o
 - API keys are stored in plain text in MongoDB (`backpack-api-keys`). Anyone who can read
   that collection can use them. Administrators manage keys and purge queues with an OIDC
   token; API keys are not accepted on those endpoints.
-- A few endpoints need no authentication: the OIDC settings, the queue statistics
-  (`/api/status/*`), and `GET /api/container/container`, a leftover test endpoint that
+- A few endpoints need no authentication: the OIDC settings, the health endpoints
+  (`/healthz/*`), the queue statistics (`/api/status/*`), and `GET /api/container/container`, a leftover test endpoint that
   starts a collection of `docker.io/nginx:latest` as a Docker archive. Don't expose the
   API beyond the networks that need it.
 - Anyone who can publish to RabbitMQ can trigger collections and write processed results.

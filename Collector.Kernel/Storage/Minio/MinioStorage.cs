@@ -42,6 +42,24 @@ public class MinioStorage : IDisposable {
   }
 
   /// <summary>
+  ///   The bucket this storage writes to.
+  /// </summary>
+  public string bucket => bucket_;
+
+  /// <summary>
+  ///   Asks the S3 service whether the bucket exists, without creating it.
+  ///   Throws when the service is unreachable or rejects the credentials.
+  /// </summary>
+  /// <param name="token">Cancels the request.</param>
+  /// <returns>True when the bucket exists.</returns>
+  public async Task<bool> BucketExistsAsync(CancellationToken token = default) {
+    return await client.BucketExistsAsync(
+             new BucketExistsArgs().WithBucket(bucket_),
+             token
+           );
+  }
+
+  /// <summary>
   ///   Gets the Minio client.
   /// </summary>
   public IMinioClient client { get; }

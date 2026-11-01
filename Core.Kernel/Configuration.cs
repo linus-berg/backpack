@@ -41,6 +41,8 @@ public static class Configuration {
         CoreVariables.BP_OIDC_AUDIENCE, "backpack"
       }, {
         CoreVariables.BP_S3_TRACING, "false"
+      }, {
+        CoreVariables.BP_HEALTH_PORT, "8080"
       }
     };
 
