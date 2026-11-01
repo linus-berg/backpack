@@ -149,7 +149,7 @@ What `/healthz/ready` checks:
 
 | Service | Checks |
 | :--- | :--- |
-| Integration.API | RabbitMQ (the MassTransit bus), MongoDB, Redis; the OIDC provider's discovery document and the RabbitMQ management API, which can only degrade it |
+| Integration.API | MongoDB, Redis, the MassTransit bus; RabbitMQ itself (an AMQP connection), the RabbitMQ management API, S3 (when the API has the S3 settings) and the OIDC provider's discovery document, which can only degrade it |
 | Core.Gateway, Tracker.Scheduler | RabbitMQ, MongoDB, Redis |
 | Collectors that write to S3 (HTTP, Git, Hugging Face, Wget, Docker archive) | RabbitMQ, S3 (the bucket) |
 | Collector.Router, the container and rsync collectors, processors | RabbitMQ |
@@ -160,19 +160,25 @@ What `/healthz/ready` checks:
   {"name":"s3","status":"Degraded","description":"Bucket backpack doesn’t exist yet; it is created on first write.","duration_ms":42}]}
 ```
 
-- **Degraded is still ready** (200). The API stays ready without the OIDC provider (API
-  keys and tokens it has already validated keep working) and without the management API
-  (only the Status page and purging need it). A bucket that doesn't exist yet is
-  degraded too, since collectors create it on first write.
+- **Degraded is still ready** (200). The API stays ready without RabbitMQ (reads keep
+  working; adding artifacts fails), the OIDC provider (API keys and tokens it has already
+  validated keep working), the management API (only the Status page and purging need it)
+  and S3 (it only reports it). A bucket that doesn't exist yet is degraded too, since
+  collectors create it on first write.
 - **Workers are only ready while they consume.** While RabbitMQ is unreachable,
   MassTransit reports the bus as degraded and keeps reconnecting; the gateway, router,
   collectors and processors answer 503 until it is back. Liveness stays 200, so the pods
-  aren't restarted. The API has no queues of its own, so a RabbitMQ outage shows there as
-  a degraded management API.
+  aren't restarted. The API has no queues of its own, so its bus stays healthy; its own
+  AMQP check reports the outage.
 - Each check times out after 3 seconds and the checks run in parallel, so a probe timeout
   of 5 seconds is enough.
 - The body never contains exception details, since the API's endpoints need no
   authentication. Failing checks are logged with the exception by the service.
+- The GUI's Status page shows the API's view of the infrastructure (`GET
+  /api/status/health`): RabbitMQ, its management API, MongoDB, Redis, S3 and the OIDC
+  provider. There a dependency that is down shows as down, even where it only degrades
+  the API's readiness. The checks run at most every 10 seconds, however many people
+  have the page open.
 - When several services run on one machine, as in development, only the first gets port
   8080; the others log `Health endpoint not started on port 8080` and run without it. Give
   each service its own `BP_HEALTH_PORT`, or set it to an empty string to turn the

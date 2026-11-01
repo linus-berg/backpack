@@ -33,7 +33,25 @@ public static class StorageExtensions {
         );
       }
     );
-    /* SETUP STORAGE */
+    return services.AddS3Storage(HealthStatus.Unhealthy, true);
+  }
+
+  /// <summary>
+  ///   Registers <see cref="MinioStorage" /> for the BP_S3_* settings and the
+  ///   <c>s3</c> health check. Reads the settings now, so a missing variable
+  ///   fails while the host is built.
+  /// </summary>
+  /// <param name="services">The service collection.</param>
+  /// <param name="failure_status">
+  ///   What an unreachable S3 means for readiness: unhealthy for collectors,
+  ///   degraded for services that only report it.
+  /// </param>
+  /// <param name="auto_create_bucket">Create the bucket on first write.</param>
+  /// <returns>The updated service collection.</returns>
+  public static IServiceCollection AddS3Storage(
+    this IServiceCollection services,
+    HealthStatus failure_status,
+    bool auto_create_bucket) {
     MinioConnectionBuilder connection = new();
 
     connection.region =
@@ -51,18 +69,17 @@ public static class StorageExtensions {
       Configuration.GetBackpackVariable(CoreVariables.BP_S3_TRACING)
     );
     MinioStorageOptions minio_options = new() {
-      auto_create_bucket = true,
+      auto_create_bucket = auto_create_bucket,
       connection_string = connection.ToString(),
       tracing = tracing
     };
     services.AddSingleton(minio_options);
     services.AddSingleton<MinioStorage>();
-    /* Readiness: the storage collectors also need S3. */
     services.AddHealthChecks()
             .AddCheck<S3HealthCheck>(
               "s3",
-              HealthStatus.Unhealthy,
-              new[] { HealthTags.READY },
+              failure_status,
+              HealthTags.READY_INFRASTRUCTURE,
               TimeSpan.FromSeconds(3)
             );
     return services;

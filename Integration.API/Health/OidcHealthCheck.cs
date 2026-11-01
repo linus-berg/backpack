@@ -1,4 +1,5 @@
 using Core.Kernel;
+using Core.Kernel.Health;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Integration.API.Health;
@@ -48,13 +49,13 @@ public sealed class OidcHealthCheck : IHealthCheck {
                                                  );
       result = response.IsSuccessStatusCode
                  ? HealthCheckResult.Healthy("The OIDC provider answers.")
-                 : new HealthCheckResult(
-                   context.Registration.FailureStatus,
+                 : HealthResults.Failed(
+                   context,
                    $"The OIDC provider answered {(int)response.StatusCode}."
                  );
     } catch (Exception e) {
-      result = new HealthCheckResult(
-        context.Registration.FailureStatus,
+      result = HealthResults.Failed(
+        context,
         "The OIDC provider is unreachable.",
         e
       );

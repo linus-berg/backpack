@@ -79,6 +79,11 @@ need temporary space for the largest file they download.
 
 How objects are named is described in [Storage Architecture](../STORAGE.md).
 
+Integration.API takes the same variables, optionally: with `BP_S3_ENDPOINT` and the four
+others set, the GUI's Status page shows whether the bucket is reachable. The API only
+checks that the bucket exists; it never creates or writes to it. The Helm chart passes the
+collectors' settings to it.
+
 ## Module-specific variables
 
 | Variable                          | Read by | Default | Notes |

@@ -17,4 +17,16 @@ public static class HealthTags {
   ///   The tag MassTransit puts on its bus check.
   /// </summary>
   public const string MASSTRANSIT = "masstransit";
+
+  /// <summary>
+  ///   Checks of the infrastructure Backpack depends on (RabbitMQ, MongoDB,
+  ///   Redis, S3, the OIDC provider), which Integration.API reports to the
+  ///   GUI's Status page.
+  /// </summary>
+  public const string INFRASTRUCTURE = "infrastructure";
+
+  /// <summary>
+  ///   <see cref="READY" /> and <see cref="INFRASTRUCTURE" />.
+  /// </summary>
+  public static readonly string[] READY_INFRASTRUCTURE = { READY, INFRASTRUCTURE };
 }

@@ -21,6 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Collector.Kernel\Collector.Kernel.csproj"/>
         <ProjectReference Include="..\Core.Infrastructure\Core.Infrastructure.csproj"/>
         <ProjectReference Include="..\Core.Kernel\Core.Kernel.csproj"/>
     </ItemGroup>

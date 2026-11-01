@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using Core.Kernel;
+using Core.Kernel.Health;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Integration.API.Health;
@@ -39,13 +40,13 @@ public sealed class RabbitMqManagementHealthCheck : IHealthCheck {
         await http_.CreateClient("health").SendAsync(request, token);
       return response.IsSuccessStatusCode
                ? HealthCheckResult.Healthy("The RabbitMQ management API answers.")
-               : new HealthCheckResult(
-                 context.Registration.FailureStatus,
+               : HealthResults.Failed(
+                 context,
                  $"The RabbitMQ management API answered {(int)response.StatusCode}."
                );
     } catch (Exception e) {
-      return new HealthCheckResult(
-        context.Registration.FailureStatus,
+      return HealthResults.Failed(
+        context,
         "The RabbitMQ management API is unreachable.",
         e
       );

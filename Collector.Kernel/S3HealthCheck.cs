@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Collector.Kernel.Storage.Minio;
+using Core.Kernel.Health;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Collector.Kernel;
@@ -32,8 +33,8 @@ public sealed class S3HealthCheck : IHealthCheck {
                  $"Bucket {storage_.bucket} doesn’t exist yet; it is created on first write."
                );
     } catch (Exception e) {
-      return new HealthCheckResult(
-        context.Registration.FailureStatus,
+      return HealthResults.Failed(
+        context,
         "S3 storage is unreachable or rejects the credentials.",
         e
       );

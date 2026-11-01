@@ -1,6 +1,7 @@
 // Copyright (c) 2022 Linus Berg. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Core.Kernel.Health;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using StackExchange.Redis;
 
@@ -30,8 +31,8 @@ public sealed class RedisHealthCheck : IHealthCheck {
         $"Redis answers in {latency.TotalMilliseconds:0} ms."
       );
     } catch (Exception e) {
-      return new HealthCheckResult(
-        context.Registration.FailureStatus,
+      return HealthResults.Failed(
+        context,
         "Redis is unreachable.",
         e
       );

@@ -46,8 +46,10 @@ direct-collect artifact collects it again even if it exists.
 
 ### Status page (queues)
 
-The Status page shows every queue with its message count and consumer count, from the
-RabbitMQ management API.
+The strip at the top shows RabbitMQ, its management API, MongoDB, Redis, S3 and the OIDC
+provider as the API sees them; hover one for what it found. *S3 storage: Not checked*
+means the API has no `BP_S3_*` settings. Below it, the Status page shows every queue with
+its message count and consumer count, from the RabbitMQ management API.
 
 - **0 consumers**: the service for that queue isn't running, or is connected to another
   RabbitMQ or vhost. Messages wait until it starts.

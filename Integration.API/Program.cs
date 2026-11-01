@@ -1,6 +1,7 @@
 using System.Configuration;
 using System.Security.Claims;
 using System.Text.Json;
+using Collector.Kernel;
 using Core.Infrastructure;
 using Core.Infrastructure.Health;
 using Core.Infrastructure.Services;
@@ -192,25 +193,45 @@ builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<InvalidCollectLocationExceptionHandler>();
 
-/* /healthz/live and /healthz/ready for Kubernetes probes. MassTransit adds
-   its RabbitMQ check; the OIDC provider and the management API only degrade
-   readiness, since the API still serves API keys without them. */
+/* /healthz/live and /healthz/ready for Kubernetes probes, and the
+   infrastructure checks of the Status page (/api/status/health). MassTransit
+   adds its bus check. RabbitMQ, the management API, S3 and the OIDC provider
+   only degrade readiness, since the API still serves reads and API keys
+   without them. */
 builder.Services.AddHttpClient("health", c => c.Timeout = TimeSpan.FromSeconds(5));
+builder.Services.AddSingleton<InfrastructureHealthService>();
 builder.Services.AddHealthChecks()
        .AddMongo()
        .AddRedis()
-       .AddCheck<OidcHealthCheck>(
-         "oidc",
+       .AddCheck<RabbitMqHealthCheck>(
+         "rabbitmq",
          HealthStatus.Degraded,
-         new[] { HealthTags.READY },
+         HealthTags.READY_INFRASTRUCTURE,
          TimeSpan.FromSeconds(3)
        )
        .AddCheck<RabbitMqManagementHealthCheck>(
          "rabbitmq-management",
          HealthStatus.Degraded,
-         new[] { HealthTags.READY },
+         HealthTags.READY_INFRASTRUCTURE,
+         TimeSpan.FromSeconds(3)
+       )
+       .AddCheck<OidcHealthCheck>(
+         "oidc",
+         HealthStatus.Degraded,
+         HealthTags.READY_INFRASTRUCTURE,
          TimeSpan.FromSeconds(3)
        );
+/* S3 is optional for the API: it only reports it, given the collectors'
+   S3 settings. Without them the Status page shows S3 as not checked. */
+if (!string.IsNullOrWhiteSpace(
+      Environment.GetEnvironmentVariable(nameof(CoreVariables.BP_S3_ENDPOINT))
+    ) &&
+    new[] {
+      CoreVariables.BP_S3_REGION, CoreVariables.BP_S3_BUCKET,
+      CoreVariables.BP_S3_ACCESS_KEY, CoreVariables.BP_S3_SECRET_KEY
+    }.All(v => Environment.GetEnvironmentVariable(v.ToString()) != null)) {
+  builder.Services.AddS3Storage(HealthStatus.Degraded, false);
+}
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

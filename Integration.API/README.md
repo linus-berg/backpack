@@ -33,6 +33,7 @@ port 8080.
 | `BP_LOGS` | `logs/` | Directory of the Serilog file `backpack_api.log`. |
 | `BP_OTEL_HOST` | `http://localhost:4318` | OTLP gRPC export of traces and metrics (not logs); `""` disables it. |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | `Development` enables Swagger. |
+| `BP_S3_ENDPOINT`, `BP_S3_REGION`, `BP_S3_BUCKET`, `BP_S3_ACCESS_KEY`, `BP_S3_SECRET_KEY` | none | Optional, the collectors' S3 settings. With all five set, `/api/status/health` reports whether the bucket exists; the API never writes to it. |
 
 If `BP_OIDC_AUTHORITY` or `BP_OIDC_AUDIENCE` is set to an empty string, startup fails with
 "OIDC is not configured."
@@ -80,7 +81,7 @@ Auth: **anon** = no authentication; **user** = any authenticated caller (bearer 
 | Method | Route | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | GET | `/healthz/live` | anon | 200 while the API runs; checks no dependencies. For liveness and startup probes. |
-| GET | `/healthz/ready` | anon | Runs the readiness checks: RabbitMQ, MongoDB, Redis, and (degraded only) the OIDC provider and the RabbitMQ management API. 503 when one is unhealthy. See [Health checks](../docs/DeploymentGuide.md#health-checks). |
+| GET | `/healthz/ready` | anon | Runs the readiness checks: MongoDB, Redis and the MassTransit bus, and (degraded only) RabbitMQ, the RabbitMQ management API, S3 and the OIDC provider. 503 when one is unhealthy. See [Health checks](../docs/DeploymentGuide.md#health-checks). |
 | GET | `/api/auth/oidc` | anon | OIDC authority and client ID for the GUI. |
 | GET | `/api/auth/me` | user | Caller name and roles. |
 | GET | `/api/apikey` | admin, bearer | List keys: `id`, `name`, `key_preview` (first and last 4 characters), `is_admin`, `created_at`, `created_by`. |
@@ -117,6 +118,7 @@ Auth: **anon** = no authentication; **user** = any authenticated caller (bearer 
 | POST | `/api/scheduler/trigger/{processor}` | admin | Track one processor now. `last_run` is not updated. |
 | GET | `/api/status/status` | anon | Always returns `Backpack is OK.`; nothing is checked. |
 | GET | `/api/status/queue` | anon | Queue name, messages, consumers and rates from the management API. |
+| GET | `/api/status/health` | user | `{status, checked_at, checks: [{name, status, description, duration_ms}]}` for `rabbitmq`, `rabbitmq-management`, `mongodb`, `redis`, `s3` (only with the `BP_S3_*` settings) and `oidc`, for the Status page. A dependency that is down is `Unhealthy` here even where it only degrades readiness. Results are shared for 10 seconds. |
 | DELETE | `/api/status/queue/{queue_name}` | admin, bearer | Purge a queue. Any queue name is accepted. |
 
 Cron expressions are checked with Cronos in six-field, seconds-first format. Tracker.Scheduler

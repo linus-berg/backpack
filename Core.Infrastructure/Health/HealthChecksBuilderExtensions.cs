@@ -21,7 +21,7 @@ public static class HealthChecksBuilderExtensions {
     return builder.AddCheck<MongoHealthCheck>(
       "mongodb",
       HealthStatus.Unhealthy,
-      new[] { HealthTags.READY },
+      HealthTags.READY_INFRASTRUCTURE,
       S_TIMEOUT_
     );
   }
@@ -34,7 +34,7 @@ public static class HealthChecksBuilderExtensions {
     return builder.AddCheck<RedisHealthCheck>(
       "redis",
       HealthStatus.Unhealthy,
-      new[] { HealthTags.READY },
+      HealthTags.READY_INFRASTRUCTURE,
       S_TIMEOUT_
     );
   }

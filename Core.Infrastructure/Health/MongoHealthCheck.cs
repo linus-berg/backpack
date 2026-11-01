@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Core.Kernel;
+using Core.Kernel.Health;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -32,8 +33,8 @@ public sealed class MongoHealthCheck : IHealthCheck {
                      );
       return HealthCheckResult.Healthy("MongoDB answers.");
     } catch (Exception e) {
-      return new HealthCheckResult(
-        context.Registration.FailureStatus,
+      return HealthResults.Failed(
+        context,
         "MongoDB is unreachable.",
         e
       );
