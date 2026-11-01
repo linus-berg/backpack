@@ -18,6 +18,17 @@ public class QueueStatus {
   public required long messages { get; set; } = 0;
 
   /// <summary>
+  ///   Messages waiting for a consumer (RabbitMQ's messages_ready).
+  /// </summary>
+  public long messages_ready { get; set; }
+
+  /// <summary>
+  ///   Messages delivered to a consumer and not yet acknowledged, i.e. being
+  ///   processed (RabbitMQ's messages_unacknowledged).
+  /// </summary>
+  public long messages_in_progress { get; set; }
+
+  /// <summary>
   ///   Gets or sets the number of active consumers for the queue.
   /// </summary>
   public required int consumers { get; set; } = 0;

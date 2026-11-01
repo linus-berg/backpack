@@ -62,6 +62,8 @@ public class RabbitMqStatusService : IStatusService {
           name = queue.name,
           consumers = queue.consumers,
           messages = queue.messages,
+          messages_ready = queue.messages_ready,
+          messages_in_progress = queue.messages_unacknowledged,
           avg_egress_rate = queue.message_stats?.ack_details?.rate ?? 0,
           avg_ingress_rate = queue.message_stats?.publish_details?.rate ?? 0
         }
