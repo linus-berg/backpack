@@ -31,7 +31,7 @@ The ID must match the processor definition in MongoDB.
 | `github-releases` | `processor/github-releases` | `cli/cli` | Collector.Http | — | Config `files` (`;`-separated regexes) and `include_source`. Optional `GITHUB_API_KEY`. |
 | `rancher` | `processor/rancher` | `rancher/rancher` | Collector.Container | — | Mirrors the images in a release's image list (config `file`). Optional `GITHUB_API_KEY`. |
 | `jetbrains-ide` | `processor/jetbrains-ide` | `IIU` (product code) | Collector.Http | — | Linux downloads only. |
-| `jetbrains-plugins` | `processor/jetbrains-plugins` | `7724` (plugin ID) | Collector.Http | — | |
+| `jetbrains-plugins` | `processor/jetbrains-plugins` | `7724` (plugin ID) | Collector.Http | — | Every version, read page by page; stable channel unless `channels` is set. |
 | `php` | — | `monolog/monolog` | Collector.Http | — | Not built or shipped; known bugs (see its README). |
 
 Direct-collect processors have no service: their definition has `direct_collect: true`,

@@ -44,7 +44,9 @@ public class Consumer : IProcessor {
       Artifact artifact = new() {
         id = context.Message.id,
         processor = context.Message.processor,
-        filter = string.Empty
+        filter = string.Empty,
+        /* The preview honours the channels setting like a real track. */
+        config = context.Message.config ?? new Dictionary<string, string>()
       };
       await jetbrains_.ProcessArtifact(artifact);
       await context.RespondAsync(

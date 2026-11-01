@@ -8,6 +8,11 @@ namespace Processor.Jetbrains.Plugins.Models;
 /// </summary>
 public record JetbrainsPluginUpdate {
   /// <summary>
+  ///   Gets the Marketplace id of the update, unique across channels.
+  /// </summary>
+  public long id { get; init; }
+
+  /// <summary>
   ///   Gets the version string.
   /// </summary>
   public required string version { get; init; }
