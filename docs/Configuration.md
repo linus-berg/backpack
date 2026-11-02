@@ -114,7 +114,7 @@ its service is running.
 | Field               | Default | Meaning |
 |---------------------|---------|---------|
 | `_id`               | —       | Processor ID, e.g. `npm`. Artifacts are sent to the queue `processor-<id>` and stored in a MongoDB collection named `<id>`. It must match the endpoint the processor service registers. |
-| `description`       | `""`    | Shown in the GUI (Markdown; legacy HTML is still rendered). |
+| `description`       | `""`    | Shown in the GUI above the add-artifact form. Markdown with HTML: classes (such as Blueprint's `bp6-callout bp6-intent-primary`; older `bp4-` classes are mapped) and inline styles are kept; scripts, event handlers, `<style>` blocks, frames, forms, `javascript:` links, `url()` in styles and fixed positioning are removed. |
 | `direct_collect`    | `false` | The artifact ID is a URL that is sent straight to a collector (`collector-<scheme>`), with no processor involved, e.g. `git://github.com/owner/repo`. |
 | `requires_approval` | `false` | Artifacts added by non-administrators wait in `pending-approvals` until an administrator approves them. |
 | `multi_add`         | `false` | The GUI offers bulk add (one artifact per line). |
