@@ -99,8 +99,16 @@ services.Register(registration);
 in-memory outbox (messages sent by the consumer are only delivered once it succeeds), a
 180-minute timeout, and this retry policy:
 
-- `ArtifactTimeoutException`: 5 immediate retries, then delayed redelivery after 5, 15 and
-  30 minutes.
+- `ArtifactTransientException` is the base of every failure that may pass; throw one of
+  its subtypes, which say what failed:
+
+  | Exception | For | Retries |
+  | :--- | :--- | :--- |
+  | `ArtifactTimeoutException` | Something took too long. | 5 immediate, then redelivery after 5, 15 and 30 minutes. |
+  | `ArtifactUpstreamException` | The upstream source failed: network, DNS, TLS, 5xx, a download that ended early. | Same. |
+  | `ArtifactRateLimitedException` | The upstream asked us to slow down (429, or 503 with `Retry-After`). | Redelivery only (5, 15 and 30 minutes); retrying at once would hit the limit again. |
+  | `ArtifactStorageException` | Backpack's own storage failed (S3, the temp disk). Collector.Kernel's `FileSystem` throws it after waiting up to 10 minutes for S3. | Redelivery only, every 15 minutes for a day, so an S3 outage doesn't lose requests. |
+
 - `ArtifactMetadataException`: never retried.
 - Any other exception: not retried.
 - Messages that still fault are discarded (`DiscardFaultedMessages`). No `_error` queues are

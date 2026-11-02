@@ -59,14 +59,41 @@ public static class RegistrationUtils {
 
   /// <summary>
   ///   Configures retry and redelivery policies for a RabbitMQ receive endpoint.
+  ///   <list type="bullet">
+  ///     <item>
+  ///       <see cref="ArtifactStorageException" />: Backpack's own storage is
+  ///       failing, which affects every message. The storage call has already
+  ///       waited for it (see Collector.Kernel's FileSystem), so it is not
+  ///       retried at once but redelivered every 15 minutes for a day.
+  ///     </item>
+  ///     <item>
+  ///       <see cref="ArtifactRateLimitedException" />: delayed redelivery
+  ///       only (5, 15 and 30 minutes).
+  ///     </item>
+  ///     <item>
+  ///       Other <see cref="ArtifactTransientException" />s (timeouts,
+  ///       upstream failures): 5 immediate retries, then delayed redelivery
+  ///       (5, 15 and 30 minutes).
+  ///     </item>
+  ///     <item>Anything else, including <see cref="ArtifactMetadataException" />: not retried.</item>
+  ///   </list>
   /// </summary>
   /// <param name="endpoint">The endpoint configurator.</param>
   private static void ConfigureRetrying(
     this IRabbitMqReceiveEndpointConfigurator endpoint) {
+    /* Outer redelivery: storage outages can last, so keep trying for a day.
+       The inner one below ignores storage failures, so they end up here. */
     endpoint.UseDelayedRedelivery(
       r => {
-        r.Handle<ArtifactTimeoutException>();
+        r.Handle<ArtifactStorageException>();
+        r.Interval(96, TimeSpan.FromMinutes(15));
+      }
+    );
+    endpoint.UseDelayedRedelivery(
+      r => {
+        r.Handle<ArtifactTransientException>();
         r.Ignore<ArtifactMetadataException>();
+        r.Ignore<ArtifactStorageException>();
         r.Intervals(
           TimeSpan.FromMinutes(5),
           TimeSpan.FromMinutes(15),
@@ -76,8 +103,12 @@ public static class RegistrationUtils {
     );
     endpoint.UseMessageRetry(
       r => {
-        r.Handle<ArtifactTimeoutException>();
+        r.Handle<ArtifactTransientException>();
         r.Ignore<ArtifactMetadataException>();
+        /* Retrying at once would only hit the rate limit again. */
+        r.Ignore<ArtifactRateLimitedException>();
+        /* The storage call already waited for storage to come back. */
+        r.Ignore<ArtifactStorageException>();
         r.Immediate(5);
       }
     );

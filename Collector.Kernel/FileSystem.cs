@@ -1,10 +1,15 @@
 // Copyright (c) 2022 Linus Berg. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Buffers;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using Collector.Kernel.Storage.Common;
 using Collector.Kernel.Storage.Minio;
 using Core.Kernel;
+using Core.Kernel.Exceptions;
+using Microsoft.Extensions.Logging;
+using Minio.Exceptions;
 using Polly;
 using Polly.Registry;
 
@@ -12,11 +17,23 @@ namespace Collector.Kernel;
 
 /// <summary>
 ///   Provides high-level file system operations abstraction using a Minio storage backend.
+///   When S3 fails, a storage call keeps trying for up to 10 minutes, so a
+///   collector whose consumers all wait on storage stops taking messages and
+///   the rest stay in its queue; once S3 answers again they carry on. After
+///   that the call throws <see cref="ArtifactStorageException" />, which the
+///   endpoints redeliver every 15 minutes for a day instead of losing the
+///   request. A key that doesn't exist is not a failure.
 /// </summary>
 public class FileSystem {
+  /* Shorter than RabbitMQ's default delivery acknowledgement timeout (30
+     minutes), after which it would close the channel. */
+  private static readonly TimeSpan S_WAIT_FOR_STORAGE_ = TimeSpan.FromMinutes(10);
+  private static readonly TimeSpan S_STORAGE_RETRY_ = TimeSpan.FromSeconds(15);
+
   private readonly string? base_dir_ =
     Configuration.GetBackpackVariable(CoreVariables.BP_COLLECTOR_DIRECTORY);
 
+  private readonly ILogger<FileSystem> logger_;
   private readonly MinioStorage storage_backend_;
   private readonly ResiliencePipeline<bool> storage_pipeline_;
 
@@ -25,10 +42,13 @@ public class FileSystem {
   /// </summary>
   /// <param name="storage_backend">The Minio storage backend to use.</param>
   /// <param name="polly">The resilience pipeline provider.</param>
+  /// <param name="logger">Logger.</param>
   public FileSystem(MinioStorage storage_backend,
-                    ResiliencePipelineProvider<string> polly) {
+                    ResiliencePipelineProvider<string> polly,
+                    ILogger<FileSystem> logger) {
     storage_backend_ = storage_backend;
     storage_pipeline_ = polly.GetPipeline<bool>("storage-pipeline");
+    logger_ = logger;
   }
 
   /// <summary>
@@ -37,7 +57,7 @@ public class FileSystem {
   /// <param name="path">The path to check.</param>
   /// <returns>True if it exists; otherwise, false.</returns>
   public async Task<bool> Exists(string path) {
-    return await storage_backend_.ExistsAsync(path);
+    return await Storage("checking", path, () => storage_backend_.ExistsAsync(path));
   }
 
   /// <summary>
@@ -47,7 +67,7 @@ public class FileSystem {
   /// <returns>A collection of matching file specifications.</returns>
   public async Task<IReadOnlyCollection<FileSpec>> GetFileList(
     string search_pattern) {
-    return await storage_backend_.GetFileListAsync(search_pattern);
+    return await Storage("listing", search_pattern, () => storage_backend_.GetFileListAsync(search_pattern));
   }
 
   /// <summary>
@@ -58,9 +78,10 @@ public class FileSystem {
   /// <returns>A paged result of matching file specifications.</returns>
   public async Task<PagedFileListResult> GetPagedFileList(
     string search_pattern, int page_size = 10000) {
-    return await storage_backend_.GetPagedFileListAsync(
-             page_size,
-             search_pattern
+    return await Storage(
+             "listing",
+             search_pattern,
+             () => storage_backend_.GetPagedFileListAsync(page_size, search_pattern)
            );
   }
 
@@ -70,7 +91,7 @@ public class FileSystem {
   /// <param name="path">The path of the file to delete.</param>
   /// <returns>True if the file was deleted; otherwise, false.</returns>
   public async Task<bool> Delete(string path) {
-    return await storage_backend_.DeleteFileAsync(path);
+    return await Storage("deleting", path, () => storage_backend_.DeleteFileAsync(path));
   }
 
   /// <summary>
@@ -80,7 +101,7 @@ public class FileSystem {
   /// <param name="b">The destination path.</param>
   /// <returns>True if the rename was successful; otherwise, false.</returns>
   public async Task<bool> Rename(string a, string b) {
-    return await storage_backend_.RenameFileAsync(a, b);
+    return await Storage("renaming", a, () => storage_backend_.RenameFileAsync(a, b));
   }
 
   /// <summary>
@@ -89,7 +110,7 @@ public class FileSystem {
   /// <param name="path">The path of the file to read.</param>
   /// <returns>A stream for reading the file.</returns>
   public async Task<Stream> GetStream(string path) {
-    return await storage_backend_.GetFileStreamAsync(path, StreamMode.READ);
+    return await Storage("reading", path, () => storage_backend_.GetFileStreamAsync(path, StreamMode.READ));
   }
 
   /// <summary>
@@ -98,7 +119,7 @@ public class FileSystem {
   /// <param name="path">The path of the file to read.</param>
   /// <returns>The string content of the file.</returns>
   public async Task<string> GetString(string path) {
-    return await storage_backend_.GetFileContentsAsync(path);
+    return await Storage("reading", path, () => storage_backend_.GetFileContentsAsync(path));
   }
 
   /// <summary>
@@ -111,14 +132,18 @@ public class FileSystem {
   public async Task<bool> PutString(string path, string content,
                                    IDictionary<string, string>? metadata =
                                      null) {
-    return await storage_pipeline_.ExecuteAsync(
-             static async (state, _) =>
-               await state.storage_backend_.SaveFileAsync(
-                 state.path,
-                 state.content,
-                 state.metadata
-               ),
-             (storage_backend_, path, content, metadata)
+    return await Storage(
+             "writing",
+             path,
+             () => storage_pipeline_.ExecuteAsync(
+               static async (state, _) =>
+                 await state.storage_backend_.SaveFileAsync(
+                   state.path,
+                   state.content,
+                   state.metadata
+                 ),
+               (storage_backend_, path, content, metadata)
+             ).AsTask()
            );
   }
 
@@ -138,15 +163,19 @@ public class FileSystem {
        here, outside the pipeline, and rewound per attempt by the backend. */
     Stream? spool = stream.CanSeek ? null : await SpoolToDisk(stream);
     try {
-      return await storage_pipeline_.ExecuteAsync(
-               static async (state, token) =>
-                 await state.storage_backend_.SaveFileAsync(
-                   state.path,
-                   state.stream,
-                   state.metadata,
-                   token
-                 ),
-               (storage_backend_, path, stream: spool ?? stream, metadata)
+      return await Storage(
+               "storing",
+               path,
+               () => storage_pipeline_.ExecuteAsync(
+                 static async (state, token) =>
+                   await state.storage_backend_.SaveFileAsync(
+                     state.path,
+                     state.stream,
+                     state.metadata,
+                     token
+                   ),
+                 (storage_backend_, path, stream: spool ?? stream, metadata)
+               ).AsTask()
              );
     } finally {
       if (spool != null) {
@@ -157,25 +186,101 @@ public class FileSystem {
 
   /// <summary>
   ///   Buffers a forward-only stream to a temporary file so that it can be
-  ///   replayed if the upload is retried.
+  ///   replayed if the upload is retried. Errors reading the source (such as
+  ///   a download that ends early) are thrown as they are, for the caller to
+  ///   judge; errors of the temp disk are storage failures.
   /// </summary>
   /// <param name="stream">The stream to buffer.</param>
   /// <returns>A seekable stream positioned at the start of the content.</returns>
   private static async Task<Stream> SpoolToDisk(Stream stream) {
-    FileStream spool = File.Create(
-      Path.GetTempFileName(),
-      8192,
-      FileOptions.DeleteOnClose
-    );
+    FileStream spool;
     try {
-      await stream.CopyToAsync(spool);
+      spool = File.Create(Path.GetTempFileName(), 8192, FileOptions.DeleteOnClose);
+    } catch (Exception e) when (e is IOException or UnauthorizedAccessException) {
+      throw new ArtifactStorageException(
+        $"Could not create a temp file to buffer the download ({e.Message})",
+        e
+      );
+    }
+
+    byte[] buffer = ArrayPool<byte>.Shared.Rent(81920);
+    try {
+      int read;
+      while ((read = await stream.ReadAsync(buffer)) > 0) {
+        try {
+          await spool.WriteAsync(buffer.AsMemory(0, read));
+        } catch (IOException e) {
+          throw new ArtifactStorageException(
+            $"Could not write the temp file that buffers the download ({e.Message})",
+            e
+          );
+        }
+      }
+
       spool.Seek(0, SeekOrigin.Begin);
     } catch (Exception) {
       await spool.DisposeAsync();
       throw;
+    } finally {
+      ArrayPool<byte>.Shared.Return(buffer);
     }
 
     return spool;
+  }
+
+  /// <summary>
+  ///   Runs a storage call. While S3 fails it tries again every 15 seconds
+  ///   for up to 10 minutes, then throws <see cref="ArtifactStorageException" />.
+  ///   A key or bucket that doesn't exist is passed on unchanged.
+  /// </summary>
+  private async Task<T> Storage<T>(string what, string path,
+                                   Func<Task<T>> call) {
+    DateTime started = DateTime.UtcNow;
+    DateTime next_warning = started;
+    for (int attempt = 1;; attempt++) {
+      try {
+        T result = await call();
+        if (attempt > 1) {
+          logger_.LogInformation(
+            "S3 answers again; {What} {Path} succeeded after {Seconds:N0} s",
+            what,
+            path,
+            (DateTime.UtcNow - started).TotalSeconds
+          );
+        }
+
+        return result;
+      } catch (Exception e) when (IsStorageFailure(e)) {
+        if (DateTime.UtcNow - started >= S_WAIT_FOR_STORAGE_) {
+          throw new ArtifactStorageException(
+            $"S3 failed while {what} {path} for {S_WAIT_FOR_STORAGE_.TotalMinutes:N0} minutes ({e.GetType().Name}: {e.Message})",
+            e
+          );
+        }
+
+        if (DateTime.UtcNow >= next_warning) {
+          next_warning = DateTime.UtcNow.AddMinutes(1);
+          logger_.LogWarning(
+            "S3 failed while {What} {Path} ({Error}); waiting for it, which pauses this request",
+            what,
+            path,
+            e.Message
+          );
+        }
+
+        await Task.Delay(S_STORAGE_RETRY_);
+      }
+    }
+  }
+
+  private static bool IsStorageFailure(Exception e) {
+    return e is not (ArtifactStorageException or ObjectNotFoundException
+             or BucketNotFoundException) &&
+           (e is MinioException or HttpRequestException or IOException
+              or SocketException or TimeoutException or TaskCanceledException ||
+            /* The Minio client reports some S3 errors this way, e.g.
+               "Bucket already owned by you (Parameter 'response')". */
+            e is ArgumentException { Source: "Minio" });
   }
 
 
@@ -244,7 +349,7 @@ public class FileSystem {
   /// <returns>The size of the file in bytes.</returns>
   /// <exception cref="InvalidOperationException">Thrown when file information cannot be retrieved.</exception>
   public async Task<long> GetFileSize(string filepath) {
-    FileSpec spec = await storage_backend_.GetFileInfoAsync(filepath) ??
+    FileSpec spec = await GetFileInfo(filepath) ??
                     throw new InvalidOperationException();
     return spec.size;
   }
@@ -255,7 +360,7 @@ public class FileSystem {
   /// <param name="filepath">The path of the file.</param>
   /// <returns>The file specification, or null if it doesn't exist.</returns>
   public async Task<FileSpec?> GetFileInfo(string filepath) {
-    return await storage_backend_.GetFileInfoAsync(filepath);
+    return await Storage("reading", filepath, () => storage_backend_.GetFileInfoAsync(filepath));
   }
 
   /// <summary>

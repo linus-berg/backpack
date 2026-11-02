@@ -23,7 +23,7 @@ is unreachable or rejects the credentials.
 | `BP_S3_ENDPOINT`         | none     | Required. `https://host:port` uses TLS; `http://host:port` or a bare `host:port` uses plain HTTP. |
 | `BP_S3_ACCESS_KEY`       | none     | Required. |
 | `BP_S3_SECRET_KEY`       | none     | Required. |
-| `BP_S3_BUCKET`           | none     | Required. Created if missing (checked once per process, on the first storage call). |
+| `BP_S3_BUCKET`           | none     | Required. Created if missing (checked once per process, on the first storage call; concurrent calls wait for that check, and a bucket another replica created at the same moment counts as created). |
 | `BP_S3_REGION`           | none     | Required, but may be empty; an empty value is not passed to the client. |
 | `BP_S3_TRACING`          | `false`  | Parsed with `bool.Parse`, so anything but `true`/`false` stops the service at startup. `true` prints every S3 request and response body to stdout. |
 | `BP_COLLECTOR_DIRECTORY` | `/data/` | Local working directory. `GetModuleDir(name)` returns `<dir>/<name>`. Only Collector.Git and Collector.DockerArchive use it. |
@@ -59,13 +59,20 @@ delta/npm/2026_10_31/registry.npmjs.org/@babel/core/core-7.0.0.tgz
 ## Uploads and retries
 
 - `PutFile` and `PutString` run through the `storage-pipeline` Polly policy: any
-  exception is retried up to 5 times, 5 seconds apart (6 attempts). After that the
-  exception reaches the collector.
+  exception is retried up to 5 times, 5 seconds apart (6 attempts).
+- When S3 fails (unreachable, erroring, rejecting the credentials), every storage call keeps
+  trying, every 15 seconds for up to 10 minutes, and logs a warning once a minute. A
+  collector whose consumers all wait on storage takes no more messages, so the rest stay in
+  its queue until S3 answers again. After 10 minutes the call throws
+  `ArtifactStorageException`, which the collector endpoints redeliver every 15 minutes for a
+  day. A key or bucket that doesn't exist is not a failure.
 - A stream that can't seek (an HTTP response body) is first copied in full to a temp
   file (`Path.GetTempFileName()`, i.e. `TMPDIR`, usually `/tmp`), which is deleted after
   the upload. Collectors therefore need temp space for the largest file they download,
-  times the number of downloads running at once.
+  times the number of downloads running at once. Errors reading the stream (a download
+  that ends early) are thrown as they are; errors writing the temp file (a full disk)
+  become `ArtifactStorageException`.
 - An upload replaces whatever is at the key; the new object appears only once the upload
   has completed.
 - `Exists` is false only when S3 reports the key or bucket as missing; connection or
-  permission errors throw. `GetFileInfo` returns null on any error.
+  permission errors are handled as above. `GetFileInfo` returns null on any error.

@@ -105,7 +105,9 @@ The exception you throw decides what happens to the message:
 
 | Exception | Effect |
 |-----------|--------|
-| `ArtifactTimeoutException` | Retried 5 times immediately, then after 5, 15 and 30 minutes. Use it for timeouts, rate limits and 5xx responses. |
+| `ArtifactTimeoutException` | Retried 5 times immediately, then after 5, 15 and 30 minutes. Use it for timeouts. |
+| `ArtifactUpstreamException` | Same retries. Use it when the registry fails in a way that may pass: connection errors, 5xx responses. |
+| `ArtifactRateLimitedException` | Retried only after 5, 15 and 30 minutes. Use it for 429 (and 503 with `Retry-After`). |
 | `ArtifactMetadataException` | Not retried. Use it when the artifact doesn't exist or its metadata can't be read. |
 | anything else | Not retried. |
 

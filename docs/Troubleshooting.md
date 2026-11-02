@@ -87,9 +87,12 @@ To follow one artifact, search the gateway log for `INGESTED:<processor>:<id>` a
 
 ### Failed messages are discarded
 
-Processors and collectors retry a message only when it fails with
-`ArtifactTimeoutException`: five times immediately, then again after 5, 15 and 30
-minutes. Any other exception, including `ArtifactMetadataException` (which processors
+Processors and collectors retry a message only when it fails with a transient error:
+timeouts and upstream failures (`ArtifactTimeoutException`, `ArtifactUpstreamException`)
+five times immediately, then again after 5, 15 and 30 minutes; rate limits
+(`ArtifactRateLimitedException`) only after 5, 15 and 30 minutes; storage failures
+(`ArtifactStorageException`) every 15 minutes for a day, after the collector has waited up to
+10 minutes for S3. Any other exception, including `ArtifactMetadataException` (which processors
 throw when an upstream registry's metadata can't be fetched or read), fails the message
 at once, and processors and collectors **discard** failed messages. There is nothing to
 inspect or replay; fix the cause and re-track or validate the artifact.
@@ -123,7 +126,7 @@ a collector.
 |---------|--------------|
 | Added artifact never gets versions | Processor not running (0 consumers on `processor-<id>`), the processor ID doesn't match, or the processor failed (its log). |
 | Versions in MongoDB, no files in the bucket | Router or collector for the file's scheme not running, a filter that matches no version, the collector can't reach the URL, or S3 credentials or `BP_S3_REGION` missing (the collector fails at startup). |
-| Some files are silently missing | Collector.Http and Collector.Huggingface skip any URL that doesn't answer with a 2xx status without logging an error. Check that the URL works from the collector's network. |
+| Some files are missing | Collector.Http logs a warning (`Not collected: <url> answered 404 NotFound…`) for URLs it can't get and won't retry, and retries network errors, rate limits (429), server errors and S3 failures for about an hour before giving up (`R-FAULT` in its log). Collector.Huggingface still skips non-2xx answers without an error. Check that the URL works from the collector's network. |
 | Git repository not updated | Collector.Git logs the failure and completes the message; nothing retries it until the next re-track or validate. Check its log (credentials, proxy, the 120-minute clone/fetch limit). |
 | Nothing collected for an artifact with a semver filter | A `SEMVER_RANGE` filter fails on any version string that isn't semver (container tags, Git commit IDs, PEP 440 pre-releases), and then **no** file of that artifact is routed. Use a regular expression for such ecosystems. |
 | Schedule never runs | Schedules use Quartz cron syntax with seconds; see [Schedules](Configuration.md#schedules). |

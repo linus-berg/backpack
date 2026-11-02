@@ -20,8 +20,9 @@ namespace Collector.Kernel.Storage.Minio;
 public class MinioStorage : IDisposable {
   private readonly string bucket_;
   private readonly ILogger logger_;
+  private readonly SemaphoreSlim bucket_lock_ = new(1, 1);
   private readonly bool should_auto_create_bucket_;
-  private bool bucket_exists_checked_;
+  private volatile bool bucket_exists_checked_;
 
   /// <summary>
   ///   Initializes a new instance of the <see cref="MinioStorage" /> class.
@@ -76,18 +77,41 @@ public class MinioStorage : IDisposable {
       return;
     }
 
-    logger_.LogTrace("Checking if bucket {Bucket} exists", bucket_);
-    bool found =
-      await client.BucketExistsAsync(
-        new BucketExistsArgs().WithBucket(bucket_)
-      );
-    if (!found) {
-      logger_.LogInformation("Creating {Bucket}", bucket_);
-      await client.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucket_));
-      logger_.LogInformation("Created {Bucket}", bucket_);
-    }
+    /* One check at a time: concurrent requests on a fresh install would
+       otherwise all try to create the bucket, and all but one fail. */
+    await bucket_lock_.WaitAsync();
+    try {
+      if (bucket_exists_checked_) {
+        return;
+      }
 
-    bucket_exists_checked_ = true;
+      logger_.LogTrace("Checking if bucket {Bucket} exists", bucket_);
+      bool found =
+        await client.BucketExistsAsync(
+          new BucketExistsArgs().WithBucket(bucket_)
+        );
+      if (!found) {
+        logger_.LogInformation("Creating {Bucket}", bucket_);
+        try {
+          await client.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucket_));
+          logger_.LogInformation("Created {Bucket}", bucket_);
+        } catch (Exception) {
+          /* Another replica may have created it in the meantime ("already
+             owned by you"); anything else is a real failure. */
+          if (!await client.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(bucket_)
+              )) {
+            throw;
+          }
+
+          logger_.LogInformation("{Bucket} was created by another replica", bucket_);
+        }
+      }
+
+      bucket_exists_checked_ = true;
+    } finally {
+      bucket_lock_.Release();
+    }
   }
 
   /// <summary>

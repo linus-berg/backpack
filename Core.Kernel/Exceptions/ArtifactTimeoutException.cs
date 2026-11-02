@@ -4,9 +4,10 @@
 namespace Core.Kernel.Exceptions;
 
 /// <summary>
-///   Exception thrown when an operation on an artifact times out.
+///   An operation on an artifact took too long and may succeed on another
+///   try. Retried immediately, then by delayed redelivery.
 /// </summary>
-public class ArtifactTimeoutException : Exception {
+public class ArtifactTimeoutException : ArtifactTransientException {
   /// <summary>
   ///   Initializes a new instance of the <see cref="ArtifactTimeoutException" /> class.
   /// </summary>
