@@ -10,7 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
-        <PackageReference Include="StackExchange.Redis" Version="2.13.17" />
+        <PackageReference Include="StackExchange.Redis" Version="2.13.23" />
     </ItemGroup>
 
     <ItemGroup>
