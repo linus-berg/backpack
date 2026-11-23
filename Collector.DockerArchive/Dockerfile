@@ -21,7 +21,7 @@ RUN dotnet publish "Collector.DockerArchive.csproj" -a $TARGETARCH -c Release -o
 # Build static skopeo binary (this is unsupported)
 # Requires newer debian release than 8.0 dotnet image has
 # https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
-FROM docker.io/ubuntu:25.10 AS skopeo-build
+FROM docker.io/ubuntu:26.04 AS skopeo-build
 # Set skopeo version here
 ARG SKOPEO_VERSION=1.21.0
 WORKDIR /src
